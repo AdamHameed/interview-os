@@ -1,4 +1,4 @@
-import { defineProblems, DOCS_INSPIRED_NOTE, EDU_INSPIRED_NOTE, ORIGINAL_NOTE, OSS_INSPIRED_NOTE } from "./types";
+import { defineProblems, DOCS_INSPIRED_NOTE, EDU_INSPIRED_NOTE, ORIGINAL_NOTE } from "./types";
 
 export const writeCodeProblems = defineProblems([
   {
