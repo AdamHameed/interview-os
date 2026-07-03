@@ -138,6 +138,25 @@ export const ATTEMPT_STATUS_LABELS: Record<AttemptStatus, string> = {
   skipped: "Skipped",
 };
 
+export const SUBMISSION_STATUSES = [
+  "draft",
+  "submitted",
+  "passed",
+  "failed",
+  "reviewed",
+  "needs_retry",
+] as const;
+export type SubmissionStatus = (typeof SUBMISSION_STATUSES)[number];
+
+export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
+  draft: "Draft",
+  submitted: "Submitted",
+  passed: "Passed",
+  failed: "Failed",
+  reviewed: "Reviewed",
+  needs_retry: "Needs Retry",
+};
+
 export const RESOURCE_TYPES = [
   "article",
   "video",

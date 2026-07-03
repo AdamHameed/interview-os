@@ -2,6 +2,7 @@ import { debuggingProblems } from "./debugging";
 import { dsaProblems } from "./dsa";
 import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
+import { runnableOverrides } from "./runnable-overrides";
 import { starterAiUsageProblems } from "./starter-ai-usage";
 import { starterDatabaseProblems } from "./starter-databases";
 import { starterDebuggingProblems } from "./starter-debugging";
@@ -15,7 +16,7 @@ import { writeCodeProblems } from "./write-code";
  * The complete seed bank currently checked into the repository.
  * Keep this explicit so a missing seed module is visible in review.
  */
-export const allProblems: SeedProblem[] = [
+const authoredProblems: SeedProblem[] = [
   ...dsaProblems,
   ...readCodeProblems,
   ...writeCodeProblems,
@@ -28,3 +29,8 @@ export const allProblems: SeedProblem[] = [
   ...starterDatabaseProblems,
   ...starterAiUsageProblems,
 ];
+
+export const allProblems: SeedProblem[] = authoredProblems.map((problem) => ({
+  ...problem,
+  ...runnableOverrides[problem.slug],
+}));

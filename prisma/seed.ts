@@ -9,6 +9,7 @@ function toProblemData(problem: ProblemInput): Prisma.ProblemCreateInput {
     topics,
     targetRoles,
     companyStyles,
+    supportedLanguages,
     tests,
     hints,
     commonMistakes,
@@ -23,6 +24,9 @@ function toProblemData(problem: ProblemInput): Prisma.ProblemCreateInput {
     topics: JSON.stringify(topics),
     targetRoles: JSON.stringify(targetRoles),
     companyStyles: JSON.stringify(companyStyles),
+    supportedLanguages: supportedLanguages
+      ? JSON.stringify(supportedLanguages)
+      : null,
     tests: tests ? JSON.stringify(tests) : null,
     hints: JSON.stringify(hints),
     commonMistakes: JSON.stringify(commonMistakes),

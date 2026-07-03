@@ -45,3 +45,6 @@ prisma/dev.db
 prisma/dev.db-journal
 *.db
 *.db-journal
+
+# local Codex review exchange files
+/.codex-reviews/

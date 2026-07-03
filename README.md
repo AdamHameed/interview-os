@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Interview OS
 
-## Getting Started
+Interview OS is a local-first technical interview practice application. It combines a curated problem bank, progress tracking, local coding submissions, and a file-based Codex review workflow for written system-design, debugging, optimization, database, quant, and AI-usage answers.
 
-First, run the development server:
+## Local setup
+
+Requirements:
+
+- Node.js 20 or newer
+- npm
+- Python 3 available as `python3` for Python submissions
+- Codex CLI only if you want hybrid review of written submissions
 
 ```bash
+npm install
+npx prisma generate
+npx prisma db push
+npm run validate:seed
+npm run seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Coding submissions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Problems configured with a `function_call` harness show a Monaco workspace. Select Python, JavaScript, or TypeScript, define the function named in the workspace, and choose **Run tests** or **Submit**.
 
-## Learn More
+The local runner:
 
-To learn more about Next.js, take a look at the following resources:
+- creates a private temporary directory;
+- writes the answer and generated test harness there;
+- starts a fresh local child process for each test;
+- stops each test after three seconds;
+- caps captured process output and truncates displayed stdout/stderr;
+- compares normalized JSON-compatible results to expected values;
+- removes temporary files after the run;
+- stores the submission and per-test results in local SQLite.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Public tests show expected and actual values. Hidden tests report pass/fail without returning those values. Hidden tests are a practice affordance, not a security boundary: this is a local database and the seed source is available on disk.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Eight existing problems currently have runnable function-call tests. Their executable metadata is isolated in `prisma/seed-data/runnable-overrides.ts`.
 
-## Deploy on Vercel
+### Local runner security warning
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The runner is for one trusted person on their own machine. A timeout, temporary working directory, and output cap do **not** make a secure sandbox. Submitted code runs with the operating-system permissions of the Interview OS process and can access the network, filesystem, environment, or spawn other processes.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Do not expose `/api/submissions/run` to untrusted users or deploy it as a public code-execution endpoint.
+
+If Interview OS is deployed later, choose one of these deliberately:
+
+- disable code execution and retain answer storage only;
+- run each submission inside a locked-down disposable Docker/VM sandbox with resource and network controls;
+- integrate a separately operated Judge0 or Piston service;
+- use another purpose-built isolated runner.
+
+Judge0 and Piston are future deployment options, not current dependencies. The app does not call a hosted runner or paid AI API.
+
+## Written submissions and Codex review
+
+Non-coding problems provide a Markdown answer workspace.
+
+1. Write an answer and choose **Save draft** or **Submit**.
+2. After submission, choose **Export for Codex Review**.
+3. Interview OS writes `.codex-reviews/submission-<id>.md` and displays a command such as:
+
+   ```bash
+   codex "Review .codex-reviews/submission-<id>.md and write feedback to .codex-reviews/submission-<id>-feedback.md"
+   ```
+
+4. Run that command from the repository root.
+5. Return to the problem and choose **Import Codex Feedback**.
+
+The review bundle contains the prompt, constraints, rubric, solution outline, common mistakes, follow-ups, answer, and judging instructions. Import reads only the expected feedback filename and stores its Markdown in the local `Submission.reviewFeedback` field. `.codex-reviews/` is gitignored.
+
+This workflow invokes no AI API from the application. You control the local CLI command and can inspect both exchange files.
+
+## Validation
+
+```bash
+npx prisma generate
+npx prisma db push
+npm run validate:seed
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+See `PROGRESS.md` for current scope, validated behavior, known limitations, and the recommended next development slice.

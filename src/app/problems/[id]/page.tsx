@@ -3,12 +3,15 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock3, ExternalLink, Lightbulb, ListChecks, ShieldAlert } from "lucide-react";
 import { DifficultyBadge, QualityDots, SourceBadge, StatusBadge, TypeBadge } from "@/components/badges";
 import { Markdown } from "@/components/markdown";
+import { SubmissionWorkspace } from "@/components/submission-workspace";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import { ROLE_LABELS, type AttemptStatus } from "@/lib/enums";
 import { hydrateProblem } from "@/lib/problems";
+import { parseJsonArray } from "@/lib/json";
+import type { SubmissionStatus } from "@/lib/enums";
 
 export const dynamic = "force-dynamic";
 
@@ -16,13 +19,20 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const record = await db.problem.findFirst({
     where: { OR: [{ id }, { slug: id }] },
-    include: { attempts: { orderBy: { updatedAt: "desc" }, take: 1 } },
+    include: {
+      attempts: { orderBy: { updatedAt: "desc" }, take: 1 },
+      submissions: { orderBy: { updatedAt: "desc" }, take: 1 },
+    },
   });
   if (!record) notFound();
 
-  const { attempts, ...rawProblem } = record;
+  const { attempts, submissions, ...rawProblem } = record;
   const problem = hydrateProblem(rawProblem);
   const latestAttempt = attempts[0];
+  const latestSubmission = submissions[0];
+  const isCoding =
+    problem.testHarnessType === "function_call" &&
+    problem.supportedLanguages.length > 0;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -60,12 +70,24 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
             </Card>
           )}
 
-          {problem.starterCode && (
-            <Card>
-              <CardHeader><CardTitle>Starter code</CardTitle></CardHeader>
-              <CardContent><pre className="overflow-x-auto rounded-lg border bg-muted/40 p-4 text-xs leading-relaxed"><code>{problem.starterCode}</code></pre></CardContent>
-            </Card>
-          )}
+          <SubmissionWorkspace
+            problemId={problem.id}
+            isCoding={isCoding}
+            functionName={problem.functionName ?? "solve"}
+            supportedLanguages={problem.supportedLanguages}
+            starterCode={problem.starterCode ?? ""}
+            rubric={problem.rubric}
+            solutionOutline={problem.solutionOutline}
+            initialSubmission={latestSubmission ? {
+              id: latestSubmission.id,
+              answerText: latestSubmission.answerText,
+              language: latestSubmission.language,
+              status: latestSubmission.status as SubmissionStatus,
+              selfScore: latestSubmission.selfScore,
+              reviewFeedback: latestSubmission.reviewFeedback,
+              testResults: parseJsonArray(latestSubmission.testResults),
+            } : null}
+          />
 
           <Card>
             <CardHeader>
@@ -81,18 +103,6 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
               ))}
             </CardContent>
           </Card>
-
-          {problem.solutionOutline && (
-            <Card>
-              <CardHeader><CardTitle>Solution outline</CardTitle><CardDescription>Use this for review, not as the first move.</CardDescription></CardHeader>
-              <CardContent>
-                <details className="rounded-lg border p-4">
-                  <summary className="cursor-pointer text-sm font-medium">Reveal solution outline</summary>
-                  <div className="mt-4"><Markdown>{problem.solutionOutline}</Markdown></div>
-                </details>
-              </CardContent>
-            </Card>
-          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>

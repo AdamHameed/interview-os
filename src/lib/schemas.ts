@@ -10,6 +10,7 @@ import {
   RESOURCE_TYPES,
   ROLES,
   SOURCE_TYPES,
+  SUBMISSION_STATUSES,
 } from "@/lib/enums";
 
 export const rubricItemSchema = z.object({
@@ -23,6 +24,9 @@ export const testCaseSchema = z.object({
   input: z.string().optional(),
   expected: z.string().min(1),
   note: z.string().optional(),
+  args: z.array(z.unknown()).optional(),
+  expectedValue: z.unknown().optional(),
+  hidden: z.boolean().optional(),
 });
 export type TestCase = z.infer<typeof testCaseSchema>;
 
@@ -48,6 +52,11 @@ export const problemInputSchema = z
     companyStyles: z.array(z.enum(COMPANY_STYLES)).min(1),
     estimatedMinutes: z.number().int().min(5).max(120),
     language: z.string().optional(),
+    functionName: z.string().regex(/^[A-Za-z_$][\w$]*$/).optional(),
+    testHarnessType: z.enum(["function_call", "stdin_stdout", "custom"]).optional(),
+    supportedLanguages: z
+      .array(z.enum(["python", "javascript", "typescript"]))
+      .optional(),
     prompt: z.string().min(80, "prompt must be a real problem, not a stub"),
     context: z.string().optional(),
     constraints: z.string().optional(),
@@ -104,6 +113,16 @@ export const attemptInputSchema = z.object({
   timeSpentMinutes: z.number().int().min(0).max(600).default(0),
 });
 export type AttemptInput = z.infer<typeof attemptInputSchema>;
+
+export const submissionInputSchema = z.object({
+  problemId: z.string().min(1),
+  submissionId: z.string().min(1).optional(),
+  answerText: z.string().max(500_000),
+  language: z.enum(["python", "javascript", "typescript"]).optional(),
+  status: z.enum(SUBMISSION_STATUSES),
+  selfScore: z.number().int().min(1).max(5).optional(),
+});
+export type SubmissionInput = z.infer<typeof submissionInputSchema>;
 
 export const interviewConfigSchema = z.object({
   title: z.string().min(3).max(120).optional(),

@@ -58,6 +58,33 @@ function checkPlaceholders(problem: ProblemInput): void {
   });
 }
 
+function checkRunnableMetadata(problem: ProblemInput): void {
+  if (problem.testHarnessType !== "function_call") return;
+
+  if (!problem.functionName) {
+    report(problem.slug, "function-call harness requires functionName");
+  }
+  if (!problem.supportedLanguages || problem.supportedLanguages.length === 0) {
+    report(problem.slug, "function-call harness requires supportedLanguages");
+  }
+
+  const runnableTests = (problem.tests ?? []).filter(
+    (test) =>
+      Array.isArray(test.args) &&
+      Object.prototype.hasOwnProperty.call(test, "expectedValue")
+  );
+  if (runnableTests.length === 0) {
+    report(problem.slug, "function-call harness requires structured runnable tests");
+    return;
+  }
+  if (!runnableTests.some((test) => !test.hidden)) {
+    report(problem.slug, "function-call harness requires at least one public test");
+  }
+  if (!runnableTests.some((test) => test.hidden)) {
+    report(problem.slug, "function-call harness requires at least one hidden test");
+  }
+}
+
 for (const candidate of allProblems) {
   const slug = typeof candidate.slug === "string" ? candidate.slug : "<missing slug>";
 
@@ -76,6 +103,7 @@ for (const candidate of allProblems) {
   }
 
   checkPlaceholders(parsed.data);
+  checkRunnableMetadata(parsed.data);
 }
 
 if (errors.length > 0) {

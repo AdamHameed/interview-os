@@ -2,126 +2,112 @@
 
 Last updated: 2026-07-03 on branch `codex-stabilize`.
 
-## Current state
+## Current application
 
-Interview OS is a Next.js 15 App Router application using React 19, TypeScript, Tailwind CSS 4, Prisma 6, SQLite, Zod, and the existing shadcn/Base UI component set. The repository keeps enum-like values in `src/lib/enums.ts`, validates write input with `src/lib/schemas.ts`, and serializes SQLite JSON columns at the Prisma boundary.
+Interview OS is a local-first Next.js 15 application using React 19, TypeScript, Tailwind CSS 4, Prisma 6, SQLite, Zod, Monaco, and the existing shadcn/Base UI components.
 
-The application now has working routes for:
+Working user routes:
 
 - `/dashboard`
 - `/problems`
-- `/problems/[id]` (accepts either a database ID or problem slug)
+- `/problems/[id]` (database ID or slug)
 - `/practice`
 - `/ai-usage`
 
-The existing sidebar also links to interviews, resources, and admin routes that are not implemented yet.
+The bank remains at 80 validated problems. The prior 56-problem bank and 24-problem starter expansion are preserved; no new problem statements were added in the submission/judging slice.
 
-## UX improvements completed
+## Submission and judging support
 
-### Dashboard
+### Data model
 
-- Shows total, attempted, solved, and needs-review counts.
-- Shows bank and solved coverage by populated interview format.
-- Uses existing stats helpers for weak topics, review counts, and next-problem recommendations.
-- Recommends practice modes with the lowest solved coverage.
-- Provides quick tracks for Backend SWE, Infrastructure SWE, Quant Dev, and AI Usage.
+- Added `Submission` with answer text, optional language, lifecycle status, JSON test results, self-score, review feedback, timestamps, and a cascading relation to `Problem`.
+- Added optional `functionName`, `testHarnessType`, and JSON `supportedLanguages` metadata to `Problem`.
+- Extended the authored test-case shape with optional JSON-compatible `args`, `expectedValue`, and `hidden` fields while preserving existing display-only tests.
+- Added submission status constants for draft, submitted, passed, failed, reviewed, and needs-retry states.
+- SQLite was updated with `npx prisma db push`; no migration history has been introduced yet.
 
-### Problem bank
+### Problem workspace
 
-- Search covers title, slug, topics, and prompt text.
-- Shareable URL filters cover type, difficulty, target role, topic, attempt status, and maximum duration.
-- Cards show type and difficulty badges, estimated time, topic tags, target roles, source provenance, quality score, and attempt status.
-- Empty results have a clear recovery state.
+- Coding problems show Monaco, Python/JavaScript/TypeScript selection, Run Tests, Save Draft, and Submit actions.
+- Test results show pass/fail, public expected and actual values, runtime, stdout, stderr, and errors. Hidden tests redact expected and actual values in the response/UI.
+- Written problems show a Markdown textarea, local draft/submit actions, self-score, rubric, post-submission solution reveal, Codex review export/import, and imported feedback.
+- The latest local submission is restored when returning to a problem.
 
-### Problem detail
+### Local runner
 
-- Separates prompt, constraints, starter code, hints, solution outline, mistakes, follow-ups, rubric, topics, attempt status, and provenance.
-- Hints reveal independently with native accessible disclosure controls.
-- Solution outlines are hidden until explicitly revealed.
-- Displays latest attempt status and notes when an attempt exists. Editing is intentionally deferred because no attempt write flow existed before this slice.
-- Source links open directly, and original-content license notes remain visible.
+- `POST /api/submissions/run` validates input, loads the problem harness, executes each test in a fresh child process, stores results, and returns a submission ID.
+- Python uses a generated import/call harness. JavaScript and TypeScript use TypeScript transpilation to CommonJS followed by a generated function-call harness.
+- Each test has a three-second timeout, 64 KiB process-output cap, 8,000-character display cap, private temporary working directory, and cleanup in `finally`.
+- Python tuples/sets and JavaScript sets are normalized into JSON-compatible output before comparison.
+- This is process isolation for trusted local use, not a security sandbox. Submitted code retains the app process's OS permissions and can access the machine or network.
 
-### Practice and AI usage
+### Codex hybrid review
 
-- Practice cards cover DSA, read-code, debugging, optimization, system design, quant-dev, and AI-usage rounds, with live problem counts and filtered-bank links.
-- AI Usage is now a structured guide to token-efficient prompting, repository context selection, code review, hallucination detection, test-first acceptance, and interview-rule boundaries.
+- `POST /api/submissions/export-review` writes `.codex-reviews/submission-<id>.md` with the problem, rubric, reference material, answer, and judging instructions.
+- The UI displays the exact local `codex` command for producing the expected feedback file.
+- `POST /api/submissions/import-feedback` reads only `.codex-reviews/submission-<id>-feedback.md`, stores it in `reviewFeedback`, and marks the submission reviewed.
+- `.codex-reviews/` is gitignored. The app invokes no AI API and no hosted code runner.
 
-## Problem bank
+## Runnable seed problems
 
-The bank contains 80 validated problems: the original 56 plus exactly 24 new starter problems. Existing seed records were not rewritten.
+Eight existing original problems now have executable function-call metadata, with public and hidden tests:
 
-New additions are isolated in six auditable modules:
+- `clean-request-window`
+- `feature-rollout-reachability`
+- `maintenance-window-merge`
+- `cooldown-task-scheduler`
+- `account-merge-shared-emails`
+- `migration-batch-sizing`
+- `logfmt-parser-spec`
+- `feature-flag-evaluator-spec`
 
-- `starter-read-code.ts`: 4
-- `starter-debugging.ts`: 4
-- `starter-optimization.ts`: 4
-- `starter-quant-dev.ts`: 4
-- `starter-databases.ts`: 4
-- `starter-ai-usage.ts`: 4
-
-The new scenarios use original wording and public concepts. They cover language semantics, resource ownership, delivery guarantees, leases, streaming proxies, regex complexity, pagination, fanout, batching, hashing, RAII, market-data recovery, transaction anomalies, deadlocks, idempotency, MVCC, context selection, hallucinated APIs, and test-driven AI review. No proprietary or paid-platform problem statements were used.
-
-Current totals by type:
-
-- DSA: 16
-- Read code: 14
-- Write code: 10
-- Debugging: 14
-- Optimization: 14
-- Quant dev: 4
-- Databases: 4
-- AI usage: 4
-
-Do not expand to the full 120-problem target yet.
+Their prompts remain in the original seed modules. Runnable metadata is isolated in `prisma/seed-data/runnable-overrides.ts`. Seed validation now requires every function-call problem to provide a function name, supported languages, structured tests, at least one public test, and at least one hidden test.
 
 ## Validation status
 
-These commands pass:
+The following pass:
 
 ```bash
-npm run validate:seed
-npm run seed
-npm run lint
-npm run typecheck
-npm run build
-```
-
-Seed validation reports 80 valid, uniquely slugged problems. A local development-server smoke test returned HTTP 200 for the dashboard, filtered problem bank, a seeded problem detail, practice, and AI usage routes.
-
-`npm test` still exits with code 1 because the repository has no test files. This is the most important remaining stability gap; do not hide it with a pass-with-no-tests flag.
-
-Prisma 6 also prints a non-blocking deprecation warning for `package.json#prisma`. Migrate to `prisma.config.ts` only as part of a deliberate Prisma upgrade.
-
-## Recommended next steps
-
-1. Add focused unit tests for `src/lib/interview-select.ts`, `src/lib/stats.ts`, filtering/hydration, and seed validation.
-2. Add a narrow attempt write flow for status, notes, score, and time spent, validated with the existing Zod schema. Then connect it to the detail page.
-3. Add an error boundary/loading states for dynamic Prisma routes.
-4. Implement mock interviews and resources as separate vertical slices; do not build all remaining sidebar destinations at once.
-5. Add system-design content only after the attempt workflow and tests are stable.
-6. Replace the generic create-next-app README with local setup and architecture notes.
-
-Fresh setup:
-
-```bash
-npm install
 npx prisma generate
 npx prisma db push
 npm run validate:seed
 npm run seed
-npm run dev
-```
-
-Before handoff:
-
-```bash
-npm run validate:seed
 npm run lint
 npm run typecheck
 npm test
 npm run build
 ```
 
+`npm test` contains four local-runner tests covering Python, captured JavaScript output, TypeScript transpilation, and three-second timeout termination.
+
+Manual API smoke tests also passed for:
+
+- Python, JavaScript, and TypeScript submissions against the same seeded problem;
+- persisted pass/fail results;
+- written submission creation;
+- Codex review bundle export;
+- feedback file import and persistence.
+
+## Known limitations and safety boundary
+
+- The runner is unsafe for untrusted or public use. It does not block filesystem, environment, network, subprocess, or system-call access.
+- A deployed version must disable execution or use a separately secured Docker/VM sandbox, Judge0, Piston, or another purpose-built runner.
+- Hidden tests are not secret from a local repository owner; they are only hidden in normal result presentation.
+- Only `function_call` harnesses are implemented. Schema values for `stdin_stdout` and `custom` are reserved for later work.
+- Every run currently creates a new submission record. Draft/submit updates reuse the current submission selected in the workspace.
+- Import marks feedback as reviewed but does not parse a Codex verdict into `needs_retry` or a numeric score.
+- Prisma still emits the existing `package.json#prisma` deprecation warning.
+- Interviews, resources, and admin sidebar destinations remain unimplemented.
+
+## Recommended next steps
+
+1. Add tests for submission route validation, review path handling, and database persistence using a disposable test database.
+2. Add a submission-history view and allow selecting prior runs/drafts instead of restoring only the latest.
+3. Decide whether Codex feedback should use a small machine-readable frontmatter block for verdict and score import.
+4. Add abort controls and stronger process-tree cleanup before expanding runner usage.
+5. Implement `stdin_stdout` only when a concrete problem requires it; do not add generic harness complexity speculatively.
+6. Keep code execution disabled in any public deployment until a real sandbox is designed and threat-modeled.
+
 ## Recommended next prompt for Claude Fable 5 / Codex
 
-> Continue from the current Interview OS repository and read `PROGRESS.md` before editing. Preserve the existing architecture, 80 validated seed problems, seed validator, and completed dashboard/problem/practice/AI routes. Do not restart the project and do not expand toward 120 problems. Implement one narrow reliability slice: add real unit tests for the existing pure stats, interview-selection, problem-filtering, and seed-validation logic, then add a Zod-validated attempt status/notes/self-score write flow to `/problems/[id]`. Reuse the current Prisma model and UI components. Run seed validation, lint, typecheck, tests, and production build; document remaining failures and commit only that slice.
+> Continue from the current Interview OS repository and read `README.md` and `PROGRESS.md` before editing. Preserve the 80-problem bank, Submission schema, local runner APIs, Codex file review workflow, and eight runnable problem overlays. Do not add paid APIs, hosted runners, more problem content, or a public execution path. Implement one narrow reliability slice: add API/database tests for submission save/run/export/import using a disposable SQLite database, add a submission-history panel on `/problems/[id]`, and improve child-process-tree cancellation without claiming the runner is a secure sandbox. Run Prisma generation, seed validation, lint, typecheck, tests, and build; document and commit only that slice.
