@@ -1,38 +1,84 @@
-# Interview OS — Stabilization Handoff
+# Interview OS — Progress and Handoff
 
-Last stabilized: 2026-07-03 on branch `codex-stabilize`.
+Last updated: 2026-07-03 on branch `codex-stabilize`.
 
-## What exists
+## Current state
 
-- Next.js 15 App Router project with React 19, TypeScript, Tailwind CSS 4, and shadcn/Base UI components.
-- A shared app shell in `src/app/layout.tsx`: theme provider, responsive sidebar, top bar, command palette, and toast provider.
-- Prisma 6 with a SQLite schema for problems, attempts, resources, and mock interviews.
-- Zod write-boundary schemas plus enum definitions and JSON serialization helpers in `src/lib`.
-- Pure helpers for problem filtering/hydration, interview selection, dashboard statistics, readiness, review queues, and recommendations.
-- 56 authored seed problems. The bank intentionally remains partial:
-  - 16 DSA
-  - 10 read-code
-  - 10 write-code
-  - 10 debugging
-  - 10 optimization
-- Shared UI primitives and app-level components under `src/components`.
+Interview OS is a Next.js 15 App Router application using React 19, TypeScript, Tailwind CSS 4, Prisma 6, SQLite, Zod, and the existing shadcn/Base UI component set. The repository keeps enum-like values in `src/lib/enums.ts`, validates write input with `src/lib/schemas.ts`, and serializes SQLite JSON columns at the Prisma boundary.
 
-## What was fixed during stabilization
+The application now has working routes for:
 
-- Added the missing `prisma/seed.ts` runner. It validates every problem with Zod, serializes array/object fields for SQLite, and uses slug-based upserts so rerunning it does not delete attempts or unrelated database records.
-- Added `prisma/seed-data/index.ts` as the explicit source of truth for included seed modules.
-- Added `scripts/validate-seed.ts`. It checks Zod validity, duplicate slugs, and obvious unfinished placeholder text, and prints a per-type inventory.
-- Added the required `seed` package script and retained `db:seed` as a compatible alias.
-- Removed an unused seed-data import that caused the only lint warning.
-- Inspected the app layout, pages, components, schema, library modules, and all seed modules. No remaining interrupted TypeScript/JSX syntax or broken imports were found.
-- Kept the existing 56-problem bank unchanged; no new problem content was generated.
+- `/dashboard`
+- `/problems`
+- `/problems/[id]` (accepts either a database ID or problem slug)
+- `/practice`
+- `/ai-usage`
 
-## Validation results
+The existing sidebar also links to interviews, resources, and admin routes that are not implemented yet.
 
-The following commands pass:
+## UX improvements completed
+
+### Dashboard
+
+- Shows total, attempted, solved, and needs-review counts.
+- Shows bank and solved coverage by populated interview format.
+- Uses existing stats helpers for weak topics, review counts, and next-problem recommendations.
+- Recommends practice modes with the lowest solved coverage.
+- Provides quick tracks for Backend SWE, Infrastructure SWE, Quant Dev, and AI Usage.
+
+### Problem bank
+
+- Search covers title, slug, topics, and prompt text.
+- Shareable URL filters cover type, difficulty, target role, topic, attempt status, and maximum duration.
+- Cards show type and difficulty badges, estimated time, topic tags, target roles, source provenance, quality score, and attempt status.
+- Empty results have a clear recovery state.
+
+### Problem detail
+
+- Separates prompt, constraints, starter code, hints, solution outline, mistakes, follow-ups, rubric, topics, attempt status, and provenance.
+- Hints reveal independently with native accessible disclosure controls.
+- Solution outlines are hidden until explicitly revealed.
+- Displays latest attempt status and notes when an attempt exists. Editing is intentionally deferred because no attempt write flow existed before this slice.
+- Source links open directly, and original-content license notes remain visible.
+
+### Practice and AI usage
+
+- Practice cards cover DSA, read-code, debugging, optimization, system design, quant-dev, and AI-usage rounds, with live problem counts and filtered-bank links.
+- AI Usage is now a structured guide to token-efficient prompting, repository context selection, code review, hallucination detection, test-first acceptance, and interview-rule boundaries.
+
+## Problem bank
+
+The bank contains 80 validated problems: the original 56 plus exactly 24 new starter problems. Existing seed records were not rewritten.
+
+New additions are isolated in six auditable modules:
+
+- `starter-read-code.ts`: 4
+- `starter-debugging.ts`: 4
+- `starter-optimization.ts`: 4
+- `starter-quant-dev.ts`: 4
+- `starter-databases.ts`: 4
+- `starter-ai-usage.ts`: 4
+
+The new scenarios use original wording and public concepts. They cover language semantics, resource ownership, delivery guarantees, leases, streaming proxies, regex complexity, pagination, fanout, batching, hashing, RAII, market-data recovery, transaction anomalies, deadlocks, idempotency, MVCC, context selection, hallucinated APIs, and test-driven AI review. No proprietary or paid-platform problem statements were used.
+
+Current totals by type:
+
+- DSA: 16
+- Read code: 14
+- Write code: 10
+- Debugging: 14
+- Optimization: 14
+- Quant dev: 4
+- Databases: 4
+- AI usage: 4
+
+Do not expand to the full 120-problem target yet.
+
+## Validation status
+
+These commands pass:
 
 ```bash
-npx prisma generate
 npm run validate:seed
 npm run seed
 npm run lint
@@ -40,31 +86,22 @@ npm run typecheck
 npm run build
 ```
 
-`npm run validate:seed` reports all 56 records valid. `npm run seed` successfully upserts all 56 records. The production build completes successfully.
+Seed validation reports 80 valid, uniquely slugged problems. A local development-server smoke test returned HTTP 200 for the dashboard, filtered problem bank, a seeded problem detail, practice, and AI usage routes.
 
-`npm install` was not rerun during stabilization because `node_modules` and the lockfile were already present and usable.
+`npm test` still exits with code 1 because the repository has no test files. This is the most important remaining stability gap; do not hide it with a pass-with-no-tests flag.
 
-## What is still incomplete or failing
+Prisma 6 also prints a non-blocking deprecation warning for `package.json#prisma`. Migrate to `prisma.config.ts` only as part of a deliberate Prisma upgrade.
 
-- `npm test` exits with code 1 because there are no test files yet. Vitest itself starts correctly.
-- Only `/` exists, and it redirects to `/dashboard`; `/dashboard` has not been implemented. The production build passes, but visiting the app currently lands on a 404 after that redirect.
-- Sidebar and command-menu destinations are planned links only. Dashboard, problem list/detail, practice, interviews, resources, AI usage, and admin routes are not implemented.
-- There are no server actions/API handlers or CRUD forms wired to Prisma yet.
-- Seven planned problem types have no seed modules yet: system design, low-level design, quant dev, databases, OS/networking/concurrency, AI usage, and behavioral. Do not expand toward 120 problems until the core UI flow is working and tested.
-- Prisma prints a deprecation warning for the `package.json#prisma` seed configuration. It still works in Prisma 6; migration to `prisma.config.ts` can wait until a deliberate Prisma 7 upgrade.
-- `README.md` is still the generic create-next-app README.
+## Recommended next steps
 
-## Exact next steps
+1. Add focused unit tests for `src/lib/interview-select.ts`, `src/lib/stats.ts`, filtering/hydration, and seed validation.
+2. Add a narrow attempt write flow for status, notes, score, and time spent, validated with the existing Zod schema. Then connect it to the detail page.
+3. Add an error boundary/loading states for dynamic Prisma routes.
+4. Implement mock interviews and resources as separate vertical slices; do not build all remaining sidebar destinations at once.
+5. Add system-design content only after the attempt workflow and tests are stable.
+6. Replace the generic create-next-app README with local setup and architecture notes.
 
-1. Add focused unit tests for `src/lib/interview-select.ts`, `src/lib/stats.ts`, and seed validation. Make `npm test` pass with real tests rather than suppressing the no-tests exit.
-2. Implement `/dashboard` first so the existing `/` redirect has a valid destination. Use the existing stats helpers; do not invent a second scoring model in the page.
-3. Implement `/problems` and `/problems/[slug]` using `hydrateProblem`, then verify the 56 seeded records can be browsed end to end.
-4. Add attempt creation/update as the first write flow. Preserve Zod validation at the write boundary.
-5. Implement remaining routes incrementally, running lint, typecheck, tests, and build after each coherent slice.
-6. Only after the browse/practice/attempt flows are stable, add the remaining problem categories and expand the bank toward 120.
-7. Replace the generic README with setup and architecture notes once the first end-to-end flow exists.
-
-Fresh local setup:
+Fresh setup:
 
 ```bash
 npm install
@@ -75,7 +112,7 @@ npm run seed
 npm run dev
 ```
 
-Before every handoff:
+Before handoff:
 
 ```bash
 npm run validate:seed
@@ -85,6 +122,6 @@ npm test
 npm run build
 ```
 
-## Recommended next prompt for Claude/Codex
+## Recommended next prompt for Claude Fable 5 / Codex
 
-> Continue from the current Interview OS repository and read `PROGRESS.md` first. Do not restart or rewrite the app, and do not expand the problem bank. Implement the next narrow vertical slice: add real unit tests for the existing pure helpers, then build a `/dashboard` page backed by Prisma and the existing `src/lib/stats.ts` functions so the `/` redirect no longer lands on a 404. Preserve the current schema, seed runner, validator, app shell, and useful components. Run `npm run validate:seed`, `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`; document any remaining failures and commit only that slice.
+> Continue from the current Interview OS repository and read `PROGRESS.md` before editing. Preserve the existing architecture, 80 validated seed problems, seed validator, and completed dashboard/problem/practice/AI routes. Do not restart the project and do not expand toward 120 problems. Implement one narrow reliability slice: add real unit tests for the existing pure stats, interview-selection, problem-filtering, and seed-validation logic, then add a Zod-validated attempt status/notes/self-score write flow to `/problems/[id]`. Reuse the current Prisma model and UI components. Run seed validation, lint, typecheck, tests, and production build; document remaining failures and commit only that slice.

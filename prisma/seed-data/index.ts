@@ -2,6 +2,12 @@ import { debuggingProblems } from "./debugging";
 import { dsaProblems } from "./dsa";
 import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
+import { starterAiUsageProblems } from "./starter-ai-usage";
+import { starterDatabaseProblems } from "./starter-databases";
+import { starterDebuggingProblems } from "./starter-debugging";
+import { starterOptimizationProblems } from "./starter-optimization";
+import { starterQuantDevProblems } from "./starter-quant-dev";
+import { starterReadCodeProblems } from "./starter-read-code";
 import type { SeedProblem } from "./types";
 import { writeCodeProblems } from "./write-code";
 
@@ -15,4 +21,10 @@ export const allProblems: SeedProblem[] = [
   ...writeCodeProblems,
   ...debuggingProblems,
   ...optimizationProblems,
+  ...starterReadCodeProblems,
+  ...starterDebuggingProblems,
+  ...starterOptimizationProblems,
+  ...starterQuantDevProblems,
+  ...starterDatabaseProblems,
+  ...starterAiUsageProblems,
 ];
