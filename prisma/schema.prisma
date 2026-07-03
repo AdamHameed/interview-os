@@ -1,0 +1,105 @@
+// Interview OS — Prisma schema (SQLite MVP)
+//
+// SQLite does not support native enums or scalar lists, so:
+//   - enum-like fields are Strings validated by Zod (src/lib/schemas.ts)
+//   - array fields are Strings holding JSON arrays, (de)serialized in src/lib/json.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Problem {
+  id                String    @id @default(cuid())
+  slug              String    @unique
+  title             String
+  // dsa | read_code | write_code | debugging | optimization | system_design |
+  // low_level_design | quant_dev | databases | os_networking_concurrency | ai_usage | behavioral
+  type              String
+  // easy | medium | hard
+  difficulty        String
+  topics            String    @default("[]") // JSON string[]
+  targetRoles       String    @default("[]") // JSON string[]
+  companyStyles     String    @default("[]") // JSON string[]
+  estimatedMinutes  Int
+  language          String?
+  prompt            String
+  context           String?
+  constraints       String?
+  starterCode       String?
+  tests             String?   // JSON: { name, input, expected, note? }[]
+  hints             String    @default("[]") // JSON string[]
+  solutionOutline   String?
+  fullSolution      String?
+  commonMistakes    String    @default("[]") // JSON string[]
+  followUpQuestions String    @default("[]") // JSON string[]
+  rubric            String    @default("[]") // JSON { criterion, description }[]
+  // original | external_link | open_source_inspired | official_docs_inspired | educational_inspired
+  sourceType        String
+  sourceUrls        String    @default("[]") // JSON string[]
+  licenseNote       String?
+  qualityScore      Int       @default(3)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  attempts          Attempt[]
+
+  @@index([type])
+  @@index([difficulty])
+}
+
+model Attempt {
+  id               String         @id @default(cuid())
+  problemId        String
+  problem          Problem        @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  mockInterviewId  String?
+  mockInterview    MockInterview? @relation(fields: [mockInterviewId], references: [id], onDelete: SetNull)
+  // not_started | in_progress | solved | needs_review | skipped
+  status           String         @default("in_progress")
+  notes            String?
+  selfScore        Int? // 1..5
+  timeSpentMinutes Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([problemId])
+  @@index([mockInterviewId])
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  url         String
+  // article | video | repo | course | book | docs | paper | blog
+  type        String
+  topics      String   @default("[]") // JSON string[]
+  targetRoles String   @default("[]") // JSON string[]
+  notes       String?
+  // not_started | reading | done | archived
+  status      String   @default("not_started")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MockInterview {
+  id              String    @id @default(cuid())
+  title           String
+  targetRole      String
+  // a problem type, or "mixed"
+  format          String
+  durationMinutes Int
+  // easy | medium | hard | mixed
+  difficulty      String
+  topics          String    @default("[]") // JSON string[]
+  problemIds      String    @default("[]") // JSON string[] (ordered)
+  // active | completed | abandoned
+  status          String    @default("active")
+  currentIndex    Int       @default(0)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  attempts        Attempt[]
+}
