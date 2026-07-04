@@ -229,8 +229,8 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
-| raii-resource-ownership | beginner | — | C++ RAII in Interviews | 0/1/0/0 | warmup, challenge, advanced | quant-debugging | cppreference (cited), Core Guidelines |
-| move-semantics | intermediate | raii | — | 0/1/0/0 (shares cpp-moved-handle-double-close) | lessons, warmup, challenge, advanced | quant-debugging | cppreference move/value categories |
+| raii-resource-ownership | beginner | — | C++ RAII in Interviews; Scope Exit Walkthrough | 2/1/1/0 | advanced | quant-debugging | cppreference (cited), Core Guidelines |
+| move-semantics | intermediate | raii | Value Categories; noexcept Walkthrough | 2/1/1/0 | advanced | quant-debugging | cppreference move/value categories |
 | references-pointers-lifetimes | intermediate | raii | — | 0/0/0/0 (→ cpp-dangling-view-config Ch, cpp-callback-vector-realloc Ch) | lessons, warmup, core, advanced | read-code, debugging | cppreference lifetime rules |
 | stl-containers-iterators | intermediate | — | — | 0/0/0/0 | all | — | cppreference containers, iterator invalidation |
 | unordered-map-hashing-collisions | intermediate | stl-containers | — | 0/0/0/0 | all | — | cppreference unordered_map |
@@ -268,8 +268,8 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
-| docker-fundamentals | beginner | — | — | 0/0/0/0 | all | — | docs.docker.com |
-| dockerfiles-image-layers | intermediate | docker-fundamentals | Docker Image Layers | 0/0/0/0 | all problems (lesson links none) | — | docs.docker.com build cache (cited) |
+| docker-fundamentals | beginner | — | Containers Mental Model; docker run Walkthrough | 2/2/1/0 | advanced | debugging, os/networking | docs.docker.com (cited), kernel namespaces docs |
+| dockerfiles-image-layers | intermediate | docker-fundamentals | Docker Image Layers; Cache Optimization Walkthrough | 2/2/1/0 | advanced | optimization, write-code, debugging | docs.docker.com build cache (cited) |
 | docker-compose | beginner | docker-fundamentals | — | 0/0/0/0 | all | — | compose docs |
 | kubernetes-fundamentals | beginner | docker-fundamentals | — | 0/0/0/0 | all | — | kubernetes.io concepts |
 | pods-deployments-services | beginner | k8s-fundamentals | Pods vs Deployments vs Services | 0/0/0/0 | all problems | — | kubernetes.io (cited) |
@@ -316,7 +316,33 @@ Completed: three real lessons (TCP reliability traced packet by packet; a connec
 
 Completed: four real lessons (DP as a state definition, deriving a 1-D DP end to end, grid tables, string alignment with edit distance and LCS) and nine original runnable problems in `prisma/seed-data/dsa-dynamic-programming.ts` (release-train-hops, cheapest-retry-ladder, ad-slot-revenue-plan, fewest-batches-exact-total, warehouse-robot-routes, ordered-log-subsequence, cheapest-rack-cabling, config-drift-distance, shared-history-length) — 4 warmups, 3 core, 1 challenge, 1 applied, all with Python/JavaScript/TypeScript public and hidden tests including greedy-refuting and performance cases. Reference solutions verified against all 52 seeded tests. This closes the last empty priority-1 gap: every DSA module the path marks core now has at least a warmup entry point.
 
-**Queued after Batch 6** (in priority order): http-request-lifecycle deepening; raii + move-semantics deepening; docker-fundamentals + dockerfiles-image-layers; market-data-feeds + order-books; K8s fundamentals pair; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
+### Batch 7 — C++: raii-resource-ownership + move-semantics — DONE 2026-07-04
+
+Completed: one new walkthrough lesson for raii-resource-ownership (tracing resource lifetime through every exit path, RAII chaining via LIFO scope order) and two new lessons for move-semantics (value categories concept; why noexcept is not optional for move constructors, walkthrough). Six written problems in `prisma/seed-data/cpp-foundations.ts`:
+- cpp-raii-owner-identification (warmup, read_code): classify ownership in four code snippets
+- cpp-transaction-missing-rollback (warmup, debugging): RAII transaction guard for exception-safe cleanup
+- cpp-raii-two-phase-cleanup (challenge, quant_dev): Rule-of-Five wrapper for a resource needing ordered teardown
+- cpp-move-value-categories (warmup, read_code): classify lvalue/prvalue/xvalue in five expressions
+- cpp-noexcept-move-vector (warmup, debugging): why std::vector copies instead of moves and the noexcept fix
+- cpp-pipeline-move-optimization (challenge, quant_dev): identify all copies in a three-stage pipeline, redesign for ownership propagation
+Sources: cppreference, C++ Core Guidelines (isocpp).
+
+### Batch 8 — Docker: docker-fundamentals + dockerfiles-image-layers — DONE 2026-07-04
+
+Completed: two new lessons for docker-fundamentals (namespaces/cgroups/overlayfs concept; tracing docker run from command line to process) and one new lesson for dockerfiles-image-layers (cache-friendly Dockerfile rewriting walkthrough with BuildKit cache mounts). Ten written/write-code problems in `prisma/seed-data/docker-foundations.ts`:
+- container-vs-vm-comparison (warmup, read_code): classify five statements about containers vs VMs
+- docker-run-exit-code-debug (warmup, debugging): diagnose three exit code scenarios with investigation commands
+- docker-network-container-discovery (core, debugging): fix container-to-container DNS on the default bridge network
+- docker-resource-limits-oom (core, os_networking_concurrency): OOM killer victim selection, cgroup limits, oom_score_adj, exit code 137 detection
+- docker-entrypoint-design (challenge, write_code): design exec-form ENTRYPOINT + init.sh with correct signal routing
+- dockerfile-layer-order-fix (warmup, optimization): reorder Node.js Dockerfile to cache npm ci
+- dockerfile-cache-invalidation-trace (warmup, debugging): predict which layers hit cache across four change scenarios
+- dockerfile-multi-stage-conversion (core, write_code): convert a 1.2 GB Go Dockerfile to multi-stage under 25 MB
+- dockerfile-image-size-diagnosis (core, debugging): identify three size contributors in a 2.3 GB ML image
+- dockerfile-build-reproducibility (challenge, write_code): fix four non-determinism sources and explain reproducibility for supply-chain security
+Sources: Docker documentation, Linux kernel cgroup/namespace man pages.
+
+**Queued** (in priority order): http-request-lifecycle deepening; market-data-feeds + order-books; K8s fundamentals pair; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
 
 ## Long-term generation guidance
 
@@ -338,4 +364,4 @@ Keep easy problems genuinely easy: a warmup isolates one main idea, uses a small
 
 ## Recommended next prompt
 
-Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: `raii-resource-ownership` + `move-semantics` deepening (or `docker-fundamentals` + `dockerfiles-image-layers` if C++ is deprioritized). Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.
+Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: `http-request-lifecycle` deepening (concept + 2 warmups + 2 core + 1 challenge) paired with `market-data-feeds` + `order-books` or the K8s fundamentals pair (`kubernetes-fundamentals` + `pods-deployments-services`). Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.
