@@ -1,0 +1,512 @@
+import { defineProblems, ORIGINAL_NOTE } from "./types";
+import { learningModuleId, learningPathId, lessonId } from "../../src/lib/learning";
+
+const DSA_PATH = learningPathId("dsa-confidence-builder");
+const BACKEND_PATH = learningPathId("backend-swe");
+const DP_BASICS = learningModuleId("dynamic-programming-basics");
+const DP_GRIDS = learningModuleId("dp-grids-strings");
+const STATE_LESSON = lessonId(DP_BASICS, "dp-state-and-recurrence");
+const ONE_D_LESSON = lessonId(DP_BASICS, "one-dimensional-dp-walkthrough");
+const GRID_LESSON = lessonId(DP_GRIDS, "grid-dp-tables");
+const ALIGNMENT_LESSON = lessonId(DP_GRIDS, "string-alignment-walkthrough");
+
+const LANGUAGES = ["python", "javascript", "typescript"] as const;
+
+/**
+ * Batch 4 of the curriculum plan: 1-D dynamic programming and
+ * grid/string DP. All problems are runnable.
+ */
+export const dsaDynamicProgrammingProblems = defineProblems([
+  {
+    slug: "release-train-hops",
+    title: "Counting Paths Through a Release Train",
+    type: "dsa",
+    difficulty: "easy",
+    topics: ["dynamic-programming", "counting", "recurrences"],
+    targetRoles: ["new_grad_swe", "backend_swe"],
+    companyStyles: ["big_tech", "startup"],
+    estimatedMinutes: 12,
+    language: "python",
+    functionName: "count_upgrade_paths",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH],
+    moduleIds: [DP_BASICS],
+    lessonIds: [STATE_LESSON],
+    confidenceLevel: "warmup",
+    prompt:
+      "A service upgrades through a release train of n sequential versions. Each upgrade step moves forward by exactly 1 version, or by 2 versions when the skip is compatible (assume every 2-step skip is compatible). Starting before version 1, count the distinct upgrade sequences that land exactly on version n. For n = 3 the answer is 3: (1,2,3), (1,3), and (2,3).",
+    constraints:
+      "1 <= n <= 70. Answers grow fast, so the naive branching recursion is too slow well before n = 70 — cache subproblems or fill an array. Aim for O(n) time; O(1) space is a nice follow-up.",
+    starterCode: "def count_upgrade_paths(n: int) -> int:\n    ...\n",
+    tests: [
+      { name: "single version", input: "1", expected: "1", args: [1], expectedValue: 1 },
+      { name: "two versions", input: "2", expected: "2", args: [2], expectedValue: 2 },
+      { name: "five versions", input: "5", expected: "8", args: [5], expectedValue: 8 },
+      { name: "ten versions", input: "10", expected: "89", args: [10], expectedValue: 89, hidden: true },
+      { name: "thirty versions", input: "30", expected: "1346269", args: [30], expectedValue: 1346269, hidden: true },
+      { name: "seventy versions (perf)", input: "70", expected: "308061521170129", args: [70], expectedValue: 308061521170129, hidden: true },
+    ],
+    hints: [
+      "State sentence: ways[i] = number of distinct sequences landing exactly on version i.",
+      "The last hop into version i came from i-1 or i-2, so ways[i] = ways[i-1] + ways[i-2].",
+    ],
+    solutionOutline:
+      "Define ways[i] as the number of distinct upgrade sequences ending exactly at version i. Every sequence reaching i arrived from i-1 or i-2, and those sets are disjoint, so ways[i] = ways[i-1] + ways[i-2] with bases ways[1] = 1, ways[2] = 2. Fill iteratively to n: O(n) time, and two rolling variables give O(1) space. The naive recursion recomputes the same subproblems exponentially often — this is the smallest possible demonstration of overlapping subproblems.",
+    commonMistakes: [
+      "Base case ways[2] = 1, forgetting that version 2 is reachable both via version 1 and by a direct 2-step skip.",
+      "Submitting the plain recursion, which times out at moderate n from exponential recomputation.",
+    ],
+    followUpQuestions: [
+      "Some 2-step skips are incompatible, given as a set of forbidden landings — how does the recurrence change?",
+      "How would you return one example sequence in addition to the count?",
+    ],
+    rubric: [
+      { criterion: "Recurrence derivation", description: "States the ways[i] meaning and justifies the sum over the two disjoint predecessor sets." },
+      { criterion: "Efficiency", description: "Linear time via memoization or tabulation; no exponential recursion." },
+    ],
+    sourceType: "original",
+    sourceUrls: [],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 4,
+  },
+  {
+    slug: "cheapest-retry-ladder",
+    title: "Cheapest Climb Through Flaky Stages",
+    type: "dsa",
+    difficulty: "easy",
+    topics: ["dynamic-programming", "min-cost", "recurrences"],
+    targetRoles: ["new_grad_swe", "backend_swe"],
+    companyStyles: ["big_tech", "startup"],
+    estimatedMinutes: 15,
+    language: "python",
+    functionName: "min_ladder_cost",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH],
+    moduleIds: [DP_BASICS],
+    lessonIds: [ONE_D_LESSON],
+    confidenceLevel: "warmup",
+    prompt:
+      "A deployment pipeline has stages with known retry costs. You may enter the pipeline at stage 0 or stage 1. From stage i you advance to stage i+1 or i+2, and you pay the cost of every stage you land on (including your entry stage). You finish as soon as you advance past the last stage. Return the minimum total cost to finish.",
+    constraints:
+      "2 <= len(costs) <= 10^5, costs are non-negative integers. O(n) time; the recurrence uses only a fixed window of previous results, so O(1) extra space is achievable.",
+    starterCode: "def min_ladder_cost(costs: list[int]) -> int:\n    ...\n",
+    tests: [
+      { name: "three stages", input: "[10, 15, 20]", expected: "15", args: [[10, 15, 20]], expectedValue: 15 },
+      { name: "long ladder", input: "[1, 100, 1, 1, 1, 100, 1, 1, 100, 1]", expected: "6", args: [[1, 100, 1, 1, 1, 100, 1, 1, 100, 1]], expectedValue: 6 },
+      { name: "two stages", input: "[3, 7]", expected: "3", args: [[3, 7]], expectedValue: 3 },
+      { name: "all free", input: "[0, 0, 0, 0]", expected: "0", args: [[0, 0, 0, 0]], expectedValue: 0, hidden: true },
+      { name: "skip out from stage 1", input: "[9, 6, 3]", expected: "6", args: [[9, 6, 3]], expectedValue: 6, hidden: true },
+    ],
+    hints: [
+      "State sentence: dp[i] = minimum cost to finish starting from stage i (you will pay costs[i]).",
+      "dp[i] = costs[i] + min(dp[i+1], dp[i+2]), with dp equal to zero past the end; the answer is min(dp[0], dp[1]).",
+    ],
+    solutionOutline:
+      "Work backwards with dp[i] = costs[i] + min(dp[i+1], dp[i+2]) and dp[n] = dp[n+1] = 0, answering min(dp[0], dp[1]). Iterating from the last stage down (or the mirrored forward version) is O(n), and since only two future values are needed, two rolling variables suffice. This is the lesson's worked example generalized — deriving it from the state sentence matters more than the ten lines of code.",
+    commonMistakes: [
+      "Forgetting that entry at stage 1 is allowed, and returning dp[0] instead of min(dp[0], dp[1]).",
+      "Paying the cost of the stage you jump over — you pay only for stages you land on.",
+      "Base cases of costs[n-1] hacked in instead of clean zeros past the end, which breaks the two-stage input.",
+    ],
+    followUpQuestions: [
+      "A maintenance rule forbids two consecutive 2-jumps — what extra state does dp need?",
+      "How do you recover the actual sequence of stages, not just the cost?",
+    ],
+    rubric: [
+      { criterion: "Clean derivation", description: "State sentence, recurrence, zero base cases past the end, and the min-of-two-entries answer." },
+      { criterion: "Edge correctness", description: "Two-stage and all-zero ladders return the right result without special-casing." },
+    ],
+    sourceType: "original",
+    sourceUrls: [],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 4,
+  },
+  {
+    slug: "ad-slot-revenue-plan",
+    title: "Non-Adjacent Ad Slot Revenue",
+    type: "dsa",
+    difficulty: "medium",
+    topics: ["dynamic-programming", "max-value", "non-adjacent"],
+    targetRoles: ["new_grad_swe", "backend_swe"],
+    companyStyles: ["big_tech", "startup"],
+    estimatedMinutes: 25,
+    language: "python",
+    functionName: "max_slot_revenue",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH],
+    moduleIds: [DP_BASICS],
+    lessonIds: [ONE_D_LESSON],
+    confidenceLevel: "core",
+    prompt:
+      "A page has a row of ad slots, each with a predicted revenue. Policy forbids selling two adjacent slots (back-to-back ads hurt engagement). Choose a set of non-adjacent slots maximizing total revenue and return that maximum. An empty selection is allowed and yields 0.",
+    constraints:
+      "0 <= len(revenues) <= 10^5, revenues are non-negative integers. O(n) time, O(1) extra space. The greedy 'take the largest, skip its neighbors, repeat' is not correct — find an input where it fails before trusting any greedy here.",
+    starterCode: "def max_slot_revenue(revenues: list[int]) -> int:\n    ...\n",
+    tests: [
+      { name: "skip the middle", input: "[50, 10, 60, 20]", expected: "110", args: [[50, 10, 60, 20]], expectedValue: 110 },
+      { name: "alternating peaks", input: "[5, 100, 5, 100, 5]", expected: "200", args: [[5, 100, 5, 100, 5]], expectedValue: 200 },
+      { name: "no slots", input: "[]", expected: "0", args: [[]], expectedValue: 0 },
+      { name: "single slot", input: "[20]", expected: "20", args: [[20]], expectedValue: 20, hidden: true },
+      { name: "ends beat the middle", input: "[100, 1, 1, 100]", expected: "200", args: [[100, 1, 1, 100]], expectedValue: 200, hidden: true },
+      { name: "increasing run", input: "[10, 20, 30]", expected: "40", args: [[10, 20, 30]], expectedValue: 40, hidden: true },
+    ],
+    hints: [
+      "State sentence: dp[i] = maximum revenue using only the first i slots.",
+      "Slot i is either skipped (dp[i-1]) or taken, which forbids slot i-1 (revenues[i-1] + dp[i-2]).",
+      "For the greedy counterexample, try three slots where the middle is the single largest but the ends together beat it.",
+    ],
+    solutionOutline:
+      "dp[i] = max revenue from the first i slots: dp[i] = max(dp[i-1], revenues[i-1] + dp[i-2]) with dp[0] = 0, dp[1] = revenues[0]. Each slot is a binary take/skip decision whose take-branch reaches back exactly two entries, so two rolling variables give O(n)/O(1). Greedy-largest fails on [4, 5, 4]: it takes 5 (total 5) while the optimum takes both 4s (total 8) — the interview point is recognizing that local slot value ignores what taking it forbids.",
+    commonMistakes: [
+      "Allowing revenues[i-1] + dp[i-1] in the take branch, which silently permits adjacent picks.",
+      "Assuming an alternating pattern (take every other slot) is optimal — [100, 1, 1, 100] breaks it.",
+      "Mishandling the empty input when seeding the rolling variables.",
+    ],
+    followUpQuestions: [
+      "The slots form a ring (first and last are adjacent) — how do you reduce it to two runs of this problem?",
+      "Policy changes to 'no three consecutive slots' — what does the state become?",
+    ],
+    rubric: [
+      { criterion: "Take/skip recurrence", description: "Correct max(dp[i-1], value + dp[i-2]) with clean bases and rolling-variable space." },
+      { criterion: "Greedy refutation", description: "Produces a concrete counterexample to the largest-first greedy when prompted." },
+    ],
+    sourceType: "original",
+    sourceUrls: [],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 4,
+  },
+  {
+    slug: "fewest-batches-exact-total",
+    title: "Fewest Batches to an Exact Record Count",
+    type: "dsa",
+    difficulty: "medium",
+    topics: ["dynamic-programming", "unbounded-choice", "min-count"],
+    targetRoles: ["new_grad_swe", "backend_swe"],
+    companyStyles: ["big_tech", "startup"],
+    estimatedMinutes: 30,
+    language: "python",
+    functionName: "fewest_batches",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH, BACKEND_PATH],
+    moduleIds: [DP_BASICS],
+    lessonIds: [ONE_D_LESSON],
+    confidenceLevel: "core",
+    prompt:
+      "A data-migration tool moves records in fixed batch sizes (for example 250, 1000, 5000 records per batch), and each size may be used any number of times. Given the available batch sizes and an exact total record count to move, return the minimum number of batches that sums exactly to the total, or -1 when no combination can hit it exactly. A total of 0 needs 0 batches.",
+    constraints:
+      "1 <= len(sizes) <= 12, 1 <= size <= 10^4, 0 <= total <= 10^4. Target O(total × len(sizes)) time. Note the greedy largest-batch-first strategy is wrong for some size sets — the tests include one.",
+    starterCode: "def fewest_batches(sizes: list[int], total: int) -> int:\n    ...\n",
+    tests: [
+      { name: "two mid batches beat greedy", input: "[1, 3, 4], 6", expected: "2", args: [[1, 3, 4], 6], expectedValue: 2 },
+      { name: "unreachable total", input: "[5], 7", expected: "-1", args: [[5], 7], expectedValue: -1 },
+      { name: "zero records", input: "[2, 5], 0", expected: "0", args: [[2, 5], 0], expectedValue: 0 },
+      { name: "repeat small sizes", input: "[2, 5], 11", expected: "4", args: [[2, 5], 11], expectedValue: 4, hidden: true },
+      { name: "three sizes", input: "[7, 3, 2], 12", expected: "3", args: [[7, 3, 2], 12], expectedValue: 3, hidden: true },
+      { name: "even sizes odd total", input: "[4, 9], 6", expected: "-1", args: [[4, 9], 6], expectedValue: -1, hidden: true },
+    ],
+    hints: [
+      "State sentence: dp[t] = fewest batches summing exactly to t, or infinity when impossible.",
+      "dp[t] = 1 + min(dp[t - size]) over all sizes that fit; dp[0] = 0.",
+      "Greedy fails on sizes [1, 3, 4] with total 6: largest-first gives 4+1+1 = 3 batches; 3+3 uses 2.",
+    ],
+    solutionOutline:
+      "dp[t] = fewest batches reaching exactly t: for each t from 1 to total, dp[t] = 1 + min(dp[t - s] for s in sizes if s <= t), infinity when no predecessor is reachable, dp[0] = 0. Return dp[total] or -1 for infinity. Time O(total × k), space O(total). The unbounded reuse of sizes is what makes this a forward table over amounts rather than a per-item take/skip: the same size may contribute many times, so the recurrence reaches back by size from every amount. The [1,3,4]→6 case is the standard proof that largest-first greedy is not optimal for arbitrary size sets.",
+    commonMistakes: [
+      "Initializing dp[t] to 0 or -1 and letting unreachable states contaminate minima — use a real infinity sentinel and convert at the end.",
+      "Writing the bounded-choice (each size once) recurrence, which wrongly forbids repeating a batch size.",
+      "Special-casing total = 0 as -1; zero records legitimately needs zero batches.",
+    ],
+    followUpQuestions: [
+      "How would you also return one optimal batch composition, and what do you store to make backtracking O(total)?",
+      "Count the number of distinct compositions instead — what changes in the recurrence and why does loop order start to matter?",
+    ],
+    rubric: [
+      { criterion: "Unbounded recurrence", description: "Correct min over sizes with an infinity sentinel, dp[0] = 0, and -1 conversion." },
+      { criterion: "Greedy awareness", description: "Explains why largest-first fails and which size sets make greedy safe (canonical systems)." },
+    ],
+    sourceType: "original",
+    sourceUrls: [],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 4,
+  },
+  {
+    slug: "warehouse-robot-routes",
+    title: "Routes Across a Warehouse Grid",
+    type: "dsa",
+    difficulty: "easy",
+    topics: ["dynamic-programming", "grid-dp", "counting"],
+    targetRoles: ["new_grad_swe", "backend_swe"],
+    companyStyles: ["big_tech", "startup"],
+    estimatedMinutes: 15,
+    language: "python",
+    functionName: "count_routes",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH],
+    moduleIds: [DP_GRIDS],
+    lessonIds: [GRID_LESSON],
+    confidenceLevel: "warmup",
+    prompt:
+      "A picking robot starts at the top-left cell of a rows × cols warehouse grid and must reach the bottom-right cell. Aisle direction rules only allow moving one cell right or one cell down per step. Count the distinct routes from start to finish.",
+    constraints:
+      "1 <= rows, cols <= 18, so the counts fit in ordinary integers. Fill a table (or one rolling row); the branching recursion without a cache recomputes cells exponentially.",
+    starterCode: "def count_routes(rows: int, cols: int) -> int:\n    ...\n",
+    tests: [
+      { name: "three by three", input: "3, 3", expected: "6", args: [3, 3], expectedValue: 6 },
+      { name: "single row", input: "1, 5", expected: "1", args: [1, 5], expectedValue: 1 },
+      { name: "two by two", input: "2, 2", expected: "2", args: [2, 2], expectedValue: 2 },
+      { name: "wide grid", input: "3, 7", expected: "28", args: [3, 7], expectedValue: 28, hidden: true },
+      { name: "large square (perf)", input: "18, 18", expected: "2333606220", args: [18, 18], expectedValue: 2333606220, hidden: true },
+    ],
+    hints: [
+      "State sentence: dp[r][c] = number of routes from the start to cell (r, c).",
+      "Every route enters a cell from above or from the left: dp[r][c] = dp[r-1][c] + dp[r][c-1], with the first row and column all 1.",
+    ],
+    solutionOutline:
+      "dp[r][c] = dp[r-1][c] + dp[r][c-1]; the first row and first column are 1 (only one straight path reaches them). Fill row-by-row and return the bottom-right value — O(rows × cols) time, and a single rolling row (row[c] += row[c-1]) gives O(cols) space. Hand-check on the 3×3 table from the lesson (corner = 6). The closed form C(rows+cols-2, rows-1) exists and makes a good verification, but the table is the point of the exercise.",
+    commonMistakes: [
+      "Base cases of 0 in the first row/column, which zero out the whole table.",
+      "Confusing rows/cols order when indexing — the 1×5 and 3×7 tests catch transposition.",
+      "Uncached recursion that times out on the 18×18 case.",
+    ],
+    followUpQuestions: [
+      "Some cells contain racks the robot cannot enter — what single line changes in the fill?",
+      "Why does the closed-form binomial answer match, and when would you prefer computing it directly?",
+    ],
+    rubric: [
+      { criterion: "Table construction", description: "Correct base row/column of 1s and the two-neighbor sum, filled in dependency order." },
+      { criterion: "Space awareness", description: "Can state the rolling-row optimization even if the submitted version keeps the full table." },
+    ],
+    sourceType: "original",
+    sourceUrls: [],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 4,
+  },
+  {
+    slug: "ordered-log-subsequence",
+    title: "Is the Alert Pattern in the Log?",
+    type: "dsa",
+    difficulty: "easy",
+    topics: ["strings", "subsequences", "two-pointers"],
+    targetRoles: ["new_grad_swe", "backend_swe"],
+    companyStyles: ["big_tech", "startup"],
+    estimatedMinutes: 12,
+    language: "python",
+    functionName: "is_ordered_subsequence",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH],
+    moduleIds: [DP_GRIDS],
+    lessonIds: [ALIGNMENT_LESSON],
+    confidenceLevel: "warmup",
+    prompt:
+      "An alert fires when a known escalation pattern of event codes appears in a service's event stream in order — other events may occur in between, but the pattern's events must appear in the given relative order. Given the pattern and the stream as strings of single-character event codes, return true when the pattern appears in order within the stream, else false. The empty pattern is always present.",
+    constraints:
+      "0 <= len(pattern) <= len achievable in one pass; 0 <= len(stream) <= 10^5. One forward scan of the stream, O(1) extra space. This warmup builds the in-order intuition that the alignment lessons formalize — no DP table needed here.",
+    starterCode: "def is_ordered_subsequence(pattern: str, stream: str) -> bool:\n    ...\n",
+    tests: [
+      { name: "pattern spread across stream", input: "'ace', 'abcde'", expected: "true", args: ["ace", "abcde"], expectedValue: true },
+      { name: "order violated", input: "'aec', 'abcde'", expected: "false", args: ["aec", "abcde"], expectedValue: false },
+      { name: "empty pattern", input: "'', 'xyz'", expected: "true", args: ["", "xyz"], expectedValue: true },
+      { name: "empty stream", input: "'x', ''", expected: "false", args: ["x", ""], expectedValue: false, hidden: true },
+      { name: "repeated codes", input: "'aab', 'aacab'", expected: "true", args: ["aab", "aacab"], expectedValue: true, hidden: true },
+      { name: "pattern longer than stream", input: "'abc', 'ab'", expected: "false", args: ["abc", "ab"], expectedValue: false, hidden: true },
+    ],
+    hints: [
+      "Keep one pointer into the pattern; walk the stream once and advance the pattern pointer on each match.",
+      "The pattern is present exactly when its pointer reaches the end.",
+    ],
+    solutionOutline:
+      "Walk the stream with an index into the pattern: whenever the current stream character equals the awaited pattern character, advance the pattern index. Return pattern_index == len(pattern) at the end (immediately true for the empty pattern). The greedy earliest-match is safe: matching a pattern character at the first opportunity never blocks a later match, because any later occurrence the optimal alignment would use is still available to subsequent pattern characters. One pass, O(1) space.",
+    commonMistakes: [
+      "Checking mere character membership and ignoring order — 'aec' vs 'abcde' catches it.",
+      "Restarting the pattern pointer on a mismatch as if searching for a contiguous substring.",
+      "Missing the empty-pattern and empty-stream boundaries.",
+    ],
+    followUpQuestions: [
+      "A million patterns are checked against the same long stream — what preprocessing of the stream makes each check faster?",
+      "How does this check relate to the LCS table — what would LCS(pattern, stream) equal when the answer is true?",
+    ],
+    rubric: [
+      { criterion: "One-pass scan", description: "Single pointer per string, correct termination condition, boundary cases handled." },
+      { criterion: "Greedy justification", description: "Can argue why earliest matching is safe rather than asserting it." },
+    ],
+    sourceType: "original",
+    sourceUrls: [],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 4,
+  },
+  {
+    slug: "cheapest-rack-cabling",
+    title: "Cheapest Cable Run Through the Rack Grid",
+    type: "dsa",
+    difficulty: "medium",
+    topics: ["dynamic-programming", "grid-dp", "min-cost"],
+    targetRoles: ["new_grad_swe", "backend_swe", "infrastructure_swe"],
+    companyStyles: ["big_tech", "infra_heavy"],
+    estimatedMinutes: 25,
+    language: "python",
+    functionName: "min_cable_cost",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH],
+    moduleIds: [DP_GRIDS],
+    lessonIds: [GRID_LESSON],
+    confidenceLevel: "core",
+    prompt:
+      "A cable must run from the top-left bay to the bottom-right bay of a data-center rack grid. Routing through each bay has a non-negative cost (congested bays cost more). The cable may only extend one bay right or one bay down at a time, and it pays the cost of every bay it passes through, including the first and last. Return the minimum total routing cost.",
+    constraints:
+      "1 <= rows, cols <= 200, costs are non-negative integers. O(rows × cols) time; a rolling row gives O(cols) space. Dijkstra also solves it — explain in the follow-up why the movement restriction makes the simpler table sufficient here.",
+    starterCode: "def min_cable_cost(grid: list[list[int]]) -> int:\n    ...\n",
+    tests: [
+      { name: "classic three by three", input: "[[1,3,1],[1,5,1],[4,2,1]]", expected: "7", args: [[[1, 3, 1], [1, 5, 1], [4, 2, 1]]], expectedValue: 7 },
+      { name: "single bay", input: "[[3]]", expected: "3", args: [[[3]]], expectedValue: 3 },
+      { name: "two by two", input: "[[1,2],[1,1]]", expected: "3", args: [[[1, 2], [1, 1]]], expectedValue: 3 },
+      { name: "single row", input: "[[1,2,3]]", expected: "6", args: [[[1, 2, 3]]], expectedValue: 6, hidden: true },
+      { name: "single column", input: "[[5],[4],[2]]", expected: "11", args: [[[5], [4], [2]]], expectedValue: 11, hidden: true },
+      { name: "detour pays off", input: "3x4 grid", expected: "8", args: [[[1, 4, 7, 1], [2, 1, 8, 1], [3, 2, 1, 1]]], expectedValue: 8, hidden: true },
+    ],
+    hints: [
+      "State sentence: dp[r][c] = minimum cost of any legal cable route from the start to bay (r, c).",
+      "dp[r][c] = grid[r][c] + min(dp[r-1][c], dp[r][c-1]); the first row and column are running prefix sums.",
+    ],
+    solutionOutline:
+      "dp[r][c] = grid[r][c] + min(dp[r-1][c], dp[r][c-1]); first row and column accumulate as prefix sums since only one direction reaches them. Fill top-left to bottom-right and return the last cell — O(rows × cols), with an in-place or rolling-row variant at O(cols) space. The right/down restriction makes the dependency graph a DAG in fill order, which is why a plain table works where a general grid with all four directions would need Dijkstra: cycles and non-monotone paths never arise.",
+    commonMistakes: [
+      "Initializing the first row/column to bare grid values instead of accumulated sums.",
+      "Taking min of three neighbors including the diagonal, which invents a move the cable cannot make.",
+      "Claiming greedy 'step to the cheaper neighbor' works — the detour test defeats it.",
+    ],
+    followUpQuestions: [
+      "Why exactly does allowing up/left moves break the table fill, and what algorithm takes over?",
+      "How do you reconstruct the route itself with O(1) extra bookkeeping per cell?",
+    ],
+    rubric: [
+      { criterion: "Correct table", description: "Prefix-sum borders, two-neighbor min, dependency-order fill." },
+      { criterion: "Model boundary", description: "Explains why the DAG restriction admits DP and when the problem escalates to shortest-path algorithms." },
+    ],
+    sourceType: "original",
+    sourceUrls: [],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 4,
+  },
+  {
+    slug: "config-drift-distance",
+    title: "Measuring Config Drift Between Environments",
+    type: "dsa",
+    difficulty: "hard",
+    topics: ["dynamic-programming", "edit-distance", "strings"],
+    targetRoles: ["backend_swe", "infrastructure_swe", "mid_level_swe"],
+    companyStyles: ["big_tech", "infra_heavy"],
+    estimatedMinutes: 40,
+    language: "python",
+    functionName: "config_drift",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH],
+    moduleIds: [DP_GRIDS],
+    lessonIds: [ALIGNMENT_LESSON],
+    confidenceLevel: "challenge",
+    prompt:
+      "A drift auditor compares two environment configurations, each an ordered list of config lines. One drift operation is inserting a line, deleting a line, or replacing a line (any line content counts as one replacement). Return the minimum number of operations that transforms the staging config into the production config. The score feeds a dashboard, so exactness matters — no heuristics.",
+    constraints:
+      "0 <= len(staging), len(production) <= 300. Lines are compared as whole strings. Required: the O(n × m) alignment table; the exponential branching recursion will not finish. State clearly what dp[i][j] means before coding.",
+    starterCode: "def config_drift(staging: list[str], production: list[str]) -> int:\n    ...\n",
+    tests: [
+      { name: "one replaced line", input: "['a','b','c'] vs ['a','x','c']", expected: "1", args: [["a", "b", "c"], ["a", "x", "c"]], expectedValue: 1 },
+      { name: "replace and delete", input: "port changed, debug removed", expected: "2", args: [["port=80", "host=x", "debug=on"], ["port=8080", "host=x"]], expectedValue: 2 },
+      { name: "both empty", input: "[] vs []", expected: "0", args: [[], []], expectedValue: 0 },
+      { name: "empty target", input: "['a','b'] vs []", expected: "2", args: [["a", "b"], []], expectedValue: 2, hidden: true },
+      { name: "shift by one", input: "['a','b','c','d'] vs ['b','c','d','e']", expected: "2", args: [["a", "b", "c", "d"], ["b", "c", "d", "e"]], expectedValue: 2, hidden: true },
+      { name: "delete middle line", input: "['m','n','o'] vs ['m','o']", expected: "1", args: [["m", "n", "o"], ["m", "o"]], expectedValue: 1, hidden: true },
+    ],
+    hints: [
+      "dp[i][j] = minimum operations turning the first i staging lines into the first j production lines.",
+      "Matching last lines are free (diagonal); otherwise 1 + min(replace: diagonal, delete: up, insert: left).",
+      "Bases: dp[i][0] = i deletions, dp[0][j] = j insertions.",
+    ],
+    solutionOutline:
+      "Classic edit distance over lines instead of characters. dp[i][j] = dp[i-1][j-1] when staging[i-1] == production[j-1]; otherwise 1 + min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]) covering replace, delete, insert. Bases dp[i][0] = i, dp[0][j] = j. Fill row-major, answer dp[n][m]; O(nm) time and O(m) space with a rolling row (keep the previous diagonal in a temporary). The 'shift by one' test is the discriminating case: naive positional comparison scores 4, but delete 'a' + insert 'e' realigns everything for 2 — exactly the alignment insight the table encodes.",
+    commonMistakes: [
+      "Comparing lines positionally and counting mismatches, which overreports drift the moment one line is inserted at the top.",
+      "Forgetting the free diagonal on equal lines, turning every match into a phantom replacement.",
+      "Indexing dp by list indices rather than prefix lengths and corrupting the sentinel row/column.",
+      "Rolling-row versions that overwrite the diagonal before reading it.",
+    ],
+    followUpQuestions: [
+      "The dashboard also wants the operations themselves — how do you backtrack through the table, and what does that cost in memory?",
+      "Replacements should cost 2 when the line's key changes but only 1 when just the value changes — where does the recurrence change?",
+      "Both configs are 100k lines — the quadratic table is too big; what real-world diff strategies (anchoring on unique lines, Myers) trade exactness or generality for speed?",
+    ],
+    rubric: [
+      { criterion: "Alignment recurrence", description: "Correct three-operation recurrence with free diagonal, prefix-length indexing, and sentinel bases." },
+      { criterion: "Non-positional insight", description: "Explains why the shift-by-one case costs 2, not 4 — the point of alignment over positional diffing." },
+      { criterion: "Scaling judgment", description: "Discusses space optimization and what breaks at very large inputs when prompted." },
+    ],
+    sourceType: "original",
+    sourceUrls: ["https://en.wikipedia.org/wiki/Levenshtein_distance"],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 5,
+  },
+  {
+    slug: "shared-history-length",
+    title: "Longest Shared Deploy History",
+    type: "dsa",
+    difficulty: "medium",
+    topics: ["dynamic-programming", "longest-common-subsequence", "diffing"],
+    targetRoles: ["backend_swe", "infrastructure_swe", "new_grad_swe"],
+    companyStyles: ["big_tech", "infra_heavy", "startup"],
+    estimatedMinutes: 30,
+    language: "python",
+    functionName: "shared_history_length",
+    testHarnessType: "function_call",
+    supportedLanguages: [...LANGUAGES],
+    pathIds: [DSA_PATH, BACKEND_PATH],
+    moduleIds: [DP_GRIDS],
+    lessonIds: [ALIGNMENT_LESSON],
+    confidenceLevel: "advanced",
+    prompt:
+      "Two regions applied deploys from the same pipeline, but each region skipped some releases and took hotfixes of its own, so their deploy logs differ. To reconcile them, an auditing tool needs the length of the longest sequence of deploy IDs that appears in both logs in the same relative order (not necessarily contiguously) — the common backbone that a diff view renders unchanged, with everything else shown as region-specific. Given both logs as lists of integer deploy IDs, return that length.",
+    constraints:
+      "0 <= len(log) <= 500 per region. O(n × m) time and O(min(n, m)) space with a rolling row. This is the algorithmic core of diff tools — the follow-ups probe that connection, so solve it as an engineer, not a puzzle.",
+    starterCode: "def shared_history_length(region_a: list[int], region_b: list[int]) -> int:\n    ...\n",
+    tests: [
+      { name: "interleaved hotfixes", input: "[1,3,4,1,2,8] vs [3,4,1,2,1,8]", expected: "5", args: [[1, 3, 4, 1, 2, 8], [3, 4, 1, 2, 1, 8]], expectedValue: 5 },
+      { name: "one empty log", input: "[] vs [1,2]", expected: "0", args: [[], [1, 2]], expectedValue: 0 },
+      { name: "identical single deploy", input: "[7] vs [7]", expected: "1", args: [[7], [7]], expectedValue: 1 },
+      { name: "nothing shared", input: "[1,2,3] vs [4,5,6]", expected: "0", args: [[1, 2, 3], [4, 5, 6]], expectedValue: 0, hidden: true },
+      { name: "reversed order", input: "[1,2,3,2,1] vs [3,2,1,2,3]", expected: "3", args: [[1, 2, 3, 2, 1], [3, 2, 1, 2, 3]], expectedValue: 3, hidden: true },
+      { name: "duplicate deploys", input: "[4,4,4] vs [4,4]", expected: "2", args: [[4, 4, 4], [4, 4]], expectedValue: 2, hidden: true },
+    ],
+    hints: [
+      "dp[i][j] = LCS length of the first i deploys of region A and the first j of region B.",
+      "Equal last deploys extend the backbone: dp[i-1][j-1] + 1; otherwise max(dp[i-1][j], dp[i][j-1]).",
+      "Contiguity is not required — the 'interleaved hotfixes' case has the backbone split across both logs.",
+    ],
+    solutionOutline:
+      "Standard LCS: dp[i][j] = dp[i-1][j-1] + 1 on match, else max(dp[i-1][j], dp[i][j-1]); zero bases; answer dp[n][m]. Rolling row with a saved diagonal reaches O(min(n, m)) space. The engineering framing is the point: a diff tool computes exactly this backbone, then renders A-only entries as deletions and B-only entries as insertions; edit distance with insert/delete only is n + m − 2·LCS, which connects this problem to the drift challenge. The reversed-order hidden test guards against substring (contiguous) implementations.",
+    commonMistakes: [
+      "Computing longest common substring (contiguous) — the reversed-order test returns 1 for substring but 3 for subsequence.",
+      "Intersecting ID sets and returning the count, which ignores order entirely.",
+      "Rolling-row update that loses the diagonal value needed for the match case.",
+    ],
+    followUpQuestions: [
+      "How does a diff tool turn the LCS table into the actual insert/delete script, and why is the result not unique?",
+      "Deploy IDs are near-unique per log — how do anchor-based diff algorithms exploit that to beat O(nm) in practice?",
+      "Prove or verify the identity: insert/delete-only edit distance = n + m − 2·LCS.",
+    ],
+    rubric: [
+      { criterion: "LCS recurrence", description: "Correct match/mismatch recurrence with prefix-length indexing and zero bases." },
+      { criterion: "Diff connection", description: "Articulates how the backbone plus off-backbone entries constitute a diff, and the edit-distance identity." },
+      { criterion: "Order-sensitivity", description: "Solution demonstrably order-aware — passes the reversed and duplicate hidden tests." },
+    ],
+    sourceType: "original",
+    sourceUrls: ["https://en.wikipedia.org/wiki/Longest_common_subsequence"],
+    licenseNote: ORIGINAL_NOTE,
+    qualityScore: 5,
+  },
+]);

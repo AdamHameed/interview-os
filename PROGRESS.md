@@ -1,6 +1,6 @@
 # Interview OS — Progress and Handoff
 
-Last updated: 2026-07-04 on branch `codex-stabilize` (curriculum coverage plan pass; no seed content changed).
+Last updated: 2026-07-04 on branch `codex-stabilize` (problem-solving flow and route-health pass).
 
 ## Current platform
 
@@ -51,8 +51,8 @@ Together they contain:
 
 - 79 standalone modules across DSA, Docker, Kubernetes, operating systems, networking, C++, Python, databases, caching, backend/system design, quant development, and AI usage;
 - 63 ordered path memberships, including modules reused across multiple paths;
-- 183 lesson records;
-- 25 real mini-lessons;
+- 187 lesson records;
+- 29 real mini-lessons;
 - 158 explicit placeholder lesson briefs.
 
 The 2026-07-04 DSA batch extended the DSA Confidence Builder to 16 ordered modules covering the full roadmap topic list (arrays/hashing through math/geometry), added four real lessons (binary-search invariants, search-on-answers, linked-list pointer discipline, slow/fast pointers), and mapped twelve previously orphaned problems into modules.
@@ -76,12 +76,13 @@ Placeholder lessons are not disguised as complete content. The UI labels them **
 - Standalone module pages show prerequisites, outcomes, ordered lessons, confidence-grouped problems, paths that reuse the module, related modules, sources, and an interview-cram checklist.
 - Lesson pages render Markdown, takeaways, examples, sources, previous/next navigation, linked practice, and a clear placeholder warning.
 - Dashboard includes Continue Learning, a Browse Modules entry point, and quick interview-cram cards for Kubernetes, Docker, threading, C++, databases, system design, quant, and AI usage.
-- Problem bank filters now include path, module, and confidence level; problem cards and detail pages show their guided placement.
+- The problem bank uses a calm single-column result list. Search, format, and difficulty stay visible while less-common filters are grouped under **More filters**.
+- Problem detail pages use a responsive split workspace: statement, constraints, and hints remain visible in a sticky left pane while the Monaco editor or written-answer workspace occupies the right pane. Review material is collapsed until needed.
 - Practice includes Practice by Path, Practice by Module, and the dedicated Confidence Builder progression.
 
 ## Confidence-building problems
 
-The bank now contains 118 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems, 9 written database problems, and 8 written concurrency problems — the last three batches added 2026-07-04, each with a warmup → core → challenge → applied mix.
+The bank now contains 127 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems, 9 written database problems, 8 written concurrency problems, and 9 runnable dynamic-programming problems — the last four batches added 2026-07-04, each with a warmup → core → challenge → applied mix.
 
 - Four runnable DSA warmups: pair sum, unique sliding window, balanced brackets, and graph reachability.
 - Two debugging warmups: boolean environment parsing and missing `await`.
@@ -89,7 +90,7 @@ The bank now contains 118 validated problems: 80 originals, 12 easy warmups, 9 b
 - Two database warmups: composite index selection and uniqueness races.
 - Two AI-usage warmups: debugging prompt structure and hallucinated configuration verification.
 
-The four DSA warmups and all nine binary-search/linked-list problems support Python, JavaScript, and TypeScript with public and hidden tests. Combined with the existing eight runnable overlays, 21 coding problems now support local function-call judging.
+The four DSA warmups, the nine binary-search/linked-list problems, and the nine dynamic-programming problems support Python, JavaScript, and TypeScript with public and hidden tests. Combined with the existing eight runnable overlays, 30 coding problems now support local function-call judging.
 
 Existing higher-level problems receive learning metadata through `prisma/seed-data/learning-overrides.ts`; their authored problem content was not overwritten.
 
@@ -123,7 +124,7 @@ npm test
 npm run build
 ```
 
-Runtime smoke tests returned HTTP 200 for the module catalog, all six new real-lesson module pages, Backend and Quant path pages, dashboard, practice, and the problem bank. The legacy nested path/module URL returned a 307 redirect to its standalone module URL.
+Runtime smoke tests covered every published path, all 79 published modules, all 183 lessons, all 118 problems, filtered bank views, dashboard, practice, and AI usage. Every content route returned HTTP 200; `/` correctly redirects to the dashboard. The local-runner suite passed on rerun after one load-related Python startup timeout at the exact three-second boundary.
 
 ## Known limitations
 
@@ -133,7 +134,7 @@ Runtime smoke tests returned HTTP 200 for the module catalog, all six new real-l
 - Module target-role filtering is derived from the published paths that include a module; standalone-only role metadata is not modeled yet.
 - The runner remains unsafe for public/untrusted execution. See `README.md` before changing it.
 - Only function-call judging exists; stdin/stdout and custom harness types remain reserved.
-- Interviews, resources, and admin sidebar destinations remain unimplemented.
+- Mock interviews, resources, and admin tooling remain future features; their dead sidebar links were removed so the visible navigation contains only working pages.
 - Prisma still emits the existing `package.json#prisma` deprecation warning.
 
 ## Curriculum coverage plan (2026-07-04)
@@ -154,8 +155,8 @@ This plan was produced by auditing every module against the current 92-problem b
 1. ~~40 authored problems with no module/path metadata~~ — **28 mapped across Batches 1–3**; remaining orphans are mostly read-code language problems (Python/Go/Java/JS/React), queues-workers candidates, and quant specs. Mapping them stays the cheapest coverage win (remaining candidates are marked `→` below).
 2. **The bank contains zero `system_design`-type problems** even though a System Design path exists. Current design-adjacent problems are debugging/optimization formats. A first batch of open-ended scenario problems (no code harness) is queued as Batch 4+.
 3. ~~10 missing DSA module scaffolds~~ — **done 2026-07-04**; all 18 roadmap families now have modules in the 16-module path.
-4. **`dynamic-programming-basics` still has no warmup/core problems** (one advanced bitmask mapping) — the worst gap inside the DSA path and the top DSA batch candidate.
-5. **54 of 79 modules still have only scaffold lessons.** Docker/K8s, most OS/networking, C++, Python, and quant modules remain lesson-free.
+4. ~~`dynamic-programming-basics` empty~~ — **done 2026-07-04**; both DP modules now carry full lesson + warmup→applied ladders with runnable tests.
+5. **52 of 79 modules still have only scaffold lessons.** Docker/K8s, most OS/networking, C++, Python, and quant modules remain lesson-free.
 6. ~~No `os_networking_concurrency`-type problems~~ — the first six landed with the concurrency batch; OS/networking modules should continue this format mix.
 
 ### DSA Confidence Builder (priority 1)
@@ -174,8 +175,8 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 | backtracking | intermediate | trees-graphs | — | 0/0/0/0 | all | — | pruning/state-space references |
 | greedy | intermediate | arrays | — | 0/0/0/0 | all | — | exchange-argument references |
 | intervals | intermediate | greedy | — | 1/0/0/0 | lessons, core, challenge, advanced | coding | sweep-line references |
-| dynamic-programming-basics | intermediate | arrays | — | 0/0/0/1 | lessons, warmup, core, challenge | coding | 1-D DP references (uni notes) |
-| dp-grids-strings | advanced | dp-basics | — | 0/0/0/0 | all | — | grid/edit-distance references |
+| dynamic-programming-basics | intermediate | arrays | State & Recurrence; 1-D Walkthrough | 2/2/0/1 | challenge | coding (all runnable) | none (covered) |
+| dp-grids-strings | advanced | dp-basics | Grid Tables; String Alignment | 2/1/1/1 | — (full ladder) | coding (all runnable) | none (covered) |
 | advanced-graphs | advanced | trees-graphs | — | 0/0/1/0 | lessons, warmup, core, advanced | coding | Dijkstra/topo-sort/MST references |
 | bit-manipulation | intermediate | arrays | — | 0/0/0/1 | lessons, warmup, core, challenge | coding | two's-complement/mask references |
 | math-geometry | intermediate | arrays | — | 0/0/0/0 | all | — | modular arithmetic/geometry basics |
@@ -302,7 +303,11 @@ Completed: 14 orphan database problems mapped via `learning-overrides.ts` (trans
 
 Completed: shared-counter-undercounts (warmup) and flaky-test-global-state (core) mapped into threading-synchronization. Both modules fully developed: four real lessons (data races and critical sections, lost-increment walkthrough, the synchronization toolbox, bounded-buffer walkthrough) and eight written problems in `prisma/seed-data/concurrency-foundations.ts` (is-it-a-data-race, shared-cache-dict-race, metrics-flush-torn-read, pick-the-primitive, condvar-if-instead-of-while, bounded-queue-two-condvars, shutdown-deadlock-workers, connection-pool-semaphore) — 4 warmups, 3 core, 1 challenge, 1 applied across os/concurrency and debugging formats, introducing the first `os_networking_concurrency`-type problems. Sources: OSTEP concurrency chapters, man7, Python threading docs.
 
-**Queued after Batch 3** (in priority order): dynamic-programming-basics + dp-grids-strings; tcp-vs-udp deepening + sockets-connection-lifecycle; first true `system_design`-type scenario problems for the framework module; http-request-lifecycle + apis-requirements; raii + move-semantics deepening; docker-fundamentals + dockerfiles-image-layers; market-data-feeds + order-books; K8s fundamentals pair; remaining Python/C++/AI modules.
+### Batch 4 — Dynamic programming: dynamic-programming-basics + dp-grids-strings — DONE 2026-07-04
+
+Completed: four real lessons (DP as a state definition, deriving a 1-D DP end to end, grid tables, string alignment with edit distance and LCS) and nine original runnable problems in `prisma/seed-data/dsa-dynamic-programming.ts` (release-train-hops, cheapest-retry-ladder, ad-slot-revenue-plan, fewest-batches-exact-total, warehouse-robot-routes, ordered-log-subsequence, cheapest-rack-cabling, config-drift-distance, shared-history-length) — 4 warmups, 3 core, 1 challenge, 1 applied, all with Python/JavaScript/TypeScript public and hidden tests including greedy-refuting and performance cases. Reference solutions verified against all 52 seeded tests. This closes the last empty priority-1 gap: every DSA module the path marks core now has at least a warmup entry point.
+
+**Queued after Batch 4** (in priority order): tcp-vs-udp deepening + sockets-connection-lifecycle; first true `system_design`-type scenario problems for the framework module; http-request-lifecycle + apis-requirements; raii + move-semantics deepening; docker-fundamentals + dockerfiles-image-layers; market-data-feeds + order-books; K8s fundamentals pair; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
 
 ## Long-term generation guidance
 
@@ -324,4 +329,4 @@ Keep easy problems genuinely easy: a warmup isolates one main idea, uses a small
 
 ## Recommended next prompt
 
-Run **Prompt 3** in `CLAUDE_CONTENT_PROMPTS.md` scoped to **Batch 1** above (DSA scaffolds + binary search & linked lists). After that, run **Prompt 2** repeatedly for Batches 2 and 3 and the queued batches, updating the coverage tables in this file after each pass.
+Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: `tcp-vs-udp` deepening plus `sockets-connection-lifecycle`. Keep the batch bounded, include genuinely easy warmups, and update the coverage tables afterward.

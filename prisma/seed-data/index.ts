@@ -2,6 +2,7 @@ import { debuggingProblems } from "./debugging";
 import { dsaProblems } from "./dsa";
 import { concurrencyFoundationProblems } from "./concurrency-foundations";
 import { databasesFoundationProblems } from "./databases-foundations";
+import { dsaDynamicProgrammingProblems } from "./dsa-dynamic-programming";
 import { dsaSearchListProblems } from "./dsa-search-lists";
 import { confidenceWarmupProblems } from "./starter-confidence";
 import { learningOverrides } from "./learning-overrides";
@@ -25,6 +26,7 @@ import { writeCodeProblems } from "./write-code";
 const authoredProblems: SeedProblem[] = [
   ...dsaProblems,
   ...dsaSearchListProblems,
+  ...dsaDynamicProgrammingProblems,
   ...databasesFoundationProblems,
   ...concurrencyFoundationProblems,
   ...readCodeProblems,
