@@ -51,8 +51,8 @@ Together they contain:
 
 - 79 standalone modules across DSA, Docker, Kubernetes, operating systems, networking, C++, Python, databases, caching, backend/system design, quant development, and AI usage;
 - 63 ordered path memberships, including modules reused across multiple paths;
-- 179 lesson records;
-- 21 real mini-lessons;
+- 183 lesson records;
+- 25 real mini-lessons;
 - 158 explicit placeholder lesson briefs.
 
 The 2026-07-04 DSA batch extended the DSA Confidence Builder to 16 ordered modules covering the full roadmap topic list (arrays/hashing through math/geometry), added four real lessons (binary-search invariants, search-on-answers, linked-list pointer discipline, slow/fast pointers), and mapped twelve previously orphaned problems into modules.
@@ -81,7 +81,7 @@ Placeholder lessons are not disguised as complete content. The UI labels them **
 
 ## Confidence-building problems
 
-The bank now contains 110 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems (4 warmups, 3 core, 1 challenge, 1 applied), and 9 written database problems for sql-indexes and transactions-isolation (4 warmups, 3 core, 1 challenge, 1 advanced), the last two batches added 2026-07-04.
+The bank now contains 118 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems, 9 written database problems, and 8 written concurrency problems — the last three batches added 2026-07-04, each with a warmup → core → challenge → applied mix.
 
 - Four runnable DSA warmups: pair sum, unique sliding window, balanced brackets, and graph reachability.
 - Two debugging warmups: boolean environment parsing and missing `await`.
@@ -151,12 +151,12 @@ This plan was produced by auditing every module against the current 92-problem b
 
 ### Global gaps (highest leverage first)
 
-1. **~40 authored problems have no module/path metadata.** Most read-code, write-code, debugging, optimization, and starter-databases/quant problems are orphans. Extending `learning-overrides.ts` costs no new content and instantly fills many W/C/Ch/A slots (candidates are marked `→` below).
+1. ~~40 authored problems with no module/path metadata~~ — **28 mapped across Batches 1–3**; remaining orphans are mostly read-code language problems (Python/Go/Java/JS/React), queues-workers candidates, and quant specs. Mapping them stays the cheapest coverage win (remaining candidates are marked `→` below).
 2. **The bank contains zero `system_design`-type problems** even though a System Design path exists. Current design-adjacent problems are debugging/optimization formats. A first batch of open-ended scenario problems (no code harness) is queued as Batch 4+.
-3. **10 of the 18 DSA roadmap families have no module scaffold**: binary search, linked lists, tries, backtracking, advanced graphs, 2-D DP, greedy, intervals, bit manipulation, math/geometry. (Trees/BSTs live inside `trees-graphs`; two pointers inside `arrays-hashmaps-two-pointers`.)
-4. **`dynamic-programming-basics` has zero linked problems** — the worst gap inside the existing DSA path.
-5. **56 of 69 modules have only scaffold lessons.** OS, networking, Docker/K8s, C++, Python, and quant modules are almost all lesson-free.
-6. No `os_networking_concurrency`-type problems exist yet; OS/networking modules will need debugging/read-code/written-analysis formats.
+3. ~~10 missing DSA module scaffolds~~ — **done 2026-07-04**; all 18 roadmap families now have modules in the 16-module path.
+4. **`dynamic-programming-basics` still has no warmup/core problems** (one advanced bitmask mapping) — the worst gap inside the DSA path and the top DSA batch candidate.
+5. **54 of 79 modules still have only scaffold lessons.** Docker/K8s, most OS/networking, C++, Python, and quant modules remain lesson-free.
+6. ~~No `os_networking_concurrency`-type problems~~ — the first six landed with the concurrency batch; OS/networking modules should continue this format mix.
 
 ### DSA Confidence Builder (priority 1)
 
@@ -205,8 +205,8 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 | virtual-memory-page-tables | intermediate | processes-vs-threads | Page Tables and Virtual Memory | 0/0/0/0 | all problems | — | OSTEP VM chapters (cited) |
 | scheduling-context-switching | intermediate | processes-vs-threads | — | 0/0/0/0 | all | — | OSTEP scheduling chapters |
 | filesystems-file-descriptors | intermediate | processes-vs-threads | — | 0/0/0/0 | all | — | OSTEP files chapters, man7 open/dup |
-| threading-synchronization | intermediate | processes-vs-threads | — | 0/0/0/1 (→ shared-counter-undercounts W, flaky-test-global-state C) | lessons, core, challenge | debugging, optimization | OSTEP ch. 26–29, man7 pthreads |
-| mutexes-semaphores-condition-variables | intermediate | threading-synchronization | — | 0/0/0/0 | all | — | OSTEP ch. 28–31 |
+| threading-synchronization | intermediate | processes-vs-threads | Data Races & Critical Sections; Lost Increment | 3/2/0/1 | challenge | os/concurrency, debugging, optimization | none (covered) |
+| mutexes-semaphores-condition-variables | intermediate | threading-synchronization | Synchronization Toolbox; Bounded Buffer | 2/1/1/1 | — (full ladder) | os/concurrency, debugging | none (covered) |
 | deadlocks-starvation | advanced | mutexes-… | — | 0/0/0/0 (→ account-transfer-deadlock-order C) | lessons, warmup, challenge, advanced | databases | OSTEP ch. 32 |
 | tcp-vs-udp | beginner | — | TCP vs UDP for Backend and Quant Dev | 0/1/0/0 | warmup, challenge, advanced | quant-design | RFC 9293/768 (cited) |
 | sockets-connection-lifecycle | intermediate | tcp-vs-udp | — | 0/0/0/0 (→ cancelled-request-connection-leak C) | lessons, warmup, challenge, advanced | debugging | man7 socket(7), tcp(7) |
@@ -298,10 +298,9 @@ Completed: 10 DSA module scaffolds added, path extended to 16 ordered modules, 1
 
 Completed: 14 orphan database problems mapped via `learning-overrides.ts` (transactions-isolation, database-deadlocks-idempotency, query-plans, n-plus-one-queries, cursor-pagination, redis-caching, caching-strategies). sql-indexes and transactions-isolation fully developed: four real lessons (B-tree mental model, reading EXPLAIN, isolation levels and anomalies, lost-update walkthrough) and nine written problems in `prisma/seed-data/databases-foundations.ts` (pick-index-for-login-lookup, wildcard-search-no-index, order-status-page-crawl, covering-index-hot-endpoint, write-amplification-index-audit, read-committed-status-check, double-click-refund, inventory-oversell-checkout, report-snapshot-consistency) — 4 warmups, 3 core, 1 challenge, 1 advanced across databases and optimization formats, sourced from PostgreSQL documentation.
 
-### Batch 3 — Concurrency entry point: threading-synchronization + mutexes-semaphores-condition-variables
+### Batch 3 — Concurrency entry point: threading-synchronization + mutexes-semaphores-condition-variables — DONE 2026-07-04
 
-1. Map shared-counter-undercounts (warmup) and flaky-test-global-state (core) → threading-synchronization; account-transfer-deadlock-order also → deadlocks-starvation.
-2. Fully develop both modules with lessons plus race/ordering warmups, debugging-format core problems (code + symptom), one challenge combining condition variables with shutdown or bounded-buffer semantics, and one applied backend/quant variant. Research: OSTEP ch. 26–31, man7 pthreads.
+Completed: shared-counter-undercounts (warmup) and flaky-test-global-state (core) mapped into threading-synchronization. Both modules fully developed: four real lessons (data races and critical sections, lost-increment walkthrough, the synchronization toolbox, bounded-buffer walkthrough) and eight written problems in `prisma/seed-data/concurrency-foundations.ts` (is-it-a-data-race, shared-cache-dict-race, metrics-flush-torn-read, pick-the-primitive, condvar-if-instead-of-while, bounded-queue-two-condvars, shutdown-deadlock-workers, connection-pool-semaphore) — 4 warmups, 3 core, 1 challenge, 1 applied across os/concurrency and debugging formats, introducing the first `os_networking_concurrency`-type problems. Sources: OSTEP concurrency chapters, man7, Python threading docs.
 
 **Queued after Batch 3** (in priority order): dynamic-programming-basics + dp-grids-strings; tcp-vs-udp deepening + sockets-connection-lifecycle; first true `system_design`-type scenario problems for the framework module; http-request-lifecycle + apis-requirements; raii + move-semantics deepening; docker-fundamentals + dockerfiles-image-layers; market-data-feeds + order-books; K8s fundamentals pair; remaining Python/C++/AI modules.
 

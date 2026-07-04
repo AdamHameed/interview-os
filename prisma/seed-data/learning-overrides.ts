@@ -106,6 +106,18 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     lessonIds: [],
     confidenceLevel: "core",
   },
+  "shared-counter-undercounts": {
+    pathIds: [path("infrastructure-swe")],
+    moduleIds: [moduleId("threading-synchronization")],
+    lessonIds: [lessonId(moduleId("threading-synchronization"), "lost-increment-walkthrough")],
+    confidenceLevel: "warmup",
+  },
+  "flaky-test-global-state": {
+    pathIds: [path("infrastructure-swe")],
+    moduleIds: [moduleId("threading-synchronization")],
+    lessonIds: [lessonId(moduleId("threading-synchronization"), "lost-increment-walkthrough")],
+    confidenceLevel: "core",
+  },
   "sql-lost-update-balance": {
     pathIds: [path("backend-swe")],
     moduleIds: [moduleId("transactions-isolation")],

@@ -1,5 +1,6 @@
 import { debuggingProblems } from "./debugging";
 import { dsaProblems } from "./dsa";
+import { concurrencyFoundationProblems } from "./concurrency-foundations";
 import { databasesFoundationProblems } from "./databases-foundations";
 import { dsaSearchListProblems } from "./dsa-search-lists";
 import { confidenceWarmupProblems } from "./starter-confidence";
@@ -25,6 +26,7 @@ const authoredProblems: SeedProblem[] = [
   ...dsaProblems,
   ...dsaSearchListProblems,
   ...databasesFoundationProblems,
+  ...concurrencyFoundationProblems,
   ...readCodeProblems,
   ...writeCodeProblems,
   ...debuggingProblems,
