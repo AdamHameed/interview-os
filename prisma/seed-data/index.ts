@@ -6,6 +6,7 @@ import { dsaDynamicProgrammingProblems } from "./dsa-dynamic-programming";
 import { dsaSearchListProblems } from "./dsa-search-lists";
 import { confidenceWarmupProblems } from "./starter-confidence";
 import { learningOverrides } from "./learning-overrides";
+import { networkingFoundationProblems } from "./networking-foundations";
 export { learningModules, learningPaths } from "./learning";
 import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
@@ -29,6 +30,7 @@ const authoredProblems: SeedProblem[] = [
   ...dsaDynamicProgrammingProblems,
   ...databasesFoundationProblems,
   ...concurrencyFoundationProblems,
+  ...networkingFoundationProblems,
   ...readCodeProblems,
   ...writeCodeProblems,
   ...debuggingProblems,

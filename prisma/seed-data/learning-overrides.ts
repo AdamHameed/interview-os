@@ -106,6 +106,12 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     lessonIds: [],
     confidenceLevel: "core",
   },
+  "cancelled-request-connection-leak": {
+    pathIds: [path("infrastructure-swe"), path("backend-swe")],
+    moduleIds: [moduleId("sockets-connection-lifecycle")],
+    lessonIds: [lessonId(moduleId("sockets-connection-lifecycle"), "where-connections-leak")],
+    confidenceLevel: "core",
+  },
   "shared-counter-undercounts": {
     pathIds: [path("infrastructure-swe")],
     moduleIds: [moduleId("threading-synchronization")],
