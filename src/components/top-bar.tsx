@@ -9,6 +9,7 @@ import { CommandMenu, type CommandIndexItem } from "@/components/command-menu";
 const SECTION_TITLES: [string, string][] = [
   ["/dashboard", "Dashboard"],
   ["/paths", "Learning Paths"],
+  ["/modules", "Modules"],
   ["/lessons", "Lessons"],
   ["/problems", "Problems"],
   ["/practice", "Practice"],

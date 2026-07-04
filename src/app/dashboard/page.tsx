@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, CircleAlert, GraduationCap, Target, Trophy } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CircleAlert, GraduationCap, Shapes, Target, Trophy } from "lucide-react";
 import { TypeBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,7 +26,7 @@ const TRACKS: { role: Role; description: string }[] = [
 ];
 
 export default async function DashboardPage() {
-  const [rawProblems, attempts, submissions, learningPaths] = await Promise.all([
+  const [rawProblems, attempts, submissions, learningPaths, quickModules] = await Promise.all([
     db.problem.findMany({ orderBy: [{ qualityScore: "desc" }, { title: "asc" }] }),
     db.attempt.findMany({ orderBy: { updatedAt: "desc" } }),
     db.submission.findMany({ select: { problemId: true, status: true } }),
@@ -36,9 +36,13 @@ export default async function DashboardPage() {
       include: {
         modules: {
           orderBy: { order: "asc" },
-          include: { lessons: { orderBy: { order: "asc" } } },
+          include: { module: { include: { lessons: { orderBy: { order: "asc" } } } } },
         },
       },
+    }),
+    db.learningModule.findMany({
+      where: { slug: { in: ["kubernetes-fundamentals", "docker-fundamentals", "threading-synchronization", "raii-resource-ownership", "sql-indexes", "system-design-interview-framework", "market-data-feeds", "token-efficient-prompting"] }, isPublished: true },
+      orderBy: { title: "asc" },
     }),
   ]);
   const problems = rawProblems.map(hydrateProblem);
@@ -64,7 +68,7 @@ export default async function DashboardPage() {
   );
   const continuePaths = (activePaths.length > 0 ? activePaths : learningPaths).slice(0, 2);
   const nextLesson = continuePaths
-    .flatMap((path) => path.modules.flatMap((module) => module.lessons))
+    .flatMap((path) => path.modules.flatMap((membership) => membership.module.lessons))
     .find((lesson) => !lesson.isPlaceholder);
 
   return (
@@ -197,6 +201,11 @@ export default async function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-end justify-between gap-3"><div><h3 className="flex items-center gap-2 text-lg font-semibold"><Shapes className="size-5" /> Interview cram by topic</h3><p className="text-sm text-muted-foreground">Jump into a standalone module without following a path.</p></div><Link href="/modules" className="text-sm text-muted-foreground hover:text-foreground">Browse modules</Link></div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{quickModules.map((learningModule) => <Link key={learningModule.id} href={`/modules/${learningModule.slug}`} className="rounded-xl border p-4 transition-colors hover:bg-muted/40"><div className="font-medium">{learningModule.title}</div><div className="mt-1 text-xs text-muted-foreground">{learningModule.category.replaceAll("_", " ")} · {learningModule.estimatedHours}h</div></Link>)}</div>
       </section>
 
       <section>

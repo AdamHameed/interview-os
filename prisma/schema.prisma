@@ -62,40 +62,64 @@ model Problem {
 }
 
 model LearningPath {
-  id             String           @id
-  slug           String           @unique
+  id             String               @id
+  slug           String               @unique
   title          String
   description    String
-  targetRoles    String           @default("[]") // JSON string[]
+  targetRoles    String               @default("[]") // JSON string[]
   difficulty     String
   estimatedHours Int
   order          Int
-  isPublished    Boolean          @default(false)
-  modules        LearningModule[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  isPublished    Boolean              @default(false)
+  modules        LearningPathModule[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
   @@index([order])
   @@index([isPublished])
 }
 
 model LearningModule {
-  id             String       @id
-  pathId         String
-  path           LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
-  slug           String
+  id             String               @id
+  slug           String               @unique
   title          String
   description    String
-  order          Int
+  // dsa | system_design | backend | infrastructure | devops | docker | kubernetes |
+  // operating_systems | networking | databases | caching | distributed_systems |
+  // concurrency | cpp | python | java | go | quant_dev | ai_usage | behavioral
+  category       String               @default("backend")
+  // beginner | intermediate | advanced
+  difficulty     String               @default("intermediate")
   estimatedHours Int
-  prerequisites  String       @default("[]") // JSON string[]
-  outcomes       String       @default("[]") // JSON string[]
+  prerequisites  String               @default("[]") // JSON module slugs
+  outcomes       String               @default("[]") // JSON string[]
+  sourceUrls     String               @default("[]") // JSON string[]
+  isPublished    Boolean              @default(false)
+  isPlaceholder  Boolean              @default(true)
+  paths          LearningPathModule[]
   lessons        Lesson[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
-  @@unique([pathId, slug])
-  @@index([pathId, order])
+  @@index([category])
+  @@index([difficulty])
+  @@index([isPublished])
+}
+
+model LearningPathModule {
+  id         String         @id
+  pathId     String
+  moduleId   String
+  path       LearningPath   @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  module     LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  order      Int
+  isRequired Boolean        @default(true)
+  // warmup | core | advanced | optional | interview_cram
+  label      String?
+
+  @@unique([pathId, moduleId])
+  @@unique([pathId, order])
+  @@index([moduleId])
 }
 
 model Lesson {

@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { allProblems, learningPaths } from "./seed-data";
+import { allProblems, learningModules, learningPaths } from "./seed-data";
 import { problemInputSchema, type ProblemInput } from "../src/lib/schemas";
-import { learningPathSeedSchema } from "../src/lib/learning";
+import { learningPathModuleId, learningPathSeedSchema, moduleSeedSchema } from "../src/lib/learning";
 
 const prisma = new PrismaClient();
 
@@ -45,6 +45,7 @@ function toProblemData(problem: ProblemInput): Prisma.ProblemCreateInput {
 
 async function main(): Promise<void> {
   const problems = allProblems.map((problem) => problemInputSchema.parse(problem));
+  const modules = learningModules.map((learningModule) => moduleSeedSchema.parse(learningModule));
   const paths = learningPaths.map((path) => learningPathSeedSchema.parse(path));
 
   await prisma.$transaction(
@@ -57,6 +58,46 @@ async function main(): Promise<void> {
       });
     })
   );
+
+  // Paths and modules are curated seed scaffolds. Rebuild their memberships so
+  // removed/renamed path entries cannot survive a later seed and violate order.
+  await prisma.learningPathModule.deleteMany();
+  await prisma.learningModule.deleteMany({
+    where: { id: { notIn: modules.map((learningModule) => learningModule.id) } },
+  });
+
+  for (const learningModule of modules) {
+    await prisma.learningModule.upsert({
+      where: { id: learningModule.id },
+      create: {
+        id: learningModule.id,
+        slug: learningModule.slug,
+        title: learningModule.title,
+        description: learningModule.description,
+        category: learningModule.category,
+        difficulty: learningModule.difficulty,
+        estimatedHours: learningModule.estimatedHours,
+        prerequisites: JSON.stringify(learningModule.prerequisites),
+        outcomes: JSON.stringify(learningModule.outcomes),
+        sourceUrls: JSON.stringify(learningModule.sourceUrls),
+        isPublished: learningModule.isPublished,
+        isPlaceholder: learningModule.isPlaceholder,
+      },
+      update: {
+        slug: learningModule.slug,
+        title: learningModule.title,
+        description: learningModule.description,
+        category: learningModule.category,
+        difficulty: learningModule.difficulty,
+        estimatedHours: learningModule.estimatedHours,
+        prerequisites: JSON.stringify(learningModule.prerequisites),
+        outcomes: JSON.stringify(learningModule.outcomes),
+        sourceUrls: JSON.stringify(learningModule.sourceUrls),
+        isPublished: learningModule.isPublished,
+        isPlaceholder: learningModule.isPlaceholder,
+      },
+    });
+  }
 
   for (const path of paths) {
     await prisma.learningPath.upsert({
@@ -84,29 +125,25 @@ async function main(): Promise<void> {
       },
     });
 
-    for (const learningModule of path.modules) {
-      await prisma.learningModule.upsert({
-        where: { id: learningModule.id },
+    for (const pathModule of path.modules) {
+      const learningModule = modules.find((candidate) => candidate.slug === pathModule.moduleSlug);
+      if (!learningModule) throw new Error(`Path ${path.slug} links missing module ${pathModule.moduleSlug}`);
+      await prisma.learningPathModule.upsert({
+        where: { id: learningPathModuleId(path.slug, learningModule.slug) },
         create: {
-          id: learningModule.id,
+          id: learningPathModuleId(path.slug, learningModule.slug),
           pathId: path.id,
-          slug: learningModule.slug,
-          title: learningModule.title,
-          description: learningModule.description,
-          order: learningModule.order,
-          estimatedHours: learningModule.estimatedHours,
-          prerequisites: JSON.stringify(learningModule.prerequisites),
-          outcomes: JSON.stringify(learningModule.outcomes),
+          moduleId: learningModule.id,
+          order: pathModule.order,
+          isRequired: pathModule.isRequired,
+          label: pathModule.label,
         },
         update: {
           pathId: path.id,
-          slug: learningModule.slug,
-          title: learningModule.title,
-          description: learningModule.description,
-          order: learningModule.order,
-          estimatedHours: learningModule.estimatedHours,
-          prerequisites: JSON.stringify(learningModule.prerequisites),
-          outcomes: JSON.stringify(learningModule.outcomes),
+          moduleId: learningModule.id,
+          order: pathModule.order,
+          isRequired: pathModule.isRequired,
+          label: pathModule.label,
         },
       });
     }
@@ -118,8 +155,7 @@ async function main(): Promise<void> {
     )
   );
 
-  for (const path of paths) {
-    for (const learningModule of path.modules) {
+  for (const learningModule of modules) {
       for (const lesson of learningModule.lessons) {
         const linkedProblemIds = lesson.linkedProblemSlugs.map((slug) => {
           const problemId = problemIds.get(slug);
@@ -147,20 +183,11 @@ async function main(): Promise<void> {
           update: data,
         });
       }
-    }
   }
 
-  const lessonCount = paths.reduce(
-    (total, path) =>
-      total +
-      path.modules.reduce(
-        (count, learningModule) => count + learningModule.lessons.length,
-        0
-      ),
-    0
-  );
+  const lessonCount = modules.reduce((total, learningModule) => total + learningModule.lessons.length, 0);
   console.log(
-    `Seeded ${problems.length} problems, ${paths.length} paths, and ${lessonCount} lessons.`
+    `Seeded ${problems.length} problems, ${paths.length} paths, ${modules.length} modules, and ${lessonCount} lessons.`
   );
 }
 

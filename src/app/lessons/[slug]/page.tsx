@@ -19,13 +19,13 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
     include: {
       module: {
         include: {
-          path: true,
+          paths: { include: { path: true }, orderBy: { order: "asc" } },
           lessons: { orderBy: { order: "asc" } },
         },
       },
     },
   });
-  if (!record || !record.module.path.isPublished) notFound();
+  if (!record || !record.module.isPublished) notFound();
 
   const lesson = hydrateLesson(record);
   const learningModule = hydrateLearningModule(record.module);
@@ -39,7 +39,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <Link href={`/paths/${record.module.path.slug}/modules/${record.module.slug}`} className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{learningModule.title}</Link>
+      <Link href={`/modules/${record.module.slug}`} className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{learningModule.title}</Link>
 
       <section className="rounded-2xl border bg-card p-6 md:p-8">
         <div className="flex flex-wrap gap-2"><Badge variant="secondary">{lesson.lessonType.replaceAll("_", " ")}</Badge><Badge variant="outline">{lesson.difficulty}</Badge>{lesson.isPlaceholder && <Badge variant="outline">Content scaffold</Badge>}</div>
@@ -63,7 +63,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
 
       {lesson.sourceUrls.length > 0 && <Card size="sm"><CardHeader><CardTitle>Public sources</CardTitle></CardHeader><CardContent className="space-y-2">{lesson.sourceUrls.map((url) => <a key={url} href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 break-all text-xs text-muted-foreground hover:text-foreground"><ExternalLink className="size-3" />{url}</a>)}</CardContent></Card>}
 
-      <nav className="grid gap-3 border-t pt-5 sm:grid-cols-2">{previous ? <Link href={`/lessons/${previous.slug}`} className="rounded-xl border p-4 hover:bg-muted/40"><div className="text-xs text-muted-foreground">Previous lesson</div><div className="mt-1 font-medium">← {previous.title}</div></Link> : <div />}{next ? <Link href={`/lessons/${next.slug}`} className="rounded-xl border p-4 text-right hover:bg-muted/40"><div className="text-xs text-muted-foreground">Next lesson</div><div className="mt-1 font-medium">{next.title} →</div></Link> : <Link href={`/paths/${record.module.path.slug}`} className="rounded-xl border p-4 text-right hover:bg-muted/40"><div className="text-xs text-muted-foreground">Module complete</div><div className="mt-1 font-medium">Return to path →</div></Link>}</nav>
+      <nav className="grid gap-3 border-t pt-5 sm:grid-cols-2">{previous ? <Link href={`/lessons/${previous.slug}`} className="rounded-xl border p-4 hover:bg-muted/40"><div className="text-xs text-muted-foreground">Previous lesson</div><div className="mt-1 font-medium">← {previous.title}</div></Link> : <div />}{next ? <Link href={`/lessons/${next.slug}`} className="rounded-xl border p-4 text-right hover:bg-muted/40"><div className="text-xs text-muted-foreground">Next lesson</div><div className="mt-1 font-medium">{next.title} →</div></Link> : <Link href={`/modules/${record.module.slug}`} className="rounded-xl border p-4 text-right hover:bg-muted/40"><div className="text-xs text-muted-foreground">Module complete</div><div className="mt-1 font-medium">Return to module →</div></Link>}</nav>
     </div>
   );
 }

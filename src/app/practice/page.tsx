@@ -20,9 +20,10 @@ const ROUNDS: { title: string; type: ProblemType; description: string; focus: st
 ];
 
 export default async function PracticePage() {
-  const [rawProblems, learningPaths] = await Promise.all([
+  const [rawProblems, learningPaths, learningModules] = await Promise.all([
     db.problem.findMany(),
     db.learningPath.findMany({ where: { isPublished: true }, orderBy: { order: "asc" } }),
+    db.learningModule.findMany({ where: { isPublished: true }, orderBy: { title: "asc" } }),
   ]);
   const problems = rawProblems.map(hydrateProblem);
   const countByType = new Map<string, number>();
@@ -76,6 +77,11 @@ export default async function PracticePage() {
             return <Link key={path.id} href={`/problems?path=${encodeURIComponent(path.id)}`} className="rounded-xl border p-4 transition-colors hover:bg-muted/40"><div className="flex items-center justify-between gap-3"><span className="font-medium">{path.title}</span><Badge variant="outline">{count}</Badge></div><p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{path.description}</p></Link>;
           })}
         </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="flex items-end justify-between gap-3"><div><h3 className="text-lg font-semibold">Practice by module</h3><p className="mt-1 text-sm text-muted-foreground">Choose a topic, then move through its warmup, core, challenge, and advanced problems.</p></div><Link href="/modules" className="text-sm text-muted-foreground hover:text-foreground">Browse all modules</Link></div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{learningModules.map((learningModule) => ({ learningModule, count: problems.filter((problem) => problem.moduleIds.includes(learningModule.id)).length })).filter(({ count }) => count > 0).slice(0, 9).map(({ learningModule, count }) => <Link key={learningModule.id} href={`/modules/${learningModule.slug}`} className="rounded-xl border p-4 transition-colors hover:bg-muted/40"><div className="flex items-center justify-between gap-3"><span className="font-medium">{learningModule.title}</span><Badge variant="outline">{count}</Badge></div><p className="mt-1 text-xs text-muted-foreground">{learningModule.category.replaceAll("_", " ")} · {learningModule.difficulty}</p></Link>)}</div>
       </section>
 
       <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

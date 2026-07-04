@@ -9,9 +9,9 @@ const DSA_ARRAYS = learningModuleId("dsa-confidence-builder", "arrays-hashmaps-t
 const DSA_WINDOW = learningModuleId("dsa-confidence-builder", "sliding-window-prefix-sums");
 const DSA_STACKS = learningModuleId("dsa-confidence-builder", "stacks-queues-heaps");
 const DSA_GRAPHS = learningModuleId("dsa-confidence-builder", "trees-graphs");
-const BACKEND_HTTP = learningModuleId("backend-swe", "http-apis-request-flow");
-const BACKEND_DB = learningModuleId("backend-swe", "databases-indexes");
-const BACKEND_DEBUG = learningModuleId("backend-swe", "observability-debugging");
+const BACKEND_HTTP = learningModuleId("http-request-lifecycle");
+const BACKEND_DB = learningModuleId("composite-indexes");
+const BACKEND_DEBUG = learningModuleId("observability");
 const AI_PROMPTING = learningModuleId("ai-efficient-engineer", "token-efficient-prompting");
 const AI_REVIEW = learningModuleId("ai-efficient-engineer", "reviewing-ai-code");
 

@@ -30,14 +30,14 @@ function param(params: SearchParams, key: string): string {
 
 export default async function ProblemsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const [rawProblems, attempts, learningPaths] = await Promise.all([
+  const [rawProblems, attempts, learningPaths, learningModules] = await Promise.all([
     db.problem.findMany({ orderBy: [{ qualityScore: "desc" }, { title: "asc" }] }),
     db.attempt.findMany(),
     db.learningPath.findMany({
       where: { isPublished: true },
       orderBy: { order: "asc" },
-      include: { modules: { orderBy: { order: "asc" } } },
     }),
+    db.learningModule.findMany({ where: { isPublished: true }, orderBy: { title: "asc" } }),
   ]);
   const problems = rawProblems.map(hydrateProblem);
   const latest = latestAttemptByProblem(attempts);
@@ -56,9 +56,6 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
   const visible = filterProblems(problems, filters, latest);
   const topics = collectTopics(problems);
   const pathById = new Map(learningPaths.map((path) => [path.id, path]));
-  const modules = learningPaths.flatMap((path) =>
-    path.modules.map((learningModule) => ({ ...learningModule, pathTitle: path.title }))
-  );
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -119,7 +116,7 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
             </select>
             <select name="module" defaultValue={filters.moduleId} className="h-9 rounded-lg border bg-background px-3 text-sm">
               <option value="">All modules</option>
-              {modules.map((learningModule) => <option key={learningModule.id} value={learningModule.id}>{learningModule.pathTitle} · {learningModule.title}</option>)}
+              {learningModules.map((learningModule) => <option key={learningModule.id} value={learningModule.id}>{learningModule.title}</option>)}
             </select>
             <select name="confidence" defaultValue={filters.confidenceLevel} className="h-9 rounded-lg border bg-background px-3 text-sm">
               <option value="">All confidence levels</option>

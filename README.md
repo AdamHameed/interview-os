@@ -22,39 +22,48 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Learning paths and lessons
+## Modular curriculum
 
-Interview OS organizes study into `LearningPath → LearningModule → Lesson → Problem` progressions. Visit `/paths` to choose a role-oriented sequence, then move through ready mini-lessons and explicitly marked lesson scaffolds. Problems may belong to multiple paths and carry a confidence level: `warmup`, `core`, `challenge`, or `advanced`.
+Interview OS supports two complementary study modes:
 
-The initial scaffold contains six paths, 36 modules, eight real mini-lessons, and two placeholder lesson briefs per module. Placeholder content is intentionally visible as a scaffold; it should be expanded and reviewed before being marked complete.
+- `/paths` provides optional, role-oriented guidance such as Backend SWE, Infrastructure SWE, Quant Dev, System Design, and DSA Confidence Builder.
+- `/modules` is a standalone knowledge base for direct interview cramming. A user can jump into Kubernetes, Docker, OS threading, page tables, TCP, C++, Redis, SQL indexes, order books, or AI workflows without following a path.
 
-### Add a path
+Paths do not own modules. `LearningPathModule` is an ordered join with `isRequired` and a `warmup | core | advanced | optional | interview_cram` label, so the same module can appear in several paths. Lessons belong to standalone modules. Problems may link to multiple module IDs and carry a `warmup | core | challenge | advanced` confidence level.
 
-1. Add a path specification to `PATH_SPECS` in `prisma/seed-data/learning.ts`.
-2. Use a unique kebab-case slug, supported target roles from `src/lib/enums.ts`, ordered module specifications, and a realistic estimated-hour total.
-3. `learningPathId(slug)` creates the stable database ID used by problem metadata.
+The current scaffold contains six paths, 69 standalone modules, 53 path memberships, 151 lessons, and 13 reviewed mini-lessons. The remaining 138 lesson briefs are visibly marked scaffolds for later content work.
 
-### Add a module
+### Add a standalone module
 
-1. Add its slug and title to the parent path's `modules` array in `prisma/seed-data/learning.ts`.
-2. The scaffold generator supplies stable IDs, order, prerequisite chaining, outcomes, and two placeholder lessons.
-3. Use `learningModuleId(pathSlug, moduleSlug)` when linking problems.
+1. Add a `ModuleSpec` to `MODULE_SPECS` in `prisma/seed-data/learning.ts` with a unique slug, title, category, difficulty, prerequisites by module slug, and estimated hours.
+2. The generator creates a stable `learningModuleId(moduleSlug)`, outcomes, and two placeholder lesson briefs.
+3. Add the module slug to one or more entries in `PATHS` only when it belongs in a guided sequence. Standalone-only modules are valid.
+
+### Add or change a path
+
+1. Add or edit a path in `PATHS` in `prisma/seed-data/learning.ts`.
+2. List existing global module slugs in curated order. Do not duplicate module definitions inside paths.
+3. `learningPathId(slug)` and `learningPathModuleId(pathSlug, moduleSlug)` provide stable IDs.
 
 ### Add or complete a lesson
 
-1. Add a real lesson to `REAL_LESSONS` under the key `path-slug/module-slug`.
-2. Include concise Markdown, takeaways, examples, public sources, and linked problem slugs.
-3. Set `isPlaceholder: false` only after the instructional is genuinely useful and reviewed.
-4. Leave generated placeholder records intact until their replacements exist; the seed validator accepts two or three briefs for an incomplete module and zero for a completed module.
+1. Add a lesson to `REAL_LESSONS[moduleSlug]` in `prisma/seed-data/learning.ts`.
+2. Include reviewed Markdown, takeaways, examples, public sources, and linked problem slugs.
+3. Set `isPlaceholder: false` only after the instructional is genuinely useful.
+4. Keep scaffold lessons until their replacements are reviewed; the UI clearly distinguishes ready content from placeholders.
 
 ### Link lessons and problems
 
-- New problems can declare `pathIds`, `moduleIds`, `lessonIds`, and `confidenceLevel` directly.
+- New problems can declare `pathIds`, global `moduleIds`, `lessonIds`, and `confidenceLevel` directly.
 - Existing problems receive non-destructive metadata in `prisma/seed-data/learning-overrides.ts`.
-- Lesson records use `linkedProblemSlugs`; `prisma/seed.ts` resolves those slugs to real problem IDs after problem upserts.
-- Run `npm run validate:seed` to catch unknown IDs, missing linked problems, duplicate lesson/module ordering, or removal of the foundational real-lesson set.
+- Lessons use `linkedProblemSlugs`; `prisma/seed.ts` resolves them after problem upserts.
+- Run `npm run validate:seed` to catch unknown prerequisites, memberships, path/module/lesson IDs, duplicate ordering, and missing linked problems.
 
-The next content-generation pass should deepen one module at a time: replace its two placeholder briefs with reviewed instructionals, add or link one warmup/core/challenge sequence, validate sources, and stop before moving to another module. Do not bulk-generate every lesson in one pass.
+Future content passes should remain bounded, but the overall curriculum must be broad. Treat DSA as a first-class path with original interview problems covering the major pattern families found in a rigorous "150"-style roadmap: arrays and hashing, two pointers, sliding windows, stacks, binary search, linked lists, trees and tries, heaps, backtracking, graphs, dynamic programming, greedy algorithms, intervals, bit manipulation, and math/geometry. Do not copy LeetCode, NeetCode, or paid-platform statements.
+
+Use the format that matches the interview skill. Coding problems should include starter code and runnable tests where the local harness supports them. Optimization exercises should often provide correct but inefficient code, SQL, or a design that the learner must improve while preserving behavior. Debugging and read-code exercises should provide concrete artifacts such as code, logs, traces, or failing tests. System-design exercises should remain open-ended scenarios with scale, constraints, rubrics, and follow-ups rather than being forced into a code runner.
+
+Each content pass should add a deliberate mix of warmup, core, challenge, and advanced work, with genuinely accessible entry points. Work in small reviewed batches, update the coverage notes in `PROGRESS.md`, validate sources and links, and avoid bulk-generating every lesson in one pass.
 
 ## Coding submissions
 

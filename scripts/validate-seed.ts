@@ -1,10 +1,10 @@
-import { allProblems, learningPaths } from "../prisma/seed-data";
+import { allProblems, learningModules, learningPaths } from "../prisma/seed-data";
 import {
   findPlaceholder,
   problemInputSchema,
   type ProblemInput,
 } from "../src/lib/schemas";
-import { learningPathSeedSchema } from "../src/lib/learning";
+import { learningPathSeedSchema, moduleSeedSchema } from "../src/lib/learning";
 
 type ValidationError = {
   slug: string;
@@ -110,44 +110,38 @@ for (const candidate of allProblems) {
 const problemSlugs = new Set(allProblems.map((problem) => problem.slug));
 const pathIds = new Set<string>();
 const moduleIds = new Set<string>();
+const moduleSlugs = new Set<string>();
 const lessonIds = new Set<string>();
 const lessonSlugs = new Set<string>();
 let realLessonCount = 0;
 
-for (const candidate of learningPaths) {
-  const parsed = learningPathSeedSchema.safeParse(candidate);
+for (const candidate of learningModules) {
+  const parsed = moduleSeedSchema.safeParse(candidate);
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
-      report(candidate.slug, `learning path ${issue.path.join(".")}: ${issue.message}`);
+      report(candidate.slug, `module ${issue.path.join(".")}: ${issue.message}`);
     }
     continue;
   }
-  const path = parsed.data;
-  if (pathIds.has(path.id)) report(path.slug, `duplicate path id ${path.id}`);
-  pathIds.add(path.id);
+  const learningModule = parsed.data;
+  if (moduleIds.has(learningModule.id)) report(learningModule.slug, `duplicate module id ${learningModule.id}`);
+  if (moduleSlugs.has(learningModule.slug)) report(learningModule.slug, "duplicate module slug");
+  moduleIds.add(learningModule.id);
+  moduleSlugs.add(learningModule.slug);
 
-  const moduleOrders = new Set<number>();
-  for (const learningModule of path.modules) {
-    if (moduleIds.has(learningModule.id)) {
-      report(path.slug, `duplicate module id ${learningModule.id}`);
+  for (const prerequisite of learningModule.prerequisites) {
+    if (!learningModules.some((item) => item.slug === prerequisite)) {
+      report(learningModule.slug, `unknown prerequisite module ${prerequisite}`);
     }
-    if (moduleOrders.has(learningModule.order)) {
-      report(path.slug, `duplicate module order ${learningModule.order}`);
-    }
-    moduleIds.add(learningModule.id);
-    moduleOrders.add(learningModule.order);
-
-    const placeholderCount = learningModule.lessons.filter(
+  }
+  const placeholderCount = learningModule.lessons.filter(
       (lesson) => lesson.isPlaceholder
     ).length;
-    if (placeholderCount !== 0 && (placeholderCount < 2 || placeholderCount > 3)) {
-      report(
-        learningModule.slug,
-        "an incomplete module requires 2–3 placeholder lessons; a completed module requires none"
-      );
-    }
-    const lessonOrders = new Set<number>();
-    for (const lesson of learningModule.lessons) {
+  if (placeholderCount !== 0 && (placeholderCount < 2 || placeholderCount > 3)) {
+    report(learningModule.slug, "an incomplete module requires 2–3 placeholder lessons; a completed module requires none");
+  }
+  const lessonOrders = new Set<number>();
+  for (const lesson of learningModule.lessons) {
       if (lessonIds.has(lesson.id)) {
         report(learningModule.slug, `duplicate lesson id ${lesson.id}`);
       }
@@ -166,7 +160,26 @@ for (const candidate of learningPaths) {
           report(lesson.slug, `links missing problem ${problemSlug}`);
         }
       }
-    }
+  }
+}
+
+for (const candidate of learningPaths) {
+  const parsed = learningPathSeedSchema.safeParse(candidate);
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) report(candidate.slug, `learning path ${issue.path.join(".")}: ${issue.message}`);
+    continue;
+  }
+  const path = parsed.data;
+  if (pathIds.has(path.id)) report(path.slug, `duplicate path id ${path.id}`);
+  pathIds.add(path.id);
+  const orders = new Set<number>();
+  const memberships = new Set<string>();
+  for (const membership of path.modules) {
+    if (!moduleSlugs.has(membership.moduleSlug)) report(path.slug, `links missing module ${membership.moduleSlug}`);
+    if (orders.has(membership.order)) report(path.slug, `duplicate module order ${membership.order}`);
+    if (memberships.has(membership.moduleSlug)) report(path.slug, `duplicate module membership ${membership.moduleSlug}`);
+    orders.add(membership.order);
+    memberships.add(membership.moduleSlug);
   }
 }
 
@@ -204,6 +217,6 @@ if (errors.length > 0) {
     .join(", ");
 
   console.log(
-    `Validated ${allProblems.length} seed problems (${byType}) and ${learningPaths.length} learning paths.`
+    `Validated ${allProblems.length} seed problems (${byType}), ${learningModules.length} modules, and ${learningPaths.length} learning paths.`
   );
 }

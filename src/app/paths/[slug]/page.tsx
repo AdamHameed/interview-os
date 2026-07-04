@@ -21,7 +21,7 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
       include: {
         modules: {
           orderBy: { order: "asc" },
-          include: { lessons: { orderBy: { order: "asc" } } },
+          include: { module: { include: { lessons: { orderBy: { order: "asc" } } } } },
         },
       },
     }),
@@ -41,7 +41,8 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
   ]);
   const hasActivity = pathProblems.some((problem) => activityProblemIds.has(problem.id));
   const percent = progressPercent(pathProblems.map((problem) => problem.id), completed);
-  const currentModule = rawPath.modules.find((learningModule) => {
+  const currentMembership = rawPath.modules.find((membership) => {
+    const learningModule = membership.module;
     const moduleProblems = pathProblems.filter((problem) =>
       problem.moduleIds.includes(learningModule.id)
     );
@@ -50,7 +51,7 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
       moduleProblems.some((problem) => !completed.has(problem.id))
     );
   }) ?? rawPath.modules.at(-1);
-  const firstLesson = currentModule?.lessons[0];
+  const firstLesson = currentMembership?.module.lessons[0];
   const confidenceCounts = (["warmup", "core", "challenge", "advanced"] as ConfidenceLevel[])
     .map((level) => ({ level, count: pathProblems.filter((problem) => problem.confidenceLevel === level).length }));
 
@@ -90,16 +91,16 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
       <section>
         <h3 className="text-lg font-semibold">Modules</h3>
         <div className="mt-3 space-y-3">
-          {rawPath.modules.map((rawModule, index) => {
-            const learningModule = hydrateLearningModule(rawModule);
-            const lessons = rawModule.lessons.map(hydrateLesson);
+          {rawPath.modules.map((membership, index) => {
+            const learningModule = hydrateLearningModule(membership.module);
+            const lessons = membership.module.lessons.map(hydrateLesson);
             const realCount = lessons.filter((lesson) => !lesson.isPlaceholder).length;
             return (
-              <Link key={learningModule.id} href={`/paths/${path.slug}/modules/${learningModule.slug}`} className="group block">
+              <Link key={learningModule.id} href={`/modules/${learningModule.slug}`} className="group block">
                 <Card className="transition-colors group-hover:bg-muted/30">
                   <CardContent className="flex gap-4 py-1">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full border font-mono text-xs">{index + 1}</div>
-                    <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><CardTitle>{learningModule.title}</CardTitle>{currentModule?.id === learningModule.id && <Badge variant="outline"><MapPin /> You are here</Badge>}</div><p className="mt-1 text-sm text-muted-foreground">{learningModule.description}</p><div className="mt-2 text-xs text-muted-foreground">{lessons.length} lessons · {realCount} ready · {learningModule.estimatedHours}h</div></div>
+                    <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><CardTitle>{learningModule.title}</CardTitle>{currentMembership?.moduleId === learningModule.id && <Badge variant="outline"><MapPin /> You are here</Badge>}<Badge variant="outline">{membership.label ?? (membership.isRequired ? "required" : "optional")}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{learningModule.description}</p><div className="mt-2 text-xs text-muted-foreground">{lessons.length} lessons · {realCount} ready · {learningModule.estimatedHours}h</div></div>
                     <ArrowRight className="mt-2 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
                   </CardContent>
                 </Card>
@@ -112,7 +113,7 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
       <section>
         <div className="flex items-center gap-2"><CalendarDays className="size-4" /><h3 className="text-lg font-semibold">Recommended weekly plan</h3></div>
         <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {rawPath.modules.map((rawModule, index) => <div key={rawModule.id} className="rounded-xl border p-4"><div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Week {index + 1}</div><div className="mt-1 font-medium">{rawModule.title}</div><p className="mt-1 text-xs text-muted-foreground">Read lessons, complete one warmup and one core problem, then self-review.</p></div>)}
+          {rawPath.modules.map((membership, index) => <div key={membership.id} className="rounded-xl border p-4"><div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Week {index + 1}</div><div className="mt-1 font-medium">{membership.module.title}</div><p className="mt-1 text-xs text-muted-foreground">Read lessons, complete one warmup and one core problem, then self-review.</p></div>)}
         </div>
       </section>
     </div>

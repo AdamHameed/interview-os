@@ -4,8 +4,185 @@ import {
   lessonId,
   type LearningPathSeed,
   type LessonSeed,
+  type ModuleSeed,
+  type MODULE_CATEGORIES,
+  type MODULE_DIFFICULTIES,
 } from "../../src/lib/learning";
 import type { Role } from "../../src/lib/enums";
+
+type Category = (typeof MODULE_CATEGORIES)[number];
+type ModuleDifficulty = (typeof MODULE_DIFFICULTIES)[number];
+type ModuleSpec = {
+  slug: string;
+  title: string;
+  category: Category;
+  difficulty?: ModuleDifficulty;
+  hours?: number;
+  prerequisites?: string[];
+};
+
+// This seed-only factory intentionally uses the curriculum noun "module".
+// eslint-disable-next-line @next/next/no-assign-module-variable
+const module = (
+  slug: string,
+  title: string,
+  category: Category,
+  difficulty: ModuleDifficulty = "intermediate",
+  prerequisites: string[] = []
+): ModuleSpec => ({ slug, title, category, difficulty, prerequisites, hours: difficulty === "advanced" ? 5 : 3 });
+
+const MODULE_SPECS: ModuleSpec[] = [
+  // DSA confidence roadmap
+  module("arrays-hashmaps-two-pointers", "Arrays, Hashmaps, and Two-Pointers", "dsa", "beginner"),
+  module("sliding-window-prefix-sums", "Sliding Window and Prefix Sums", "dsa", "beginner", ["arrays-hashmaps-two-pointers"]),
+  module("stacks-queues-heaps", "Stacks, Queues, and Heaps", "dsa", "intermediate", ["arrays-hashmaps-two-pointers"]),
+  module("trees-graphs", "Trees and Graphs", "dsa", "intermediate", ["stacks-queues-heaps"]),
+  module("dynamic-programming-basics", "Dynamic Programming Basics", "dsa", "intermediate", ["arrays-hashmaps-two-pointers"]),
+  module("dsa-to-real-systems", "From DSA to Real Systems", "dsa", "advanced", ["trees-graphs", "dynamic-programming-basics"]),
+
+  // DevOps / infrastructure
+  module("docker-fundamentals", "Docker Fundamentals", "docker", "beginner"),
+  module("dockerfiles-image-layers", "Dockerfiles and Image Layers", "docker", "intermediate", ["docker-fundamentals"]),
+  module("docker-compose", "Docker Compose", "docker", "beginner", ["docker-fundamentals"]),
+  module("kubernetes-fundamentals", "Kubernetes Fundamentals", "kubernetes", "beginner", ["docker-fundamentals"]),
+  module("pods-deployments-services", "Pods, Deployments, and Services", "kubernetes", "beginner", ["kubernetes-fundamentals"]),
+  module("kubernetes-configmaps-secrets", "Kubernetes ConfigMaps and Secrets", "kubernetes", "intermediate", ["pods-deployments-services"]),
+  module("kubernetes-networking-ingress", "Kubernetes Networking and Ingress", "kubernetes", "advanced", ["pods-deployments-services", "tcp-vs-udp"]),
+  module("kubernetes-scheduling-resource-limits", "Kubernetes Scheduling and Resource Limits", "kubernetes", "advanced", ["pods-deployments-services", "scheduling-context-switching"]),
+
+  // Operating systems
+  module("processes-vs-threads", "Processes vs Threads", "operating_systems", "beginner"),
+  module("threading-synchronization", "Threading and Synchronization", "concurrency", "intermediate", ["processes-vs-threads"]),
+  module("mutexes-semaphores-condition-variables", "Mutexes, Semaphores, and Condition Variables", "concurrency", "intermediate", ["threading-synchronization"]),
+  module("deadlocks-starvation", "Deadlocks and Starvation", "concurrency", "advanced", ["mutexes-semaphores-condition-variables"]),
+  module("virtual-memory-page-tables", "Virtual Memory and Page Tables", "operating_systems", "intermediate", ["processes-vs-threads"]),
+  module("scheduling-context-switching", "Scheduling and Context Switching", "operating_systems", "intermediate", ["processes-vs-threads"]),
+  module("filesystems-file-descriptors", "Filesystems and File Descriptors", "operating_systems", "intermediate", ["processes-vs-threads"]),
+
+  // Networking
+  module("tcp-vs-udp", "TCP vs UDP", "networking", "beginner"),
+  module("sockets-connection-lifecycle", "Sockets and Connection Lifecycle", "networking", "intermediate", ["tcp-vs-udp"]),
+  module("http-request-lifecycle", "HTTP Request Lifecycle", "backend", "beginner", ["tcp-vs-udp"]),
+  module("load-balancing", "Load Balancing", "infrastructure", "intermediate", ["http-request-lifecycle"]),
+  module("dns-fundamentals", "DNS Fundamentals", "networking", "beginner"),
+  module("tls-basics", "TLS Basics", "networking", "intermediate", ["tcp-vs-udp"]),
+  module("websockets-streaming", "WebSockets and Streaming", "networking", "intermediate", ["http-request-lifecycle"]),
+
+  // C++
+  module("raii-resource-ownership", "C++ RAII and Resource Ownership", "cpp", "beginner"),
+  module("move-semantics", "C++ Move Semantics", "cpp", "intermediate", ["raii-resource-ownership"]),
+  module("references-pointers-lifetimes", "C++ References, Pointers, and Lifetimes", "cpp", "intermediate", ["raii-resource-ownership"]),
+  module("stl-containers-iterators", "C++ STL Containers and Iterators", "cpp", "intermediate"),
+  module("unordered-map-hashing-collisions", "C++ unordered_map Hashing and Collisions", "cpp", "intermediate", ["stl-containers-iterators"]),
+  module("cpp-templates-basics", "C++ Templates Basics", "cpp", "intermediate"),
+  module("concurrency-in-cpp", "Concurrency in C++", "cpp", "advanced", ["threading-synchronization", "raii-resource-ownership"]),
+
+  // Python
+  module("python-mutability-identity", "Python Mutability and Identity", "python", "beginner"),
+  module("python-generators-iterators", "Python Generators and Iterators", "python", "intermediate"),
+  module("python-decorators-closures", "Python Decorators and Closures", "python", "intermediate"),
+  module("python-gil-concurrency", "Python GIL and Concurrency", "python", "advanced", ["threading-synchronization"]),
+  module("python-hashing-equality", "Python Hashing and Equality", "python", "intermediate"),
+  module("python-memory-object-model", "Python Memory and Object Model", "python", "advanced", ["python-mutability-identity"]),
+
+  // Databases and caching
+  module("sql-indexes", "SQL Indexes", "databases", "beginner"),
+  module("composite-indexes", "Composite Indexes", "databases", "intermediate", ["sql-indexes"]),
+  module("transactions-isolation", "Transactions and Isolation", "databases", "intermediate"),
+  module("query-plans", "Query Plans", "databases", "intermediate", ["sql-indexes"]),
+  module("n-plus-one-queries", "N+1 Queries", "databases", "beginner"),
+  module("cursor-pagination", "Cursor Pagination", "databases", "intermediate", ["sql-indexes"]),
+  module("database-deadlocks-idempotency", "Database Deadlocks and Idempotency", "databases", "advanced", ["transactions-isolation"]),
+  module("redis-caching", "Redis and Caching", "caching", "beginner"),
+
+  // System design and backend
+  module("system-design-interview-framework", "System Design Interview Framework", "system_design", "beginner"),
+  module("apis-requirements", "APIs and Requirements", "system_design", "beginner", ["http-request-lifecycle"]),
+  module("rate-limiting", "Rate Limiting", "system_design", "intermediate", ["apis-requirements"]),
+  module("caching-strategies", "Caching Strategies", "caching", "intermediate", ["redis-caching"]),
+  module("queues-workers", "Queues and Workers", "distributed_systems", "intermediate"),
+  module("replication-sharding", "Replication and Sharding", "distributed_systems", "advanced", ["transactions-isolation"]),
+  module("observability", "Observability", "infrastructure", "intermediate"),
+  module("reliability-backpressure", "Reliability and Backpressure", "distributed_systems", "advanced", ["queues-workers", "observability"]),
+
+  // Quant dev
+  module("market-data-feeds", "Market Data Feeds", "quant_dev", "intermediate", ["tcp-vs-udp"]),
+  module("order-books", "Order Books", "quant_dev", "intermediate", ["market-data-feeds"]),
+  module("latency-cache-locality", "Latency and Cache Locality", "quant_dev", "advanced", ["raii-resource-ownership"]),
+  module("linux-for-quant-dev", "Linux for Quant Dev", "quant_dev", "intermediate", ["processes-vs-threads"]),
+  module("networking-for-quant-dev", "Networking for Quant Dev", "quant_dev", "advanced", ["tcp-vs-udp", "sockets-connection-lifecycle"]),
+  module("concurrency-for-quant-dev", "Concurrency for Quant Dev", "quant_dev", "advanced", ["threading-synchronization"]),
+
+  // AI usage
+  module("good-ai-usage-principles", "Good AI Usage Principles", "ai_usage", "beginner"),
+  module("token-efficient-prompting", "Token-Efficient Prompting", "ai_usage", "beginner", ["good-ai-usage-principles"]),
+  module("selecting-repo-context", "Selecting Repo Context", "ai_usage", "beginner", ["good-ai-usage-principles"]),
+  module("reviewing-ai-code", "Reviewing AI Code", "ai_usage", "intermediate", ["selecting-repo-context"]),
+  module("hallucination-detection", "Hallucination Detection", "ai_usage", "intermediate", ["reviewing-ai-code"]),
+  module("testing-verification", "Test-First AI Workflows", "ai_usage", "intermediate", ["reviewing-ai-code"]),
+];
+
+type RealLesson = Omit<LessonSeed, "id" | "order">;
+const real = (input: RealLesson): RealLesson => input;
+
+const REAL_LESSONS: Record<string, RealLesson[]> = {
+  "arrays-hashmaps-two-pointers": [real({ slug: "two-sum-hashmap-pattern", title: "Two Sum as a Hashmap Pattern", lessonType: "pattern", difficulty: "easy", estimatedMinutes: 15, contentMarkdown: "## Core pattern\n\nFor a pair satisfying `a + b = target`, each value reveals the complement to seek. Scan once, check a hashmap before inserting, and keep the invariant that the map contains only earlier values.\n\n## Interview value\n\nThis tests time-space tradeoffs, duplicate handling, and whether you can explain why one pass is correct.\n\n## Common mistakes\n\nInserting before checking can self-match; returning values instead of indices violates many contracts.\n\n## Next step\n\nCompare the hashmap solution with two pointers on sorted input.", keyTakeaways: ["Use complements to replace pair enumeration with lookup.", "State the one-pass invariant before coding."], examples: ["For `[2, 7, 11]` and target 9, value 7 finds the earlier complement 2."], linkedProblemSlugs: ["pair-sum-request-ids", "quadratic-settlement-matcher"], sourceUrls: ["https://docs.python.org/3/tutorial/datastructures.html#dictionaries"], isPlaceholder: false })],
+  "sliding-window-prefix-sums": [real({ slug: "sliding-window-when-it-applies", title: "Sliding Window: When It Applies", lessonType: "pattern", difficulty: "easy", estimatedMinutes: 18, contentMarkdown: "## Recognition\n\nSliding windows fit contiguous ranges whose validity can be maintained as boundaries move. Expand right, update compact state, then shrink left until the invariant is restored.\n\n## Interview value\n\nThe pattern tests invariant design rather than memorization.\n\n## Common mistakes\n\nDo not use it for non-contiguous choices, and remember to remove state when the left edge advances.", keyTakeaways: ["Contiguity and a maintainable invariant are the main signals.", "Monotonic boundaries give the usual linear-time proof."], examples: ["A distinct-client window tracks counts while both pointers move only forward."], linkedProblemSlugs: ["longest-unique-session-streak", "clean-request-window", "sliding-window-rate-check"], sourceUrls: ["https://www.techinterviewhandbook.org/algorithms/array/"], isPlaceholder: false })],
+  "dockerfiles-image-layers": [real({ slug: "docker-image-layers-why-they-matter", title: "Docker Image Layers and Why They Matter", lessonType: "concept", difficulty: "easy", estimatedMinutes: 18, contentMarkdown: "## Mental model\n\nEach Dockerfile instruction contributes an immutable layer. Reusable earlier layers improve build caching, while frequently changing inputs should usually be copied later. Multi-stage builds keep compilers and intermediate artifacts out of the runtime image.\n\n## Interview value\n\nInterviewers use layer questions to test reproducibility, cache reasoning, image size, and supply-chain awareness.\n\n## Common mistakes\n\nCopying the whole repository before dependency installation invalidates caches; deleting files in a later layer does not erase bytes from earlier layers.", keyTakeaways: ["Order Dockerfile instructions by stability to preserve cache reuse.", "Use multi-stage builds to separate build and runtime contents."], examples: ["Copy lockfiles, install dependencies, then copy changing application source."], linkedProblemSlugs: [], sourceUrls: ["https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/"], isPlaceholder: false })],
+  "pods-deployments-services": [real({ slug: "kubernetes-pods-deployments-services", title: "Kubernetes Pods vs Deployments vs Services", lessonType: "concept", difficulty: "easy", estimatedMinutes: 20, contentMarkdown: "## Three responsibilities\n\nA Pod is a scheduling unit for tightly coupled containers. A Deployment declares and rolls out a desired replica set. A Service provides a stable discovery and traffic endpoint for a changing set of selected Pods.\n\n## Interview value\n\nThe distinction tests whether you can separate workload lifecycle from networking and discovery.\n\n## Common mistakes\n\nDo not treat a Pod as durable, or a Service as the controller that creates replicas.", keyTakeaways: ["Pods run containers; Deployments manage replica rollout; Services provide stable reachability.", "Selectors connect controllers and traffic to matching Pods."], examples: ["A Deployment replaces a failed web Pod while a Service keeps the client endpoint stable."], linkedProblemSlugs: [], sourceUrls: ["https://kubernetes.io/docs/concepts/workloads/pods/", "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/", "https://kubernetes.io/docs/concepts/services-networking/service/"], isPlaceholder: false })],
+  "processes-vs-threads": [real({ slug: "processes-vs-threads-interview-model", title: "Processes vs Threads", lessonType: "concept", difficulty: "easy", estimatedMinutes: 18, contentMarkdown: "## Isolation and sharing\n\nProcesses normally have separate virtual address spaces and explicit IPC boundaries. Threads within one process share memory and resources but retain independent stacks and scheduling state.\n\n## Interview value\n\nThis is the foundation for reasoning about isolation, synchronization, context switching, and failure containment.\n\n## Common mistakes\n\nShared memory is not automatically safe, and process isolation is not absolute without operating-system controls.", keyTakeaways: ["Processes emphasize isolation; threads emphasize shared in-process state.", "Sharing reduces communication overhead but creates synchronization obligations."], examples: ["A thread can pass an object reference directly; separate processes generally need IPC or shared-memory coordination."], linkedProblemSlugs: [], sourceUrls: ["https://man7.org/linux/man-pages/man7/pthreads.7.html"], isPlaceholder: false })],
+  "virtual-memory-page-tables": [real({ slug: "page-tables-virtual-memory", title: "Page Tables and Virtual Memory", lessonType: "concept", difficulty: "medium", estimatedMinutes: 22, contentMarkdown: "## Translation\n\nVirtual memory gives each process an address space whose virtual pages map through page tables to physical frames or to non-resident state. The TLB caches recent translations; a page fault transfers control to the kernel when a mapping is absent or disallowed.\n\n## Interview value\n\nThe topic connects memory isolation, allocation, cache behavior, and performance.\n\n## Common mistakes\n\nA TLB miss is not necessarily a page fault, and a page fault is not always disk I/O.", keyTakeaways: ["Page tables encode virtual-to-physical mappings and permissions.", "The TLB accelerates translation; faults let the kernel resolve missing or invalid access."], examples: ["A copy-on-write write fault can allocate a private frame without reading from disk."], linkedProblemSlugs: [], sourceUrls: ["https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf"], isPlaceholder: false })],
+  "raii-resource-ownership": [real({ slug: "cpp-raii-in-interviews", title: "C++ RAII in Interviews", lessonType: "concept", difficulty: "easy", estimatedMinutes: 20, contentMarkdown: "## Ownership through lifetime\n\nRAII binds resource acquisition to object construction and cleanup to deterministic destruction. It applies to memory, file descriptors, locks, sockets, and transactions—not only smart pointers.\n\n## Interview value\n\nRAII questions reveal whether code remains correct across early returns, exceptions, moves, and partial construction.\n\n## Common mistakes\n\nA moved-from object must remain valid, and raw ownership without a documented owner invites double release or leaks.", keyTakeaways: ["Express one clear owner and let scope drive cleanup.", "Design move and copy behavior to match the resource semantics."], examples: ["A lock guard releases a mutex on every scope exit, including exceptions."], linkedProblemSlugs: ["cpp-moved-handle-double-close"], sourceUrls: ["https://en.cppreference.com/w/cpp/language/raii.html"], isPlaceholder: false })],
+  "tcp-vs-udp": [real({ slug: "tcp-vs-udp-backend-quant", title: "TCP vs UDP for Backend and Quant Dev", lessonType: "concept", difficulty: "medium", estimatedMinutes: 20, contentMarkdown: "## Choose transport properties\n\nTCP is an ordered reliable byte stream with congestion control; loss can delay later bytes on that connection. UDP preserves datagram boundaries and supports multicast but leaves loss, reordering, and recovery to the application.\n\n## Interview value\n\nA strong answer connects transport behavior to latency, fanout, correctness, and recovery instead of saying only that UDP is faster.\n\n## Common mistakes\n\nDo not assume UDP cannot be made reliable at the application layer or that TCP orders data across separate connections.", keyTakeaways: ["Transport choice follows correctness, latency, and fanout needs.", "UDP market-data feeds commonly pair sequence detection with a recovery channel."], examples: ["A missing sequence marks an order book stale until replay or snapshot recovery completes."], linkedProblemSlugs: ["multicast-gap-recovery-design", "order-book-sequence-state-machine"], sourceUrls: ["https://www.rfc-editor.org/rfc/rfc9293", "https://www.rfc-editor.org/rfc/rfc768"], isPlaceholder: false })],
+  "rate-limiting": [real({ slug: "what-rate-limiter-does", title: "What a Rate Limiter Actually Does", lessonType: "concept", difficulty: "easy", estimatedMinutes: 18, contentMarkdown: "## Purpose\n\nA rate limiter protects a constrained resource by defining a key, time model, burst policy, storage location, and rejection behavior.\n\n## Interview value\n\nThe topic connects API semantics with distributed state and overload control.\n\n## Common mistakes\n\nAvoid choosing a global key for per-user limits or ignoring atomic updates across servers.", keyTakeaways: ["Define the protected resource and key before choosing an algorithm.", "Burst allowance and sustained rate are separate controls."], examples: ["A token bucket allows a short burst while bounding long-run admission."], linkedProblemSlugs: ["token-bucket-limiter-spec", "sliding-window-rate-check"], sourceUrls: ["https://datatracker.ietf.org/doc/html/rfc6585#section-4"], isPlaceholder: false })],
+  "caching-strategies": [real({ slug: "cache-warming-stampedes", title: "Cache Warming and Cache Stampedes", lessonType: "concept", difficulty: "medium", estimatedMinutes: 20, contentMarkdown: "## Separate concerns\n\nWarming preloads likely-hot keys; stampede protection controls concurrent misses. Single-flight, stale-while-revalidate, and bounded refresh concurrency address the latter.\n\n## Interview value\n\nThis tests time-based failure reasoning beyond simply naming Redis.\n\n## Common mistakes\n\nTTL jitter does not solve every hot-key stampede, and locks need expiry and failure handling.", keyTakeaways: ["Warming reduces cold starts; single-flight controls duplicate refresh work.", "Staleness policies need explicit freshness bounds."], examples: ["Thousands of reads during one rebuild can duplicate origin work without coordination."], linkedProblemSlugs: ["cache-write-before-commit", "cache-stampede-product-page"], sourceUrls: ["https://en.wikipedia.org/wiki/Cache_stampede"], isPlaceholder: false })],
+  "composite-indexes": [real({ slug: "composite-indexes-query-shape", title: "Composite Indexes and Query Shape", lessonType: "optimization", difficulty: "easy", estimatedMinutes: 20, contentMarkdown: "## Start from the query\n\nA composite index follows predicates and ordering. Equality columns usually lead, followed by range or sort columns.\n\n## Interview value\n\nIndex questions test whether you can explain the visited rows, avoided sort, and write cost.\n\n## Common mistakes\n\nSeparate single-column indexes do not automatically preserve a required composite ordering.", keyTakeaways: ["Index order follows equality, range, and ordering needs.", "Verify choices with an actual query plan."], examples: ["`WHERE customer_id = ? ORDER BY created_at DESC` often benefits from `(customer_id, created_at DESC)`."], linkedProblemSlugs: ["recent-orders-index-warmup", "missing-composite-index-orders"], sourceUrls: ["https://www.postgresql.org/docs/current/indexes-multicolumn.html"], isPlaceholder: false })],
+  "system-design-interview-framework": [real({ slug: "structure-system-design-answer", title: "How to Structure a System Design Answer", lessonType: "system_design", difficulty: "easy", estimatedMinutes: 22, contentMarkdown: "## Repeatable sequence\n\nClarify users, operations, scale, reliability, and consistency. Define a small API and data model, draw the request flow, deepen bottlenecks, and end with failures, observability, and tradeoffs.\n\n## Interview value\n\nStructure demonstrates prioritization under ambiguity.\n\n## Common mistakes\n\nDo not start capacity math before the workload or name products without explaining the property they provide.", keyTakeaways: ["Requirements determine which tradeoffs matter.", "Reserve time for failures, observability, and recap."], examples: ["Clarify notification channels, delay, ordering, retries, and preferences before selecting queues."], linkedProblemSlugs: ["cache-stampede-product-page", "outbox-publisher-marks-before-send"], sourceUrls: ["https://sre.google/sre-book/table-of-contents/"], isPlaceholder: false })],
+  "token-efficient-prompting": [real({ slug: "token-efficient-debugging-prompts", title: "Token-Efficient Debugging Prompts", lessonType: "ai_usage", difficulty: "easy", estimatedMinutes: 16, contentMarkdown: "## Relevant context only\n\nState the observed failure, expected behavior, constraints, entrypoint, relevant contract, and validation command. Let the agent search call sites before pasting unrelated files.\n\n## Interview and work value\n\nGood context selection demonstrates system understanding and produces changes that are easier to review.\n\n## Common mistakes\n\nDo not dump secrets or ask for a fix before requiring evidence for the hypothesis.", keyTakeaways: ["Lead with observable behavior and acceptance checks.", "Use progressive disclosure of repository context."], examples: ["Provide the handler, client wrapper, timeout configuration, focused test, and a call-site search."], linkedProblemSlugs: ["ai-debug-prompt-warmup", "ai-token-efficient-repo-task", "ai-select-files-for-timeout-fix"], sourceUrls: ["https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot"], isPlaceholder: false })],
+};
+
+function placeholderLessons(spec: ModuleSpec, startOrder: number): LessonSeed[] {
+  const moduleId = learningModuleId(spec.slug);
+  return ["foundations", "applied-checkpoint"].map((suffix, index) => ({
+    id: lessonId(moduleId, `${spec.slug}-${suffix}`),
+    slug: `${spec.slug}-${suffix}`,
+    title: `${spec.title}: ${index === 0 ? "Foundations" : "Applied Checkpoint"}`,
+    lessonType: index === 0 ? "concept" : "walkthrough",
+    difficulty: index === 0 ? "easy" : "medium",
+    estimatedMinutes: index === 0 ? 20 : 25,
+    contentMarkdown: `> **Content scaffold**\n\nExpand this ${index === 0 ? "instructional" : "interview checkpoint"} for **${spec.title}** with a concise mental model, realistic example, common mistakes, and self-review questions.`,
+    keyTakeaways: [`Explain the core interview vocabulary for ${spec.title}.`, "Apply the idea to one realistic scenario."],
+    examples: ["Add one small worked example and one boundary case."],
+    linkedProblemSlugs: [],
+    sourceUrls: [],
+    order: startOrder + index,
+    isPlaceholder: true,
+  }));
+}
+
+export const learningModules: ModuleSeed[] = MODULE_SPECS.map((spec) => {
+  const moduleId = learningModuleId(spec.slug);
+  const authored = (REAL_LESSONS[spec.slug] ?? []).map((lesson, index): LessonSeed => ({
+    ...lesson,
+    id: lessonId(moduleId, lesson.slug),
+    order: index + 1,
+  }));
+  return {
+    id: moduleId,
+    slug: spec.slug,
+    title: spec.title,
+    description: `A standalone interview module covering the mental models, tradeoffs, and practice expected for ${spec.title.toLowerCase()}.`,
+    category: spec.category,
+    difficulty: spec.difficulty ?? "intermediate",
+    estimatedHours: spec.hours ?? 3,
+    prerequisites: spec.prerequisites ?? [],
+    outcomes: [`Explain the core ideas behind ${spec.title}.`, "Apply the topic in a realistic interview scenario."],
+    sourceUrls: authored.flatMap((lesson) => lesson.sourceUrls),
+    isPublished: true,
+    isPlaceholder: authored.length === 0,
+    lessons: [...authored, ...placeholderLessons(spec, authored.length + 1)],
+  };
+});
 
 type PathSpec = {
   slug: string;
@@ -14,273 +191,19 @@ type PathSpec = {
   targetRoles: Role[];
   difficulty: string;
   estimatedHours: number;
-  modules: { slug: string; title: string }[];
+  modules: string[];
 };
 
-const PATH_SPECS: PathSpec[] = [
-  {
-    slug: "dsa-confidence-builder",
-    title: "DSA Confidence Builder",
-    description: "Start with approachable LeetCode-style fundamentals, then branch into interview patterns and applied backend or quant variants without jumping straight to hard problems.",
-    targetRoles: ["new_grad_swe", "backend_swe", "quant_developer", "mid_level_swe"],
-    difficulty: "beginner-to-advanced",
-    estimatedHours: 28,
-    modules: [
-      { slug: "arrays-hashmaps-two-pointers", title: "Arrays, Hashmaps, and Two-Pointers" },
-      { slug: "sliding-window-prefix-sums", title: "Sliding Window and Prefix Sums" },
-      { slug: "stacks-queues-heaps", title: "Stacks, Queues, and Heaps" },
-      { slug: "trees-graphs", title: "Trees and Graphs" },
-      { slug: "dynamic-programming-basics", title: "Dynamic Programming Basics" },
-      { slug: "dsa-to-real-systems", title: "From DSA to Real Systems" },
-    ],
-  },
-  {
-    slug: "backend-swe",
-    title: "Backend SWE Path",
-    description: "Build the interview vocabulary and practical reasoning needed for backend coding, data, reliability, debugging, and system-design rounds.",
-    targetRoles: ["backend_swe", "mid_level_swe", "fullstack_swe"],
-    difficulty: "beginner-to-advanced",
-    estimatedHours: 32,
-    modules: [
-      { slug: "http-apis-request-flow", title: "HTTP APIs and Request Flow" },
-      { slug: "caching-redis", title: "Caching and Redis" },
-      { slug: "databases-indexes", title: "Databases and Indexes" },
-      { slug: "queues-background-jobs", title: "Queues and Background Jobs" },
-      { slug: "observability-debugging", title: "Observability and Debugging" },
-      { slug: "scaling-backend-services", title: "Scaling Backend Services" },
-    ],
-  },
-  {
-    slug: "infrastructure-swe",
-    title: "Infrastructure SWE Path",
-    description: "A scaffold for operating-system, networking, concurrency, observability, distributed-systems, and reliability knowledge expected in infrastructure interviews.",
-    targetRoles: ["infrastructure_swe", "platform_engineer", "distributed_systems_engineer"],
-    difficulty: "intermediate-to-advanced",
-    estimatedHours: 34,
-    modules: [
-      { slug: "linux-process-fundamentals", title: "Linux and Process Fundamentals" },
-      { slug: "networking-traffic-flow", title: "Networking and Traffic Flow" },
-      { slug: "concurrency-synchronization", title: "Concurrency and Synchronization" },
-      { slug: "distributed-systems-foundations", title: "Distributed Systems Foundations" },
-      { slug: "observability-incident-response", title: "Observability and Incident Response" },
-      { slug: "reliability-capacity", title: "Reliability and Capacity Engineering" },
-    ],
-  },
-  {
-    slug: "system-design",
-    title: "System Design Path",
-    description: "Learn a repeatable interview structure, then add capacity, data, caching, messaging, reliability, and tradeoff analysis one layer at a time.",
-    targetRoles: ["backend_swe", "infrastructure_swe", "distributed_systems_engineer", "mid_level_swe"],
-    difficulty: "intermediate-to-advanced",
-    estimatedHours: 30,
-    modules: [
-      { slug: "approach-any-system-design", title: "How to Approach Any System Design Interview" },
-      { slug: "apis-load-capacity", title: "APIs, Load, and Capacity Estimates" },
-      { slug: "caching-rate-limiting", title: "Caching and Rate Limiting" },
-      { slug: "queues-streams-workers", title: "Queues, Streams, and Workers" },
-      { slug: "databases-replication-sharding", title: "Databases, Replication, and Sharding" },
-      { slug: "observability-reliability-tradeoffs", title: "Observability, Reliability, and Tradeoffs" },
-    ],
-  },
-  {
-    slug: "quant-dev",
-    title: "Quant Dev Path",
-    description: "Progress from language and systems fundamentals into low-latency reasoning, market data, order books, performance work, and realistic technical rounds.",
-    targetRoles: ["quant_developer", "hft_swe"],
-    difficulty: "intermediate-to-advanced",
-    estimatedHours: 36,
-    modules: [
-      { slug: "python-cpp-knowledge", title: "Python and C++ Interview Knowledge" },
-      { slug: "linux-os-networking", title: "Linux, OS, and Networking" },
-      { slug: "concurrency-low-latency", title: "Concurrency and Low-Latency Thinking" },
-      { slug: "market-data-order-books", title: "Market Data and Order Books" },
-      { slug: "performance-optimization", title: "Performance Optimization" },
-      { slug: "quant-mock-rounds", title: "Quant Dev Mock Rounds" },
-    ],
-  },
-  {
-    slug: "ai-efficient-engineer",
-    title: "AI-Efficient Engineer Path",
-    description: "Use coding agents with disciplined context selection, token-efficient prompts, independent review, tests, and interview-appropriate boundaries.",
-    targetRoles: ["backend_swe", "platform_engineer", "infrastructure_swe", "new_grad_swe"],
-    difficulty: "beginner-to-intermediate",
-    estimatedHours: 16,
-    modules: [
-      { slug: "good-ai-usage-principles", title: "Good AI Usage Principles" },
-      { slug: "token-efficient-prompting", title: "Token-Efficient Prompting" },
-      { slug: "selecting-repo-context", title: "Selecting Repo Context" },
-      { slug: "reviewing-ai-code", title: "Reviewing AI Code" },
-      { slug: "testing-verification", title: "Testing and Verification" },
-      { slug: "ai-interview-prep-boundaries", title: "AI in Interview Prep Without Dependency" },
-    ],
-  },
+const PATHS: PathSpec[] = [
+  { slug: "dsa-confidence-builder", title: "DSA Confidence Builder", description: "Build confidence from easy algorithm fundamentals into core patterns and applied interview variants.", targetRoles: ["new_grad_swe", "backend_swe", "quant_developer", "mid_level_swe"], difficulty: "beginner-to-advanced", estimatedHours: 28, modules: ["arrays-hashmaps-two-pointers", "sliding-window-prefix-sums", "stacks-queues-heaps", "trees-graphs", "dynamic-programming-basics", "dsa-to-real-systems"] },
+  { slug: "backend-swe", title: "Backend SWE Path", description: "A curated route through HTTP, data, caching, queues, observability, and reliable service design.", targetRoles: ["backend_swe", "mid_level_swe", "fullstack_swe"], difficulty: "beginner-to-advanced", estimatedHours: 34, modules: ["http-request-lifecycle", "apis-requirements", "sql-indexes", "composite-indexes", "transactions-isolation", "redis-caching", "caching-strategies", "queues-workers", "rate-limiting", "observability", "reliability-backpressure"] },
+  { slug: "infrastructure-swe", title: "Infrastructure SWE Path", description: "A systems route through processes, memory, networking, containers, Kubernetes, concurrency, and reliability.", targetRoles: ["infrastructure_swe", "platform_engineer", "distributed_systems_engineer"], difficulty: "intermediate-to-advanced", estimatedHours: 40, modules: ["processes-vs-threads", "virtual-memory-page-tables", "tcp-vs-udp", "sockets-connection-lifecycle", "docker-fundamentals", "dockerfiles-image-layers", "kubernetes-fundamentals", "pods-deployments-services", "threading-synchronization", "observability", "reliability-backpressure"] },
+  { slug: "system-design", title: "System Design Path", description: "Use a repeatable design framework, then deepen APIs, caching, messaging, data distribution, and reliability.", targetRoles: ["backend_swe", "infrastructure_swe", "distributed_systems_engineer", "mid_level_swe"], difficulty: "intermediate-to-advanced", estimatedHours: 30, modules: ["system-design-interview-framework", "apis-requirements", "rate-limiting", "caching-strategies", "queues-workers", "replication-sharding", "observability", "reliability-backpressure"] },
+  { slug: "quant-dev", title: "Quant Dev Path", description: "Connect C++, operating systems, networking, concurrency, performance, and market-data mechanics.", targetRoles: ["quant_developer", "hft_swe"], difficulty: "intermediate-to-advanced", estimatedHours: 38, modules: ["raii-resource-ownership", "move-semantics", "stl-containers-iterators", "processes-vs-threads", "tcp-vs-udp", "linux-for-quant-dev", "networking-for-quant-dev", "concurrency-for-quant-dev", "latency-cache-locality", "market-data-feeds", "order-books"] },
+  { slug: "ai-efficient-engineer", title: "AI-Efficient Engineer Path", description: "Use coding agents with disciplined context selection, review, tests, and interview-appropriate boundaries.", targetRoles: ["backend_swe", "platform_engineer", "infrastructure_swe", "new_grad_swe"], difficulty: "beginner-to-intermediate", estimatedHours: 16, modules: ["good-ai-usage-principles", "token-efficient-prompting", "selecting-repo-context", "reviewing-ai-code", "hallucination-detection", "testing-verification"] },
 ];
 
-const REAL_LESSONS: Record<string, Omit<LessonSeed, "id" | "order">[]> = {
-  "dsa-confidence-builder/arrays-hashmaps-two-pointers": [
-    {
-      slug: "two-sum-hashmap-pattern",
-      title: "Two Sum as a Hashmap Pattern",
-      lessonType: "pattern",
-      difficulty: "easy",
-      estimatedMinutes: 15,
-      contentMarkdown: "## The idea\n\nWhen a pair must satisfy `a + b = target`, each value tells you exactly which complement is missing. A hashmap turns the question from ‘search every pair’ into ‘have I already seen the complement?’ Scan once, check before inserting, and return the two indices.\n\n## Why interviews test it\n\nIt reveals whether you can trade memory for time, state an invariant, and handle duplicates without accidental self-matching. The same complement-index pattern appears in deduplication, joins, and streaming correlation.\n\n## Common mistakes\n\n- Inserting before checking and matching an element with itself.\n- Returning values when the contract asks for indices.\n- Ignoring duplicate values such as `[3, 3]`.\n\n## Next steps\n\nSolve the warmup, then explain how the design changes for sorted input, all matching pairs, or an unbounded stream.",
-      keyTakeaways: ["Store previously seen values by the information needed for the answer.", "State the one-pass invariant before coding.", "Check duplicate and no-solution behavior explicitly."],
-      examples: ["For `[2, 7, 11, 15]` and target 9, value 7 finds complement 2 at index 0."],
-      linkedProblemSlugs: ["pair-sum-request-ids", "quadratic-settlement-matcher"],
-      sourceUrls: ["https://docs.python.org/3/tutorial/datastructures.html#dictionaries"],
-      isPlaceholder: false,
-    },
-  ],
-  "dsa-confidence-builder/sliding-window-prefix-sums": [
-    {
-      slug: "sliding-window-when-it-applies",
-      title: "Sliding Window: When It Applies",
-      lessonType: "pattern",
-      difficulty: "easy",
-      estimatedMinutes: 18,
-      contentMarkdown: "## Recognize the shape\n\nA sliding window is useful when the answer concerns a **contiguous** region and the validity condition changes predictably as the left or right boundary moves. Expand the right edge, update compact state, and shrink the left edge until the invariant is restored.\n\n## Why interviews test it\n\nThe pattern tests invariant design more than memorization. You must identify exactly what state enters and leaves the window and prove each element is processed a constant number of times.\n\n## Common mistakes\n\n- Applying a window to non-contiguous choices.\n- Shrinking only once instead of until the window is valid.\n- Forgetting to decrement counts when the left edge moves.\n\n## Next steps\n\nStart with a simple distinct-value window, then move to retry-aware request windows and time-based streaming variants.",
-      keyTakeaways: ["Contiguity and a maintainable invariant are the key signals.", "Each boundary should move monotonically for the usual linear-time proof.", "Window state must support symmetric add and remove operations."],
-      examples: ["Longest subarray with no repeated client IDs uses a count map and two monotonic pointers."],
-      linkedProblemSlugs: ["longest-unique-session-streak", "clean-request-window", "sliding-window-rate-check"],
-      sourceUrls: ["https://www.techinterviewhandbook.org/algorithms/array/"],
-      isPlaceholder: false,
-    },
-  ],
-  "backend-swe/http-apis-request-flow": [
-    {
-      slug: "what-rate-limiter-does",
-      title: "What a Rate Limiter Actually Does",
-      lessonType: "concept",
-      difficulty: "easy",
-      estimatedMinutes: 18,
-      contentMarkdown: "## Purpose\n\nA rate limiter protects a constrained resource by deciding whether work may enter now. It is not merely a request counter: it defines a key, a time model, burst policy, storage location, and behavior when capacity is exhausted.\n\n## Why interviews test it\n\nRate limiting connects API semantics to distributed state and overload control. Interviewers expect you to distinguish token bucket bursts, fixed-window boundary spikes, and sliding-window accuracy.\n\n## Common mistakes\n\n- Choosing a global key when limits are per user or endpoint.\n- Failing open or closed without stating the product consequence.\n- Ignoring atomic updates across multiple servers.\n\n## Next steps\n\nImplement a local counter warmup, then compare token bucket and sliding-window designs before discussing Redis-backed distributed limits.",
-      keyTakeaways: ["Define the protected resource and key before the algorithm.", "Burst allowance and sustained rate are separate controls.", "Distributed limiters need atomic shared-state updates or deliberate approximation."],
-      examples: ["A 10-token bucket refilling at 2 tokens/second allows a short burst while bounding the long-term rate."],
-      linkedProblemSlugs: ["token-bucket-limiter-spec", "sliding-window-rate-check"],
-      sourceUrls: ["https://datatracker.ietf.org/doc/html/rfc6585#section-4"],
-      isPlaceholder: false,
-    },
-  ],
-  "backend-swe/caching-redis": [
-    {
-      slug: "cache-warming-stampedes",
-      title: "Cache Warming and Cache Stampedes",
-      lessonType: "concept",
-      difficulty: "medium",
-      estimatedMinutes: 20,
-      contentMarkdown: "## Two different concerns\n\nCache warming fills likely-hot keys before user traffic needs them. Stampede protection controls what happens when many callers miss the same key simultaneously. Warming can reduce cold misses, but it does not replace single-flight, stale-while-revalidate, or bounded refresh concurrency.\n\n## Why interviews test it\n\nThe topic exposes whether you can reason through a time-based failure rather than simply say ‘add Redis.’ A strong answer follows requests through expiry and quantifies duplicate backend work.\n\n## Common mistakes\n\n- Treating TTL jitter as a full fix for one extremely hot key.\n- Using a lock with no expiry or serving stale data without a freshness bound.\n- Warming every possible key and moving the overload earlier.\n\n## Next steps\n\nTrace a stampede timeline, choose a staleness policy, and add monitoring for refresh age and origin load.",
-      keyTakeaways: ["Warming reduces cold starts; single-flight controls concurrent misses.", "Stale-while-revalidate trades freshness for stable latency.", "Every refresh path needs failure and freshness monitoring."],
-      examples: ["At 2,000 reads/second with a four-second rebuild, one expiry can create thousands of duplicate computations."],
-      linkedProblemSlugs: ["cache-write-before-commit", "cache-stampede-product-page"],
-      sourceUrls: ["https://en.wikipedia.org/wiki/Cache_stampede"],
-      isPlaceholder: false,
-    },
-  ],
-  "backend-swe/databases-indexes": [
-    {
-      slug: "composite-indexes-query-shape",
-      title: "Composite Indexes and Query Shape",
-      lessonType: "optimization",
-      difficulty: "easy",
-      estimatedMinutes: 20,
-      contentMarkdown: "## Start from the query\n\nA useful composite index follows the predicates and ordering the database must satisfy. Equality columns usually form the leading prefix, followed by range or sort columns. The goal is not to index every referenced column; it is to let the engine visit a small, already useful slice of the index.\n\n## Why interviews test it\n\nIndex questions test whether you can read access patterns rather than repeat ‘indexes make reads faster.’ You should explain which rows are located, which sort disappears, and what writes now cost.\n\n## Common mistakes\n\n- Reversing column order without considering the leftmost prefix.\n- Adding separate single-column indexes and assuming they preserve required ordering.\n- Ignoring write amplification and storage.\n\n## Next steps\n\nUse the warmup to select a two-column index, then inspect the full query-plan optimization problem.",
-      keyTakeaways: ["Index order follows equality, range, and ordering requirements.", "Verify with an actual query plan rather than intuition.", "Every index has write, storage, and maintenance cost."],
-      examples: ["`WHERE customer_id = ? ORDER BY created_at DESC` commonly benefits from `(customer_id, created_at DESC)`."],
-      linkedProblemSlugs: ["recent-orders-index-warmup", "missing-composite-index-orders"],
-      sourceUrls: ["https://www.postgresql.org/docs/current/indexes-multicolumn.html"],
-      isPlaceholder: false,
-    },
-  ],
-  "system-design/approach-any-system-design": [
-    {
-      slug: "structure-system-design-answer",
-      title: "How to Structure a System Design Answer",
-      lessonType: "system_design",
-      difficulty: "easy",
-      estimatedMinutes: 22,
-      contentMarkdown: "## A repeatable sequence\n\nStart by clarifying users, core operations, scale, and the reliability or consistency constraints that change the design. Define a small API and data model, draw the high-level request flow, then deepen the bottlenecks one at a time. End with failure modes, observability, and tradeoffs.\n\n## Why interviews test it\n\nThe interview is deliberately underspecified. Structure shows that you can reduce ambiguity, prioritize, and communicate while making engineering decisions. A diagram with many technologies but no requirements is not a design.\n\n## Common mistakes\n\n- Capacity math before clarifying the workload.\n- Naming products without explaining the property they provide.\n- Spending the entire session on one component and skipping failures.\n\n## Next steps\n\nPractice a 45-minute outline: five minutes of requirements, five of estimates/API, twenty of architecture and deep dives, then reliability and recap.",
-      keyTakeaways: ["Requirements and constraints determine which tradeoffs matter.", "Move from API and data flow to targeted deep dives.", "Reserve time for failures, observability, and a clear recap."],
-      examples: ["For a notification system, clarify delivery channels, acceptable delay, ordering, retries, and user preferences before choosing queues."],
-      linkedProblemSlugs: ["cache-stampede-product-page", "outbox-publisher-marks-before-send"],
-      sourceUrls: ["https://sre.google/sre-book/table-of-contents/"],
-      isPlaceholder: false,
-    },
-  ],
-  "quant-dev/linux-os-networking": [
-    {
-      slug: "tcp-vs-udp-quant",
-      title: "TCP vs UDP for Quant Dev",
-      lessonType: "concept",
-      difficulty: "medium",
-      estimatedMinutes: 20,
-      contentMarkdown: "## Choose properties, not slogans\n\nTCP provides an ordered reliable byte stream, congestion control, and retransmission, but a lost segment delays later bytes on that connection. UDP preserves message boundaries and supports multicast, but applications must detect loss, ordering issues, and duplicates themselves. Market-data systems often use UDP multicast for fanout plus a separate recovery channel.\n\n## Why interviews test it\n\nThe question checks networking fundamentals and whether you can connect transport behavior to latency, fanout, and recovery requirements. ‘UDP is faster’ is not enough.\n\n## Common mistakes\n\n- Claiming UDP cannot be reliable at the application layer.\n- Ignoring sequence numbers, snapshots, replay, and kernel drops.\n- Assuming TCP removes every ordering problem across multiple connections.\n\n## Next steps\n\nTrace a missing market-data sequence through stale marking, replay, and return to live processing.",
-      keyTakeaways: ["TCP is an ordered byte stream; UDP is message-oriented and may lose or reorder datagrams.", "Multicast fanout and application recovery often work together.", "Transport choice follows latency, fanout, and correctness requirements."],
-      examples: ["Sequence 4102 arriving after 4100 should mark the book stale and trigger replay for 4101."],
-      linkedProblemSlugs: ["multicast-gap-recovery-design", "order-book-sequence-state-machine"],
-      sourceUrls: ["https://www.rfc-editor.org/rfc/rfc9293", "https://www.rfc-editor.org/rfc/rfc768"],
-      isPlaceholder: false,
-    },
-  ],
-  "ai-efficient-engineer/token-efficient-prompting": [
-    {
-      slug: "token-efficient-debugging-prompts",
-      title: "Token-Efficient Debugging Prompts",
-      lessonType: "ai_usage",
-      difficulty: "easy",
-      estimatedMinutes: 16,
-      contentMarkdown: "## Give the dependency path, not the whole repository\n\nA strong debugging prompt states the observed failure, expected behavior, constraints, likely entrypoint, relevant contract, and validation command. Let the agent search for call sites and request more context after inspection instead of pasting unrelated code.\n\n## Why interviews and real work test it\n\nEfficient context selection shows that you understand the system well enough to define evidence and boundaries. It also makes generated changes easier to review.\n\n## Common mistakes\n\n- Providing only an error message with no expected behavior.\n- Dumping secrets, full logs, or generated files.\n- Asking for a fix before asking the agent to verify the hypothesis.\n\n## Next steps\n\nPractice turning a vague timeout report into a five-part prompt: outcome, evidence, inspect-first files, constraints, and acceptance checks.",
-      keyTakeaways: ["Lead with observable behavior and a validation target.", "Use progressive disclosure of repository context.", "Require the agent to separate observed facts from assumptions."],
-      examples: ["Provide the handler, client wrapper, timeout config, focused test, and a targeted call-site search—not the entire service."],
-      linkedProblemSlugs: ["ai-debug-prompt-warmup", "ai-token-efficient-repo-task", "ai-select-files-for-timeout-fix"],
-      sourceUrls: ["https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot"],
-      isPlaceholder: false,
-    },
-  ],
-};
-
-function placeholderLessons(
-  pathSlug: string,
-  moduleSlug: string,
-  moduleTitle: string,
-  startOrder: number
-): LessonSeed[] {
-  const moduleId = learningModuleId(pathSlug, moduleSlug);
-  return [
-    {
-      id: lessonId(moduleId, `${moduleSlug}-foundations`),
-      slug: `${pathSlug}-${moduleSlug}-foundations`,
-      title: `${moduleTitle}: Foundations`,
-      lessonType: "concept",
-      difficulty: "easy",
-      estimatedMinutes: 20,
-      contentMarkdown: `> **Content scaffold**\n\nThis lesson will introduce the vocabulary, mental models, and interview signals for **${moduleTitle}**. Claude should add a concise explanation, one worked example, common mistakes, and a short checkpoint before this lesson is published as complete.`,
-      keyTakeaways: [`Explain the core vocabulary of ${moduleTitle}.`, "Recognize the first interview pattern in this topic."],
-      examples: ["Add one small worked example and one boundary case."],
-      linkedProblemSlugs: [],
-      sourceUrls: [],
-      order: startOrder,
-      isPlaceholder: true,
-    },
-    {
-      id: lessonId(moduleId, `${moduleSlug}-applied-checkpoint`),
-      slug: `${pathSlug}-${moduleSlug}-applied-checkpoint`,
-      title: `${moduleTitle}: Applied Checkpoint`,
-      lessonType: "walkthrough",
-      difficulty: "medium",
-      estimatedMinutes: 25,
-      contentMarkdown: `> **Content scaffold**\n\nThis checkpoint will connect **${moduleTitle}** to a realistic interview scenario. Claude should add a step-by-step walkthrough, warmup/core/challenge links, tradeoff questions, and a self-review checklist.`,
-      keyTakeaways: [`Apply ${moduleTitle} to a realistic scenario.`, "Explain one tradeoff without relying on memorized product names."],
-      examples: ["Add one interview-style scenario with an explicit reasoning sequence."],
-      linkedProblemSlugs: [],
-      sourceUrls: [],
-      order: startOrder + 1,
-      isPlaceholder: true,
-    },
-  ];
-}
-
-export const learningPaths: LearningPathSeed[] = PATH_SPECS.map((path, pathIndex) => ({
+export const learningPaths: LearningPathSeed[] = PATHS.map((path, pathIndex) => ({
   id: learningPathId(path.slug),
   slug: path.slug,
   title: path.title,
@@ -290,36 +213,10 @@ export const learningPaths: LearningPathSeed[] = PATH_SPECS.map((path, pathIndex
   estimatedHours: path.estimatedHours,
   order: pathIndex + 1,
   isPublished: true,
-  modules: path.modules.map((module, moduleIndex) => {
-    const moduleId = learningModuleId(path.slug, module.slug);
-    const realLessons = (REAL_LESSONS[`${path.slug}/${module.slug}`] ?? []).map(
-      (lesson, lessonIndex): LessonSeed => ({
-        ...lesson,
-        id: lessonId(moduleId, lesson.slug),
-        order: lessonIndex + 1,
-      })
-    );
-    return {
-      id: moduleId,
-      slug: module.slug,
-      title: module.title,
-      description: `A guided module for building practical interview fluency in ${module.title.toLowerCase()}.`,
-      order: moduleIndex + 1,
-      estimatedHours: Math.max(2, Math.round(path.estimatedHours / path.modules.length)),
-      prerequisites: moduleIndex === 0 ? [] : [path.modules[moduleIndex - 1].title],
-      outcomes: [
-        `Explain the core ideas behind ${module.title}.`,
-        "Complete a warmup-to-challenge practice sequence and self-review the result.",
-      ],
-      lessons: [
-        ...realLessons,
-        ...placeholderLessons(
-          path.slug,
-          module.slug,
-          module.title,
-          realLessons.length + 1
-        ),
-      ],
-    };
-  }),
+  modules: path.modules.map((moduleSlug, index) => ({
+    moduleSlug,
+    order: index + 1,
+    isRequired: index < Math.ceil(path.modules.length * 0.75),
+    label: index === 0 ? "warmup" : index >= Math.ceil(path.modules.length * 0.75) ? "advanced" : "core",
+  })),
 }));

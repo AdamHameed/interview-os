@@ -34,6 +34,7 @@ const NAV = [
     items: [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { title: "Learning Paths", href: "/paths", icon: GraduationCap },
+      { title: "Modules", href: "/modules", icon: BookOpen },
     ],
   },
   {

@@ -15,7 +15,7 @@ export default async function PathsPage() {
     db.learningPath.findMany({
       where: { isPublished: true },
       orderBy: { order: "asc" },
-      include: { modules: { include: { lessons: true } } },
+      include: { modules: { include: { module: { include: { lessons: true } } } } },
     }),
     db.problem.findMany(),
     db.attempt.findMany(),
@@ -45,7 +45,7 @@ export default async function PathsPage() {
           const path = hydrateLearningPath(rawPath);
           const pathProblems = problems.filter((problem) => problem.pathIds.includes(path.id));
           const percent = progressPercent(pathProblems.map((problem) => problem.id), completed);
-          const lessons = rawPath.modules.flatMap((module) => module.lessons);
+          const lessons = rawPath.modules.flatMap((membership) => membership.module.lessons);
           const realLessons = lessons.filter((lesson) => !lesson.isPlaceholder).length;
           return (
             <Link key={path.id} href={`/paths/${path.slug}`} className="group">
