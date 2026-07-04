@@ -51,8 +51,8 @@ Together they contain:
 
 - 79 standalone modules across DSA, Docker, Kubernetes, operating systems, networking, C++, Python, databases, caching, backend/system design, quant development, and AI usage;
 - 63 ordered path memberships, including modules reused across multiple paths;
-- 190 lesson records;
-- 32 real mini-lessons;
+- 193 lesson records;
+- 35 real mini-lessons;
 - 158 explicit placeholder lesson briefs.
 
 The 2026-07-04 DSA batch extended the DSA Confidence Builder to 16 ordered modules covering the full roadmap topic list (arrays/hashing through math/geometry), added four real lessons (binary-search invariants, search-on-answers, linked-list pointer discipline, slow/fast pointers), and mapped twelve previously orphaned problems into modules.
@@ -82,7 +82,7 @@ Placeholder lessons are not disguised as complete content. The UI labels them **
 
 ## Confidence-building problems
 
-The bank now contains 135 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems, 9 written database problems, 8 written concurrency problems, 9 runnable dynamic-programming problems, and 8 written networking problems — the last five batches added 2026-07-04, each with a warmup → core → challenge → applied mix. From the networking batch onward, every problem statement embeds a concrete example artifact (traces, tool output, sample exchanges).
+The bank now contains 143 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems, 9 written database problems, 8 written concurrency problems, 9 runnable dynamic-programming problems, 8 written networking problems, and 8 system-design scenarios — the last six batches added 2026-07-04, each with a warmup → core → challenge → applied mix. From the networking batch onward, every problem statement embeds a concrete example artifact (traces, tool output, sample exchanges, incident reports).
 
 - Four runnable DSA warmups: pair sum, unique sliding window, balanced brackets, and graph reachability.
 - Two debugging warmups: boolean environment parsing and missing `await`.
@@ -153,10 +153,10 @@ This plan was produced by auditing every module against the current 92-problem b
 ### Global gaps (highest leverage first)
 
 1. ~~40 authored problems with no module/path metadata~~ — **28 mapped across Batches 1–3**; remaining orphans are mostly read-code language problems (Python/Go/Java/JS/React), queues-workers candidates, and quant specs. Mapping them stays the cheapest coverage win (remaining candidates are marked `→` below).
-2. **The bank contains zero `system_design`-type problems** even though a System Design path exists. Current design-adjacent problems are debugging/optimization formats. A first batch of open-ended scenario problems (no code harness) is queued as Batch 4+.
+2. ~~Zero `system_design`-type problems~~ — **done 2026-07-04**; the first eight open-ended scenario problems (no code harness) landed with the system-design batch, covering requirement clarification, capacity estimation, two full design scenarios, and API-contract design.
 3. ~~10 missing DSA module scaffolds~~ — **done 2026-07-04**; all 18 roadmap families now have modules in the 16-module path.
 4. ~~`dynamic-programming-basics` empty~~ — **done 2026-07-04**; both DP modules now carry full lesson + warmup→applied ladders with runnable tests.
-5. **50 of 79 modules still have only scaffold lessons.** Docker/K8s, C++, Python, quant, and the remaining OS/networking modules are lesson-free.
+5. **48 of 79 modules still have only scaffold lessons.** Docker/K8s, C++, Python, quant, and the remaining OS/networking modules are lesson-free.
 6. ~~No `os_networking_concurrency`-type problems~~ — the first six landed with the concurrency batch; OS/networking modules should continue this format mix.
 
 ### DSA Confidence Builder (priority 1)
@@ -187,7 +187,7 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
 | http-request-lifecycle | beginner | tcp-vs-udp | — | 2/0/0/0 | lessons, core, challenge, advanced | debugging, optimization | RFC 9110–9112 |
-| apis-requirements | beginner | http-request-lifecycle | — | 0/0/0/0 | all | — | REST/idempotency references (RFC 9110 semantics) |
+| apis-requirements | beginner | http-request-lifecycle | API Contracts; Designing One Endpoint Well | 2/1/0/1 | challenge | system_design scenarios | none (covered) |
 | sql-indexes | beginner | — | B-Tree Mental Model; Reading EXPLAIN | 2/2/1/0 | advanced | databases, optimization | none (covered) |
 | composite-indexes | intermediate | sql-indexes | Composite Indexes and Query Shape | 2/0/1/0 | core, advanced | databases, optimization | PostgreSQL multicolumn-index docs (cited) |
 | transactions-isolation | intermediate | — | Isolation Levels & Anomalies; Lost Update Walkthrough | 2/3/1/2 | — (full ladder) | databases, read-code | none (covered) |
@@ -247,7 +247,8 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
-| system-design-interview-framework | beginner | — | How to Structure a System Design Answer | 0/0/0/0 | **first true `system_design`-type scenario problems** | — | SRE book (cited) |
+| system-design-interview-framework | beginner | — | Structure an Answer; Webhook Delivery Walkthrough | 2/1/1/0 | advanced | system_design scenarios | none (covered) |
+| apis-requirements | beginner | http-request-lifecycle | API Contracts; Designing One Endpoint Well | 2/1/0/1 | challenge | system_design scenarios | none (covered) |
 | replication-sharding | advanced | transactions-isolation | — | 0/0/0/0 | all | — | database replication docs (PostgreSQL), DDIA-adjacent public material |
 
 (`apis-requirements`, `rate-limiting`, `caching-strategies`, `queues-workers`, `observability`, `reliability-backpressure` are shared with Backend above.)
@@ -303,6 +304,10 @@ Completed: 14 orphan database problems mapped via `learning-overrides.ts` (trans
 
 Completed: shared-counter-undercounts (warmup) and flaky-test-global-state (core) mapped into threading-synchronization. Both modules fully developed: four real lessons (data races and critical sections, lost-increment walkthrough, the synchronization toolbox, bounded-buffer walkthrough) and eight written problems in `prisma/seed-data/concurrency-foundations.ts` (is-it-a-data-race, shared-cache-dict-race, metrics-flush-torn-read, pick-the-primitive, condvar-if-instead-of-while, bounded-queue-two-condvars, shutdown-deadlock-workers, connection-pool-semaphore) — 4 warmups, 3 core, 1 challenge, 1 applied across os/concurrency and debugging formats, introducing the first `os_networking_concurrency`-type problems. Sources: OSTEP concurrency chapters, man7, Python threading docs.
 
+### Batch 6 — System design: system-design-interview-framework + apis-requirements — DONE 2026-07-04
+
+Completed: three real lessons (a full 45-minute webhook-delivery design walkthrough with timeboxing; from vague ask to API contract; designing one endpoint well) and the bank's **first eight `system_design`-type problems** in `prisma/seed-data/system-design-foundations.ts` (clarify-notification-requirements, envelope-math-image-uploads, design-status-page-service, design-flash-sale-checkout, fix-this-api-contract, choose-the-status-code, money-transfer-api-contract, api-field-versioning-migration) — 4 warmups, 2 core, 1 challenge, 1 advanced. All are open-ended written scenarios with requirements, scale assumptions, deliberate ambiguity, rubrics, and follow-ups; every statement embeds a concrete example artifact (traffic timelines, incident reports, partner code, naive API specs). Sources: RFC 9110/6585/8594, Google SRE book.
+
 ### Batch 5 — Networking: tcp-vs-udp + sockets-connection-lifecycle — DONE 2026-07-04
 
 Completed: three real lessons (TCP reliability traced packet by packet; a connection's life in syscalls and states; following one request until something leaks) joining the existing TCP-vs-UDP concept lesson, and eight written problems in `prisma/seed-data/networking-foundations.ts` (pick-transport-for-three-services, udp-message-boundary-bug, tcp-retransmission-latency-spike, reliable-udp-telemetry-design, map-syscalls-to-handshake, close-wait-pileup, listen-backlog-refused, ephemeral-port-exhaustion-proxy) — 4 warmups, 2 core, 1 challenge, 1 advanced. Every statement embeds a concrete example artifact (packet captures, `ss`/`nstat` output, failing traces, outage timelines) per the content style rule. cancelled-request-connection-leak mapped into sockets-connection-lifecycle. Sources: RFC 9293/768/6298, man7 pages.
@@ -311,7 +316,7 @@ Completed: three real lessons (TCP reliability traced packet by packet; a connec
 
 Completed: four real lessons (DP as a state definition, deriving a 1-D DP end to end, grid tables, string alignment with edit distance and LCS) and nine original runnable problems in `prisma/seed-data/dsa-dynamic-programming.ts` (release-train-hops, cheapest-retry-ladder, ad-slot-revenue-plan, fewest-batches-exact-total, warehouse-robot-routes, ordered-log-subsequence, cheapest-rack-cabling, config-drift-distance, shared-history-length) — 4 warmups, 3 core, 1 challenge, 1 applied, all with Python/JavaScript/TypeScript public and hidden tests including greedy-refuting and performance cases. Reference solutions verified against all 52 seeded tests. This closes the last empty priority-1 gap: every DSA module the path marks core now has at least a warmup entry point.
 
-**Queued after Batch 5** (in priority order): first true `system_design`-type scenario problems for the framework module; http-request-lifecycle + apis-requirements; raii + move-semantics deepening; docker-fundamentals + dockerfiles-image-layers; market-data-feeds + order-books; K8s fundamentals pair; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
+**Queued after Batch 6** (in priority order): http-request-lifecycle deepening; raii + move-semantics deepening; docker-fundamentals + dockerfiles-image-layers; market-data-feeds + order-books; K8s fundamentals pair; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
 
 ## Long-term generation guidance
 
@@ -333,4 +338,4 @@ Keep easy problems genuinely easy: a warmup isolates one main idea, uses a small
 
 ## Recommended next prompt
 
-Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: the first true `system_design`-type scenario problems for `system-design-interview-framework` plus `apis-requirements`. Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.
+Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: `raii-resource-ownership` + `move-semantics` deepening (or `docker-fundamentals` + `dockerfiles-image-layers` if C++ is deprioritized). Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.

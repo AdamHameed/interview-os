@@ -12,6 +12,7 @@ import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
 import { runnableOverrides } from "./runnable-overrides";
 import { starterAiUsageProblems } from "./starter-ai-usage";
+import { systemDesignFoundationProblems } from "./system-design-foundations";
 import { starterDatabaseProblems } from "./starter-databases";
 import { starterDebuggingProblems } from "./starter-debugging";
 import { starterOptimizationProblems } from "./starter-optimization";
@@ -31,6 +32,7 @@ const authoredProblems: SeedProblem[] = [
   ...databasesFoundationProblems,
   ...concurrencyFoundationProblems,
   ...networkingFoundationProblems,
+  ...systemDesignFoundationProblems,
   ...readCodeProblems,
   ...writeCodeProblems,
   ...debuggingProblems,

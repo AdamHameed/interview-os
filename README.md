@@ -31,7 +31,7 @@ Interview OS supports two complementary study modes:
 
 Paths do not own modules. `LearningPathModule` is an ordered join with `isRequired` and a `warmup | core | advanced | optional | interview_cram` label, so the same module can appear in several paths. Lessons belong to standalone modules. Problems may link to multiple module IDs and carry a `warmup | core | challenge | advanced` confidence level.
 
-The current scaffold contains six paths, 79 standalone modules, 63 path memberships, 190 lessons, and 32 reviewed mini-lessons. The remaining 158 lesson briefs are visibly marked scaffolds for later content work. The DSA Confidence Builder now spans 16 modules covering the full roadmap topic list; binary search and linked lists are fully developed with lessons and runnable problems.
+The current scaffold contains six paths, 79 standalone modules, 63 path memberships, 193 lessons, and 35 reviewed mini-lessons. The remaining 158 lesson briefs are visibly marked scaffolds for later content work. The bank includes open-ended `system_design` scenario problems (no code harness) alongside runnable coding, debugging, optimization, and written-analysis formats. The DSA Confidence Builder now spans 16 modules covering the full roadmap topic list; binary search and linked lists are fully developed with lessons and runnable problems.
 
 ### Add a standalone module
 
