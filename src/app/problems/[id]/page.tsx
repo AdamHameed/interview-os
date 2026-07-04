@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock3, ExternalLink, Lightbulb, ListChecks, ShieldAlert } from "lucide-react";
-import { DifficultyBadge, QualityDots, SourceBadge, StatusBadge, TypeBadge } from "@/components/badges";
+import { ConfidenceBadge, DifficultyBadge, QualityDots, SourceBadge, StatusBadge, TypeBadge } from "@/components/badges";
 import { Markdown } from "@/components/markdown";
 import { SubmissionWorkspace } from "@/components/submission-workspace";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,9 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
   const isCoding =
     problem.testHarnessType === "function_call" &&
     problem.supportedLanguages.length > 0;
+  const learningPaths = problem.pathIds.length > 0
+    ? await db.learningPath.findMany({ where: { id: { in: problem.pathIds } } })
+    : [];
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -45,6 +48,7 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
           <TypeBadge type={problem.type} />
           <DifficultyBadge difficulty={problem.difficulty} />
           <SourceBadge sourceType={problem.sourceType} />
+          {problem.confidenceLevel && <ConfidenceBadge level={problem.confidenceLevel} />}
         </div>
         <h2 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight md:text-4xl">{problem.title}</h2>
         {problem.context && <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">{problem.context}</p>}
@@ -124,6 +128,14 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-20 xl:self-start">
+          {learningPaths.length > 0 && (
+            <Card size="sm">
+              <CardHeader><CardTitle>Learning paths</CardTitle><CardDescription>You are here in a guided progression.</CardDescription></CardHeader>
+              <CardContent className="space-y-2">
+                {learningPaths.map((path) => <Link key={path.id} href={`/paths/${path.slug}`} className="flex items-center justify-between rounded-lg border p-2 text-xs hover:bg-muted/40"><span>{path.title}</span><span>→</span></Link>)}
+              </CardContent>
+            </Card>
+          )}
           <Card size="sm">
             <CardHeader><CardTitle>Topics</CardTitle></CardHeader>
             <CardContent className="flex flex-wrap gap-1.5">{problem.topics.map((topic) => <Link key={topic} href={`/problems?topic=${encodeURIComponent(topic)}`}><Badge variant="secondary">{topic}</Badge></Link>)}</CardContent>

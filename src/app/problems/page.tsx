@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Clock3, Search, SlidersHorizontal } from "lucide-react";
-import { DifficultyBadge, QualityDots, SourceBadge, StatusBadge, TypeBadge } from "@/components/badges";
+import { ConfidenceBadge, DifficultyBadge, QualityDots, SourceBadge, StatusBadge, TypeBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,8 @@ import { db } from "@/lib/db";
 import {
   ATTEMPT_STATUS_LABELS,
   ATTEMPT_STATUSES,
+  CONFIDENCE_LEVELS,
+  CONFIDENCE_LEVEL_LABELS,
   DIFFICULTIES,
   DIFFICULTY_LABELS,
   PROBLEM_TYPES,
@@ -28,9 +30,14 @@ function param(params: SearchParams, key: string): string {
 
 export default async function ProblemsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const [rawProblems, attempts] = await Promise.all([
+  const [rawProblems, attempts, learningPaths] = await Promise.all([
     db.problem.findMany({ orderBy: [{ qualityScore: "desc" }, { title: "asc" }] }),
     db.attempt.findMany(),
+    db.learningPath.findMany({
+      where: { isPublished: true },
+      orderBy: { order: "asc" },
+      include: { modules: { orderBy: { order: "asc" } } },
+    }),
   ]);
   const problems = rawProblems.map(hydrateProblem);
   const latest = latestAttemptByProblem(attempts);
@@ -41,10 +48,17 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
     difficulty: param(params, "difficulty"),
     role: param(params, "role"),
     status: param(params, "status"),
+    pathId: param(params, "path"),
+    moduleId: param(params, "module"),
+    confidenceLevel: param(params, "confidence"),
     maxMinutes: Number(param(params, "maxMinutes")) || undefined,
   };
   const visible = filterProblems(problems, filters, latest);
   const topics = collectTopics(problems);
+  const pathById = new Map(learningPaths.map((path) => [path.id, path]));
+  const modules = learningPaths.flatMap((path) =>
+    path.modules.map((learningModule) => ({ ...learningModule, pathTitle: path.title }))
+  );
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -99,6 +113,18 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
               <option value="45">45 minutes or less</option>
               <option value="60">60 minutes or less</option>
             </select>
+            <select name="path" defaultValue={filters.pathId} className="h-9 rounded-lg border bg-background px-3 text-sm">
+              <option value="">All learning paths</option>
+              {learningPaths.map((path) => <option key={path.id} value={path.id}>{path.title}</option>)}
+            </select>
+            <select name="module" defaultValue={filters.moduleId} className="h-9 rounded-lg border bg-background px-3 text-sm">
+              <option value="">All modules</option>
+              {modules.map((learningModule) => <option key={learningModule.id} value={learningModule.id}>{learningModule.pathTitle} · {learningModule.title}</option>)}
+            </select>
+            <select name="confidence" defaultValue={filters.confidenceLevel} className="h-9 rounded-lg border bg-background px-3 text-sm">
+              <option value="">All confidence levels</option>
+              {CONFIDENCE_LEVELS.map((level) => <option key={level} value={level}>{CONFIDENCE_LEVEL_LABELS[level]}</option>)}
+            </select>
             <div className="flex gap-2 md:col-span-2 xl:col-span-4">
               <button className={buttonVariants()} type="submit">Apply filters</button>
               <Link href="/problems" className={buttonVariants({ variant: "outline" })}>Clear</Link>
@@ -127,6 +153,7 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       <TypeBadge type={problem.type} />
                       <DifficultyBadge difficulty={problem.difficulty} />
+                      {problem.confidenceLevel && <ConfidenceBadge level={problem.confidenceLevel} />}
                       {status !== "not_started" && <StatusBadge status={status} />}
                     </div>
                     <CardTitle className="text-lg group-hover:underline group-hover:underline-offset-4">{problem.title}</CardTitle>
@@ -136,6 +163,13 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
                     <div className="flex flex-wrap gap-1.5">
                       {problem.topics.slice(0, 4).map((topic) => <Badge key={topic} variant="secondary">{topic}</Badge>)}
                     </div>
+                    {problem.pathIds.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {problem.pathIds.map((pathId) => pathById.get(pathId)).filter((path): path is NonNullable<typeof path> => Boolean(path)).map((path) => (
+                          <Badge key={path.id} variant="outline">{path.title}</Badge>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><Clock3 className="size-3.5" />{problem.estimatedMinutes} min</span>
                       <span className="flex items-center gap-1.5"><QualityDots score={problem.qualityScore} /> quality</span>

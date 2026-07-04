@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, CircleAlert, Target, Trophy } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CircleAlert, GraduationCap, Target, Trophy } from "lucide-react";
 import { TypeBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +14,7 @@ import { db } from "@/lib/db";
 import { PROBLEM_TYPE_DESCRIPTIONS, ROLE_LABELS, type Role } from "@/lib/enums";
 import { hydrateProblem } from "@/lib/problems";
 import { formatProgress, recommendNext, reviewQueue, weakTopics } from "@/lib/stats";
+import { completedProblemIds, progressPercent } from "@/lib/learning-progress";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,20 @@ const TRACKS: { role: Role; description: string }[] = [
 ];
 
 export default async function DashboardPage() {
-  const [rawProblems, attempts] = await Promise.all([
+  const [rawProblems, attempts, submissions, learningPaths] = await Promise.all([
     db.problem.findMany({ orderBy: [{ qualityScore: "desc" }, { title: "asc" }] }),
     db.attempt.findMany({ orderBy: { updatedAt: "desc" } }),
+    db.submission.findMany({ select: { problemId: true, status: true } }),
+    db.learningPath.findMany({
+      where: { isPublished: true },
+      orderBy: { order: "asc" },
+      include: {
+        modules: {
+          orderBy: { order: "asc" },
+          include: { lessons: { orderBy: { order: "asc" } } },
+        },
+      },
+    }),
   ]);
   const problems = rawProblems.map(hydrateProblem);
   const progress = formatProgress(problems, attempts).filter((item) => item.total > 0);
@@ -39,6 +51,21 @@ export default async function DashboardPage() {
   const recommendations = recommendNext(problems, attempts, 4);
   const attemptedCount = new Set(attempts.map((attempt) => attempt.problemId)).size;
   const solvedCount = progress.reduce((total, item) => total + item.solved, 0);
+  const completed = completedProblemIds(attempts, submissions);
+  const activityProblemIds = new Set([
+    ...attempts.map((attempt) => attempt.problemId),
+    ...submissions.map((submission) => submission.problemId),
+  ]);
+  const activePaths = learningPaths.filter((path) =>
+    problems.some(
+      (problem) =>
+        problem.pathIds.includes(path.id) && activityProblemIds.has(problem.id)
+    )
+  );
+  const continuePaths = (activePaths.length > 0 ? activePaths : learningPaths).slice(0, 2);
+  const nextLesson = continuePaths
+    .flatMap((path) => path.modules.flatMap((module) => module.lessons))
+    .find((lesson) => !lesson.isPlaceholder);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
@@ -73,6 +100,44 @@ export default async function DashboardPage() {
             </CardHeader>
           </Card>
         ))}
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+              <GraduationCap className="size-5" /> Continue learning
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {activePaths.length > 0
+                ? "Resume the paths connected to your completed practice."
+                : "Start with a guided sequence instead of browsing the entire bank."}
+            </p>
+          </div>
+          <Link href="/paths" className="text-sm text-muted-foreground hover:text-foreground">
+            View all paths
+          </Link>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_0.9fr]">
+          {continuePaths.map((path) => {
+            const pathProblems = problems.filter((problem) => problem.pathIds.includes(path.id));
+            const percent = progressPercent(pathProblems.map((problem) => problem.id), completed);
+            return (
+              <Link key={path.id} href={`/paths/${path.slug}`} className="rounded-xl border p-4 transition-colors hover:bg-muted/40">
+                <div className="flex items-center justify-between gap-3"><span className="font-medium">{path.title}</span><span className="text-xs text-muted-foreground">{percent}%</span></div>
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{path.description}</p>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} /></div>
+              </Link>
+            );
+          })}
+          {nextLesson && (
+            <Link href={`/lessons/${nextLesson.slug}`} className="rounded-xl border border-dashed p-4 transition-colors hover:bg-muted/40">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next recommended lesson</div>
+              <div className="mt-2 font-medium">{nextLesson.title}</div>
+              <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">Continue <ArrowRight className="size-3" /></div>
+            </Link>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">

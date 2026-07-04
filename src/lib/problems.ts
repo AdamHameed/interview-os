@@ -4,6 +4,7 @@ import type { RubricItem, TestCase } from "@/lib/schemas";
 import type {
   AttemptStatus,
   CompanyStyle,
+  ConfidenceLevel,
   Difficulty,
   ProblemType,
   Role,
@@ -23,6 +24,9 @@ export type HydratedProblem = Omit<
   | "sourceUrls"
   | "tests"
   | "supportedLanguages"
+  | "pathIds"
+  | "moduleIds"
+  | "lessonIds"
   | "type"
   | "difficulty"
   | "sourceType"
@@ -40,6 +44,10 @@ export type HydratedProblem = Omit<
   sourceUrls: string[];
   tests: TestCase[] | null;
   supportedLanguages: ("python" | "javascript" | "typescript")[];
+  pathIds: string[];
+  moduleIds: string[];
+  lessonIds: string[];
+  confidenceLevel: ConfidenceLevel | null;
 };
 
 export function hydrateProblem(p: Problem): HydratedProblem {
@@ -60,6 +68,10 @@ export function hydrateProblem(p: Problem): HydratedProblem {
     supportedLanguages: parseJsonArray<"python" | "javascript" | "typescript">(
       p.supportedLanguages
     ),
+    pathIds: parseJsonArray<string>(p.pathIds),
+    moduleIds: parseJsonArray<string>(p.moduleIds),
+    lessonIds: parseJsonArray<string>(p.lessonIds),
+    confidenceLevel: p.confidenceLevel as ConfidenceLevel | null,
   };
 }
 
@@ -73,6 +85,9 @@ export type ProblemFilters = {
   status?: string; // derived from latest attempt; "not_started" = no attempt
   maxMinutes?: number;
   language?: string;
+  pathId?: string;
+  moduleId?: string;
+  confidenceLevel?: string;
 };
 
 /** Latest attempt per problem (attempts assumed sorted desc by createdAt, or not — we reduce). */
@@ -111,6 +126,10 @@ export function filterProblems(
     )
       return false;
     if (filters.language && p.language !== filters.language) return false;
+    if (filters.pathId && !p.pathIds.includes(filters.pathId)) return false;
+    if (filters.moduleId && !p.moduleIds.includes(filters.moduleId)) return false;
+    if (filters.confidenceLevel && p.confidenceLevel !== filters.confidenceLevel)
+      return false;
     if (filters.maxMinutes && p.estimatedMinutes > filters.maxMinutes) return false;
     if (filters.status && problemStatus(p.id, latest) !== filters.status) return false;
     if (q) {

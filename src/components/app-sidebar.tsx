@@ -7,6 +7,7 @@ import {
   Bot,
   Braces,
   FilePlus2,
+  GraduationCap,
   LayoutDashboard,
   Library,
   ListChecks,
@@ -30,7 +31,10 @@ import {
 const NAV = [
   {
     label: "Overview",
-    items: [{ title: "Dashboard", href: "/dashboard", icon: LayoutDashboard }],
+    items: [
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { title: "Learning Paths", href: "/paths", icon: GraduationCap },
+    ],
   },
   {
     label: "Train",

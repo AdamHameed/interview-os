@@ -1,5 +1,8 @@
 import { debuggingProblems } from "./debugging";
 import { dsaProblems } from "./dsa";
+import { confidenceWarmupProblems } from "./starter-confidence";
+import { learningOverrides } from "./learning-overrides";
+export { learningPaths } from "./learning";
 import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
 import { runnableOverrides } from "./runnable-overrides";
@@ -28,9 +31,11 @@ const authoredProblems: SeedProblem[] = [
   ...starterQuantDevProblems,
   ...starterDatabaseProblems,
   ...starterAiUsageProblems,
+  ...confidenceWarmupProblems,
 ];
 
 export const allProblems: SeedProblem[] = authoredProblems.map((problem) => ({
   ...problem,
   ...runnableOverrides[problem.slug],
+  ...learningOverrides[problem.slug],
 }));

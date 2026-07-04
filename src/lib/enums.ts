@@ -157,6 +157,21 @@ export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
   needs_retry: "Needs Retry",
 };
 
+export const CONFIDENCE_LEVELS = [
+  "warmup",
+  "core",
+  "challenge",
+  "advanced",
+] as const;
+export type ConfidenceLevel = (typeof CONFIDENCE_LEVELS)[number];
+
+export const CONFIDENCE_LEVEL_LABELS: Record<ConfidenceLevel, string> = {
+  warmup: "Warmup",
+  core: "Core",
+  challenge: "Challenge",
+  advanced: "Advanced",
+};
+
 export const RESOURCE_TYPES = [
   "article",
   "video",

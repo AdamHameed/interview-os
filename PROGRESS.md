@@ -2,66 +2,103 @@
 
 Last updated: 2026-07-03 on branch `codex-stabilize`.
 
-## Current application
+## Current platform
 
-Interview OS is a local-first Next.js 15 application using React 19, TypeScript, Tailwind CSS 4, Prisma 6, SQLite, Zod, Monaco, and the existing shadcn/Base UI components.
+Interview OS is a local-first Next.js 15 study platform using React 19, TypeScript, Tailwind CSS 4, Prisma 6, SQLite, Zod, Monaco, and the existing shadcn/Base UI components.
 
-Working user routes:
+Working routes now include:
 
 - `/dashboard`
-- `/problems`
-- `/problems/[id]` (database ID or slug)
+- `/paths`
+- `/paths/[slug]`
+- `/paths/[slug]/modules/[moduleSlug]`
+- `/lessons/[slug]`
+- `/problems` and `/problems/[id]`
 - `/practice`
 - `/ai-usage`
+- local submission/save/run/export/import API routes
 
-The bank remains at 80 validated problems. The prior 56-problem bank and 24-problem starter expansion are preserved; no new problem statements were added in the submission/judging slice.
+Existing coding submissions, Python/JavaScript/TypeScript local judging, written-answer storage, and Codex review export/import remain intact.
 
-## Submission and judging support
+## Learning-path scaffold
 
 ### Data model
 
-- Added `Submission` with answer text, optional language, lifecycle status, JSON test results, self-score, review feedback, timestamps, and a cascading relation to `Problem`.
-- Added optional `functionName`, `testHarnessType`, and JSON `supportedLanguages` metadata to `Problem`.
-- Extended the authored test-case shape with optional JSON-compatible `args`, `expectedValue`, and `hidden` fields while preserving existing display-only tests.
-- Added submission status constants for draft, submitted, passed, failed, reviewed, and needs-retry states.
-- SQLite was updated with `npx prisma db push`; no migration history has been introduced yet.
+- `LearningPath`: stable ID, slug, description, target roles, difficulty, estimated hours, ordering, and publication status.
+- `LearningModule`: ordered path relation, prerequisites, outcomes, description, and estimated hours.
+- `Lesson`: type, difficulty, duration, Markdown, takeaways, examples, linked problem IDs, public sources, order, and explicit placeholder status.
+- `Problem`: optional JSON path/module/lesson IDs plus `warmup | core | challenge | advanced` confidence level.
 
-### Problem workspace
+No user/enrollment model was added. Progress is currently derived from solved attempts and passed/reviewed submissions against problems linked to a path. This preserves the existing single-user local architecture and leaves lesson-completion persistence for a later focused slice.
 
-- Coding problems show Monaco, Python/JavaScript/TypeScript selection, Run Tests, Save Draft, and Submit actions.
-- Test results show pass/fail, public expected and actual values, runtime, stdout, stderr, and errors. Hidden tests redact expected and actual values in the response/UI.
-- Written problems show a Markdown textarea, local draft/submit actions, self-score, rubric, post-submission solution reveal, Codex review export/import, and imported feedback.
-- The latest local submission is restored when returning to a problem.
+### Seeded structure
 
-### Local runner
+Six published paths are available:
 
-- `POST /api/submissions/run` validates input, loads the problem harness, executes each test in a fresh child process, stores results, and returns a submission ID.
-- Python uses a generated import/call harness. JavaScript and TypeScript use TypeScript transpilation to CommonJS followed by a generated function-call harness.
-- Each test has a three-second timeout, 64 KiB process-output cap, 8,000-character display cap, private temporary working directory, and cleanup in `finally`.
-- Python tuples/sets and JavaScript sets are normalized into JSON-compatible output before comparison.
-- This is process isolation for trusted local use, not a security sandbox. Submitted code retains the app process's OS permissions and can access the machine or network.
+1. DSA Confidence Builder
+2. Backend SWE Path
+3. Infrastructure SWE Path
+4. System Design Path
+5. Quant Dev Path
+6. AI-Efficient Engineer Path
 
-### Codex hybrid review
+Together they contain:
 
-- `POST /api/submissions/export-review` writes `.codex-reviews/submission-<id>.md` with the problem, rubric, reference material, answer, and judging instructions.
-- The UI displays the exact local `codex` command for producing the expected feedback file.
-- `POST /api/submissions/import-feedback` reads only `.codex-reviews/submission-<id>-feedback.md`, stores it in `reviewFeedback`, and marks the submission reviewed.
-- `.codex-reviews/` is gitignored. The app invokes no AI API and no hosted code runner.
+- 36 ordered modules;
+- 80 lesson records;
+- exactly eight real mini-lessons;
+- 72 explicit placeholder lesson briefs (two per module).
 
-## Runnable seed problems
+The eight real mini-lessons are:
 
-Eight existing original problems now have executable function-call metadata, with public and hidden tests:
+1. Two Sum as a Hashmap Pattern
+2. Sliding Window: When It Applies
+3. What a Rate Limiter Actually Does
+4. Cache Warming and Cache Stampedes
+5. How to Structure a System Design Answer
+6. Composite Indexes and Query Shape
+7. TCP vs UDP for Quant Dev
+8. Token-Efficient Debugging Prompts
 
-- `clean-request-window`
-- `feature-rollout-reachability`
-- `maintenance-window-merge`
-- `cooldown-task-scheduler`
-- `account-merge-shared-emails`
-- `migration-batch-sizing`
-- `logfmt-parser-spec`
-- `feature-flag-evaluator-spec`
+Placeholder lessons are not disguised as complete content. The UI labels them **Content scaffold**, and each brief tells the next content agent what instructional, example, progression links, and review checklist to add.
 
-Their prompts remain in the original seed modules. Runnable metadata is isolated in `prisma/seed-data/runnable-overrides.ts`. Seed validation now requires every function-call problem to provide a function name, supported languages, structured tests, at least one public test, and at least one hidden test.
+### Guided UX
+
+- `/paths` shows role, level, estimated hours, ready-lesson count, linked problems, and derived progress.
+- Path pages show module order, “You are here,” start/continue action, weekly plan, and warmup/core/challenge/advanced counts.
+- Module pages show prerequisites, outcomes, lesson readiness, ordered study steps, and confidence-graded linked practice.
+- Lesson pages render Markdown, takeaways, examples, sources, previous/next navigation, linked practice, and a clear placeholder warning.
+- Dashboard includes Continue Learning, active/inferred paths, next lesson, and the existing next-problem recommendations.
+- Problem bank filters now include path, module, and confidence level; problem cards and detail pages show their guided placement.
+- Practice includes Practice by Path and a dedicated Confidence Builder progression.
+
+## Confidence-building problems
+
+The bank now contains 92 validated problems: the previous 80 plus exactly 12 original easy warmups.
+
+- Four runnable DSA warmups: pair sum, unique sliding window, balanced brackets, and graph reachability.
+- Two debugging warmups: boolean environment parsing and missing `await`.
+- Two optimization warmups: set membership and HTTP client reuse.
+- Two database warmups: composite index selection and uniqueness races.
+- Two AI-usage warmups: debugging prompt structure and hallucinated configuration verification.
+
+The four DSA warmups support Python, JavaScript, and TypeScript with public and hidden tests. Combined with the existing eight runnable overlays, 12 coding problems now support local function-call judging.
+
+Existing higher-level problems receive learning metadata through `prisma/seed-data/learning-overrides.ts`; their authored problem content was not overwritten.
+
+## Seed integrity
+
+`npm run validate:seed` now checks:
+
+- all existing problem schema, provenance, duplicate-slug, placeholder, and runnable-test rules;
+- path/module/lesson schemas and stable unique IDs;
+- unique ordering inside paths and modules;
+- either zero placeholders for a completed module or two to three for an incomplete module;
+- preservation of at least the eight foundational real mini-lessons;
+- linked lesson problem slugs;
+- every problem path/module/lesson ID reference.
+
+`prisma/seed.ts` upserts problems first, then paths/modules, resolves lesson problem slugs to database IDs, and upserts lessons without deleting attempts, submissions, or unrelated records.
 
 ## Validation status
 
@@ -78,36 +115,31 @@ npm test
 npm run build
 ```
 
-`npm test` contains four local-runner tests covering Python, captured JavaScript output, TypeScript transpilation, and three-second timeout termination.
+Runtime smoke tests returned HTTP 200 for the path catalog, DSA path, module, real lesson, new runnable warmup, filtered problem bank, dashboard, and practice page. The new pair-sum warmup also passed all public and hidden tests through the existing local runner; its smoke-test submission was removed afterward.
 
-Manual API smoke tests also passed for:
+## Known limitations
 
-- Python, JavaScript, and TypeScript submissions against the same seeded problem;
-- persisted pass/fail results;
-- written submission creation;
-- Codex review bundle export;
-- feedback file import and persistence.
-
-## Known limitations and safety boundary
-
-- The runner is unsafe for untrusted or public use. It does not block filesystem, environment, network, subprocess, or system-call access.
-- A deployed version must disable execution or use a separately secured Docker/VM sandbox, Judge0, Piston, or another purpose-built runner.
-- Hidden tests are not secret from a local repository owner; they are only hidden in normal result presentation.
-- Only `function_call` harnesses are implemented. Schema values for `stdin_stdout` and `custom` are reserved for later work.
-- Every run currently creates a new submission record. Draft/submit updates reuse the current submission selected in the workspace.
-- Import marks feedback as reviewed but does not parse a Codex verdict into `needs_retry` or a numeric score.
-- Prisma still emits the existing `package.json#prisma` deprecation warning.
+- Lesson completion and active-path enrollment are derived rather than explicitly stored.
+- Most modules intentionally contain only placeholder lesson briefs.
+- Several scaffold modules have no linked problem progression yet; the UI states this directly.
+- The runner remains unsafe for public/untrusted execution. See `README.md` before changing it.
+- Only function-call judging exists; stdin/stdout and custom harness types remain reserved.
 - Interviews, resources, and admin sidebar destinations remain unimplemented.
+- Prisma still emits the existing `package.json#prisma` deprecation warning.
 
-## Recommended next steps
+## What Claude Fable 5 should generate next
 
-1. Add tests for submission route validation, review path handling, and database persistence using a disposable test database.
-2. Add a submission-history view and allow selecting prior runs/drafts instead of restoring only the latest.
-3. Decide whether Codex feedback should use a small machine-readable frontmatter block for verdict and score import.
-4. Add abort controls and stronger process-tree cleanup before expanding runner usage.
-5. Implement `stdin_stdout` only when a concrete problem requires it; do not add generic harness complexity speculatively.
-6. Keep code execution disabled in any public deployment until a real sandbox is designed and threat-modeled.
+Work one module at a time. The best next slice is the first System Design module, **How to Approach Any System Design Interview**:
+
+1. Keep the existing real overview lesson.
+2. Replace its two placeholder briefs with reviewed lessons on requirements clarification and interview-time allocation/diagramming.
+3. Add three original problems graded warmup, core, and challenge.
+4. Link every new problem bidirectionally through lesson slugs and path/module/lesson IDs.
+5. Cite public primary or high-quality educational sources.
+6. Run every validation command and stop after that single module.
+
+After that, complete the DSA Confidence Builder modules in order, preserving the easy → core → applied-system branch rather than bulk-generating hard problems.
 
 ## Recommended next prompt for Claude Fable 5 / Codex
 
-> Continue from the current Interview OS repository and read `README.md` and `PROGRESS.md` before editing. Preserve the 80-problem bank, Submission schema, local runner APIs, Codex file review workflow, and eight runnable problem overlays. Do not add paid APIs, hosted runners, more problem content, or a public execution path. Implement one narrow reliability slice: add API/database tests for submission save/run/export/import using a disposable SQLite database, add a submission-history panel on `/problems/[id]`, and improve child-process-tree cancellation without claiming the runner is a secure sandbox. Run Prisma generation, seed validation, lint, typecheck, tests, and build; document and commit only that slice.
+> Read `README.md`, `PROGRESS.md`, `prisma/seed-data/learning.ts`, and `prisma/seed-data/learning-overrides.ts` before editing. Preserve all 92 problems, submissions, local judging, and Codex review flows. Expand exactly one module: `system-design/approach-any-system-design`. Keep the existing real overview lesson; replace that module's two placeholder briefs with concise reviewed lessons on requirements clarification and interview-time allocation/diagramming, then add exactly three original system-design exercises graded warmup/core/challenge and link them to the path, module, and lessons. Do not expand any other module. Use public sources, update documentation/counts, run Prisma generation/push, seed validation, seed, lint, typecheck, tests, and build, then commit only that slice.

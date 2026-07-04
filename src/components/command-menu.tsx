@@ -6,6 +6,7 @@ import {
   Bot,
   Braces,
   FilePlus2,
+  GraduationCap,
   LayoutDashboard,
   Library,
   ListChecks,
@@ -34,6 +35,7 @@ export type CommandIndexItem = {
 
 const PAGES = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Learning Paths", href: "/paths", icon: GraduationCap },
   { title: "Problems", href: "/problems", icon: ListChecks },
   { title: "Practice", href: "/practice", icon: Timer },
   { title: "Mock Interviews", href: "/interviews", icon: Swords },

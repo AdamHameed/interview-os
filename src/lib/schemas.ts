@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   ATTEMPT_STATUSES,
   COMPANY_STYLES,
+  CONFIDENCE_LEVELS,
   DIFFICULTIES,
   INTERVIEW_DURATIONS,
   INTERVIEW_FORMATS,
@@ -57,6 +58,10 @@ export const problemInputSchema = z
     supportedLanguages: z
       .array(z.enum(["python", "javascript", "typescript"]))
       .optional(),
+    pathIds: z.array(z.string().min(1)).optional(),
+    moduleIds: z.array(z.string().min(1)).optional(),
+    lessonIds: z.array(z.string().min(1)).optional(),
+    confidenceLevel: z.enum(CONFIDENCE_LEVELS).optional(),
     prompt: z.string().min(80, "prompt must be a real problem, not a stub"),
     context: z.string().optional(),
     constraints: z.string().optional(),

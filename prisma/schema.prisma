@@ -31,6 +31,11 @@ model Problem {
   // function_call | stdin_stdout | custom
   testHarnessType    String?
   supportedLanguages String? // JSON string[]
+  pathIds            String       @default("[]") // JSON LearningPath ids
+  moduleIds          String       @default("[]") // JSON LearningModule ids
+  lessonIds          String       @default("[]") // JSON Lesson ids
+  // warmup | core | challenge | advanced
+  confidenceLevel    String?
   prompt             String
   context            String?
   constraints        String?
@@ -54,6 +59,67 @@ model Problem {
 
   @@index([type])
   @@index([difficulty])
+}
+
+model LearningPath {
+  id             String           @id
+  slug           String           @unique
+  title          String
+  description    String
+  targetRoles    String           @default("[]") // JSON string[]
+  difficulty     String
+  estimatedHours Int
+  order          Int
+  isPublished    Boolean          @default(false)
+  modules        LearningModule[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([order])
+  @@index([isPublished])
+}
+
+model LearningModule {
+  id             String       @id
+  pathId         String
+  path           LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  slug           String
+  title          String
+  description    String
+  order          Int
+  estimatedHours Int
+  prerequisites  String       @default("[]") // JSON string[]
+  outcomes       String       @default("[]") // JSON string[]
+  lessons        Lesson[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([pathId, slug])
+  @@index([pathId, order])
+}
+
+model Lesson {
+  id               String         @id
+  moduleId         String
+  module           LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  slug             String         @unique
+  title            String
+  // concept | walkthrough | pattern | system_design | debugging | optimization | ai_usage | project_deep_dive
+  lessonType       String
+  difficulty       String
+  estimatedMinutes Int
+  contentMarkdown  String
+  keyTakeaways     String         @default("[]") // JSON string[]
+  examples         String         @default("[]") // JSON string[]
+  linkedProblemIds String         @default("[]") // JSON Problem ids
+  sourceUrls       String         @default("[]") // JSON string[]
+  order            Int
+  isPlaceholder    Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([moduleId, order])
+  @@index([isPlaceholder])
 }
 
 model Submission {

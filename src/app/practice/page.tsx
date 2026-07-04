@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import type { ProblemType } from "@/lib/enums";
+import { hydrateProblem } from "@/lib/problems";
+import { learningPathId } from "@/lib/learning";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +20,22 @@ const ROUNDS: { title: string; type: ProblemType; description: string; focus: st
 ];
 
 export default async function PracticePage() {
-  const counts = await db.problem.groupBy({ by: ["type"], _count: { _all: true } });
-  const countByType = new Map(counts.map((item) => [item.type, item._count._all]));
+  const [rawProblems, learningPaths] = await Promise.all([
+    db.problem.findMany(),
+    db.learningPath.findMany({ where: { isPublished: true }, orderBy: { order: "asc" } }),
+  ]);
+  const problems = rawProblems.map(hydrateProblem);
+  const countByType = new Map<string, number>();
+  for (const problem of problems) {
+    countByType.set(problem.type, (countByType.get(problem.type) ?? 0) + 1);
+  }
+  const confidencePathId = learningPathId("dsa-confidence-builder");
+  const confidenceProblems = problems.filter((problem) => problem.pathIds.includes(confidencePathId));
+  const confidenceCounts = {
+    warmup: confidenceProblems.filter((problem) => problem.confidenceLevel === "warmup").length,
+    core: confidenceProblems.filter((problem) => problem.confidenceLevel === "core").length,
+    challenge: confidenceProblems.filter((problem) => problem.confidenceLevel === "challenge").length,
+  };
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -28,6 +44,39 @@ export default async function PracticePage() {
         <h2 className="mt-2 text-3xl font-semibold tracking-tight">Choose the skill, then do the rep.</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Each mode maps to a common interview format. Pick one based on the signal you need to strengthen, not just the topic you enjoy.</p>
       </div>
+
+      <section className="mt-7 rounded-2xl border bg-card p-5 md:p-7">
+        <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <Badge variant="secondary">Confidence Builder</Badge>
+            <h3 className="mt-3 text-xl font-semibold">Warmup → core → challenge</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Begin with genuinely easy coding reps, then branch into the same patterns under
+              backend, quant, and performance constraints. The progression is explicit so you
+              are not dropped into the entire bank at once.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge variant="outline">{confidenceCounts.warmup} warmups</Badge>
+              <Badge variant="outline">{confidenceCounts.core} core</Badge>
+              <Badge variant="outline">{confidenceCounts.challenge} challenges</Badge>
+            </div>
+          </div>
+          <Link href="/paths/dsa-confidence-builder" className="inline-flex items-center gap-1 text-sm font-medium">
+            Start confidence path <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h3 className="text-lg font-semibold">Practice by path</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Keep each practice session connected to a larger study sequence.</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {learningPaths.map((path) => {
+            const count = problems.filter((problem) => problem.pathIds.includes(path.id)).length;
+            return <Link key={path.id} href={`/problems?path=${encodeURIComponent(path.id)}`} className="rounded-xl border p-4 transition-colors hover:bg-muted/40"><div className="flex items-center justify-between gap-3"><span className="font-medium">{path.title}</span><Badge variant="outline">{count}</Badge></div><p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{path.description}</p></Link>;
+          })}
+        </div>
+      </section>
 
       <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {ROUNDS.map((round) => {
