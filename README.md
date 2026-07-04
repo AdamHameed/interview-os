@@ -31,7 +31,7 @@ Interview OS supports two complementary study modes:
 
 Paths do not own modules. `LearningPathModule` is an ordered join with `isRequired` and a `warmup | core | advanced | optional | interview_cram` label, so the same module can appear in several paths. Lessons belong to standalone modules. Problems may link to multiple module IDs and carry a `warmup | core | challenge | advanced` confidence level.
 
-The current scaffold contains six paths, 69 standalone modules, 53 path memberships, 151 lessons, and 13 reviewed mini-lessons. The remaining 138 lesson briefs are visibly marked scaffolds for later content work.
+The current scaffold contains six paths, 79 standalone modules, 63 path memberships, 175 lessons, and 17 reviewed mini-lessons. The remaining 158 lesson briefs are visibly marked scaffolds for later content work. The DSA Confidence Builder now spans 16 modules covering the full roadmap topic list; binary search and linked lists are fully developed with lessons and runnable problems.
 
 ### Add a standalone module
 
@@ -82,7 +82,7 @@ The local runner:
 
 Public tests show expected and actual values. Hidden tests report pass/fail without returning those values. Hidden tests are a practice affordance, not a security boundary: this is a local database and the seed source is available on disk.
 
-Eight existing problems plus four new DSA confidence warmups currently have runnable function-call tests. Existing executable metadata is isolated in `prisma/seed-data/runnable-overrides.ts`; the new warmups carry their metadata directly.
+Twenty-one problems currently have runnable function-call tests: eight existing problems overlaid via `prisma/seed-data/runnable-overrides.ts`, four DSA confidence warmups, and nine binary-search/linked-list problems in `prisma/seed-data/dsa-search-lists.ts`; the newer problems carry their executable metadata directly.
 
 ### Local runner security warning
 

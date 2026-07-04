@@ -49,11 +49,13 @@ Six published paths are available:
 
 Together they contain:
 
-- 69 standalone modules across DSA, Docker, Kubernetes, operating systems, networking, C++, Python, databases, caching, backend/system design, quant development, and AI usage;
-- 53 ordered path memberships, including modules reused across multiple paths;
-- 151 lesson records;
-- 13 real mini-lessons;
-- 138 explicit placeholder lesson briefs.
+- 79 standalone modules across DSA, Docker, Kubernetes, operating systems, networking, C++, Python, databases, caching, backend/system design, quant development, and AI usage;
+- 63 ordered path memberships, including modules reused across multiple paths;
+- 175 lesson records;
+- 17 real mini-lessons;
+- 158 explicit placeholder lesson briefs.
+
+The 2026-07-04 DSA batch extended the DSA Confidence Builder to 16 ordered modules covering the full roadmap topic list (arrays/hashing through math/geometry), added four real lessons (binary-search invariants, search-on-answers, linked-list pointer discipline, slow/fast pointers), and mapped twelve previously orphaned problems into modules.
 
 This pass added six requested ready module topics while preserving the previous useful instructionals:
 
@@ -79,7 +81,7 @@ Placeholder lessons are not disguised as complete content. The UI labels them **
 
 ## Confidence-building problems
 
-The bank now contains 92 validated problems: the previous 80 plus exactly 12 original easy warmups.
+The bank now contains 101 validated problems: 80 originals, 12 easy warmups, and 9 binary-search/linked-list problems (4 warmups, 3 core, 1 challenge, 1 applied) added 2026-07-04.
 
 - Four runnable DSA warmups: pair sum, unique sliding window, balanced brackets, and graph reachability.
 - Two debugging warmups: boolean environment parsing and missing `await`.
@@ -87,7 +89,7 @@ The bank now contains 92 validated problems: the previous 80 plus exactly 12 ori
 - Two database warmups: composite index selection and uniqueness races.
 - Two AI-usage warmups: debugging prompt structure and hallucinated configuration verification.
 
-The four DSA warmups support Python, JavaScript, and TypeScript with public and hidden tests. Combined with the existing eight runnable overlays, 12 coding problems now support local function-call judging.
+The four DSA warmups and all nine binary-search/linked-list problems support Python, JavaScript, and TypeScript with public and hidden tests. Combined with the existing eight runnable overlays, 21 coding problems now support local function-call judging.
 
 Existing higher-level problems receive learning metadata through `prisma/seed-data/learning-overrides.ts`; their authored problem content was not overwritten.
 
@@ -158,26 +160,26 @@ This plan was produced by auditing every module against the current 92-problem b
 
 ### DSA Confidence Builder (priority 1)
 
+All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sliding window/prefix sums → binary search → linked lists → stacks/queues/heaps → trees/graphs → tries → backtracking → greedy → intervals → 1-D DP → 2-D DP → advanced graphs → bit manipulation → math/geometry → DSA-to-real-systems. The 2026-07-04 batch fully developed binary-search and linked-lists and applied all orphan-problem mappings.
+
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
 | arrays-hashmaps-two-pointers | beginner | — | Two Sum as a Hashmap Pattern | 3/0/0/0 (→ quadratic-settlement-matcher C) | core, challenge, advanced | coding, optimization | none (covered) |
 | sliding-window-prefix-sums | beginner | arrays | Sliding Window: When It Applies | 1/1/0/0 | challenge, advanced; prefix sums entirely untaught | coding | prefix-sum references (CLRS/uni notes) |
-| binary-search *(missing module)* | beginner | arrays | — | 0/0/0/0 | all | — | invariant/boundary write-ups (uni notes, Bentley-style) |
-| linked-lists *(missing module)* | beginner | — | — | 0/0/0/0 | all | — | pointer-manipulation references |
-| stacks-queues-heaps | intermediate | arrays | — | 1/1/0/0 (→ rolling-window-max-latency C, cooldown-task-scheduler Ch, log-topk-full-sort C) | concept lesson, challenge, advanced | coding | heap/deque references |
-| trees-graphs | intermediate | stacks-queues-heaps | — | 1/1/0/0 (→ account-merge-shared-emails C, surge-aware-shortest-path Ch) | concept lesson, advanced | coding | BST/traversal/union-find references |
-| tries *(missing module)* | intermediate | trees-graphs | — | 0/0/0/0 (→ cli-autocomplete-trie C/Ch) | all | — | trie references |
-| backtracking *(missing module)* | intermediate | trees-graphs | — | 0/0/0/0 | all | — | pruning/state-space references |
-| greedy *(missing module)* | intermediate | arrays | — | 0/0/0/0 | all | — | exchange-argument references |
-| intervals *(missing module)* | intermediate | greedy | — | 0/0/0/0 (→ maintenance-window-merge W) | all | — | sweep-line references |
-| dynamic-programming-basics | intermediate | arrays | — | 0/0/0/0 | **everything** | — | 1-D DP references (uni notes) |
-| dp-grids-strings *(missing module, 2-D DP)* | advanced | dp-basics | — | 0/0/0/0 | all | — | grid/edit-distance references |
-| advanced-graphs *(missing module)* | advanced | trees-graphs | — | 0/0/0/0 (→ surge-aware-shortest-path Ch) | all | — | Dijkstra/topo-sort/MST references |
-| bit-manipulation *(missing module)* | intermediate | arrays | — | 0/0/0/0 (→ oncall-coverage-bitmask A) | all | — | two's-complement/mask references |
-| math-geometry *(missing module)* | intermediate | arrays | — | 0/0/0/0 | all | — | modular arithmetic/geometry basics |
-| dsa-to-real-systems | advanced | trees-graphs, dp-basics | — | 0/1/0/0 (→ ttl-lru-session-cache C, log-template-dedup C, mini-matching-engine A, order-book-imbalance-window C) | lessons, warmup, challenge | coding | none (applied original) |
-
-Proposed extended path order once scaffolds exist: arrays → sliding window/prefix sums → binary search → linked lists → stacks/queues/heaps → trees/graphs → tries → backtracking → greedy → intervals → 1-D DP → 2-D DP → advanced graphs → bit manipulation → math/geometry → DSA-to-real-systems.
+| binary-search | beginner | arrays | Invariant Game; Searching the Answer Space | 2/2/0/1 | challenge | coding (all runnable) | none (covered) |
+| linked-lists | beginner | — | Pointer Discipline; Slow/Fast Pointers | 2/1/1/0 | advanced | coding (all runnable) | none (covered) |
+| stacks-queues-heaps | intermediate | arrays | — | 1/3/1/0 | concept lesson, advanced | coding, optimization | heap/deque references |
+| trees-graphs | intermediate | stacks-queues-heaps | — | 1/2/0/0 | concept lesson, challenge, advanced | coding | BST/traversal/union-find references |
+| tries | intermediate | trees-graphs | — | 0/1/0/0 | lessons, warmup, challenge, advanced | coding | trie references |
+| backtracking | intermediate | trees-graphs | — | 0/0/0/0 | all | — | pruning/state-space references |
+| greedy | intermediate | arrays | — | 0/0/0/0 | all | — | exchange-argument references |
+| intervals | intermediate | greedy | — | 1/0/0/0 | lessons, core, challenge, advanced | coding | sweep-line references |
+| dynamic-programming-basics | intermediate | arrays | — | 0/0/0/1 | lessons, warmup, core, challenge | coding | 1-D DP references (uni notes) |
+| dp-grids-strings | advanced | dp-basics | — | 0/0/0/0 | all | — | grid/edit-distance references |
+| advanced-graphs | advanced | trees-graphs | — | 0/0/1/0 | lessons, warmup, core, advanced | coding | Dijkstra/topo-sort/MST references |
+| bit-manipulation | intermediate | arrays | — | 0/0/0/1 | lessons, warmup, core, challenge | coding | two's-complement/mask references |
+| math-geometry | intermediate | arrays | — | 0/0/0/0 | all | — | modular arithmetic/geometry basics |
+| dsa-to-real-systems | advanced | trees-graphs, dp-basics | — | 0/4/0/1 | lessons, warmup, challenge | coding | none (applied original) |
 
 ### Backend SWE (priority 2)
 
@@ -288,11 +290,9 @@ Proposed extended path order once scaffolds exist: arrays → sliding window/pre
 
 Each batch is bounded, independently committable, and ends with the full validation suite plus manual route checks. Batches 2–3 follow the Prompt 2 shape in `CLAUDE_CONTENT_PROMPTS.md`; Batch 1 follows Prompt 3.
 
-### Batch 1 — DSA roadmap scaffolds + binary search & linked lists
+### Batch 1 — DSA roadmap scaffolds + binary search & linked lists — DONE 2026-07-04
 
-1. Scaffold the 10 missing DSA modules (`binary-search`, `linked-lists`, `tries`, `backtracking`, `greedy`, `intervals`, `dp-grids-strings`, `advanced-graphs`, `bit-manipulation`, `math-geometry`) as `MODULE_SPECS` entries with prerequisites per the table above, and extend the `dsa-confidence-builder` path ordering to the proposed 16-module sequence. Scaffolds only — the generator supplies the 2 placeholder lessons each.
-2. Map the orphan DSA problems via `learning-overrides.ts`: rolling-window-max-latency and cooldown-task-scheduler → stacks-queues-heaps; account-merge-shared-emails → trees-graphs; cli-autocomplete-trie → tries; surge-aware-shortest-path → advanced-graphs; oncall-coverage-bitmask → bit-manipulation; maintenance-window-merge → also intervals; ttl-lru-session-cache, log-template-dedup, mini-matching-engine, order-book-imbalance-window → dsa-to-real-systems; log-topk-full-sort → stacks-queues-heaps.
-3. Fully develop **binary-search** and **linked-lists** (both beginner, both empty): concept + worked-example lessons each, and across the pair exactly 4 runnable warmups, 3 core, 1 challenge, plus at most 1 applied variant, all with Python/JavaScript/TypeScript function-call tests.
+Completed: 10 DSA module scaffolds added, path extended to 16 ordered modules, 12 orphan problems mapped via `learning-overrides.ts`, and binary-search + linked-lists fully developed (4 lessons; 9 runnable problems in `prisma/seed-data/dsa-search-lists.ts`: sorted-build-id-lookup, first-failing-canary, error-code-range-scan, backup-bandwidth-planner, stale-metric-lookup, reverse-approval-chain, middle-of-release-queue, drop-stale-checkpoint, merge-alert-feeds). All reference solutions verified against the seeded tests.
 
 ### Batch 2 — Databases entry point: sql-indexes + transactions-isolation
 
