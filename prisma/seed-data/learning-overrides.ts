@@ -286,4 +286,48 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     lessonIds: [],
     confidenceLevel: "core",
   },
+  // http-request-lifecycle: link existing warmups to new concept lesson
+  "missing-await-save-warmup": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("http-request-lifecycle")],
+    lessonIds: [lessonId(moduleId("http-request-lifecycle"), "http-request-lifecycle-concept")],
+    confidenceLevel: "warmup",
+  },
+  "client-per-row-warmup": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("http-request-lifecycle")],
+    lessonIds: [lessonId(moduleId("http-request-lifecycle"), "http-request-lifecycle-concept")],
+    confidenceLevel: "warmup",
+  },
+  // queues-workers: map orphan problems to the module
+  "async-worker-drops-jobs": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("queues-workers")],
+    lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-job-lifecycle")],
+    confidenceLevel: "core",
+  },
+  "queue-redelivery-duplicate-emails": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("queues-workers")],
+    lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-delivery-contract")],
+    confidenceLevel: "core",
+  },
+  "job-scheduler-spec": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("queues-workers")],
+    lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-job-lifecycle")],
+    confidenceLevel: "core",
+  },
+  "batcher-throughput-latency-trap": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("queues-workers")],
+    lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-job-lifecycle")],
+    confidenceLevel: "challenge",
+  },
+  "unbounded-queue-oom": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("queues-workers")],
+    lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-delivery-contract")],
+    confidenceLevel: "challenge",
+  },
 };
