@@ -1,6 +1,6 @@
 # Interview OS — Progress and Handoff
 
-Last updated: 2026-07-04 on branch `codex-stabilize` (problem-solving flow and route-health pass).
+Last updated: 2026-07-04 on branch `codex-stabilize` (Batches 9 and 10 complete; 174 problems, 47 real lessons).
 
 ## Current platform
 
@@ -186,14 +186,14 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
-| http-request-lifecycle | beginner | tcp-vs-udp | — | 2/0/0/0 | lessons, core, challenge, advanced | debugging, optimization | RFC 9110–9112 |
+| http-request-lifecycle | beginner | tcp-vs-udp | How an HTTP Request Travels (concept); Tracing One POST Through Nginx (walkthrough) | 2/2/1/0 | advanced | debugging, optimization, read-code | RFC 9110–9112 (cited) |
 | apis-requirements | beginner | http-request-lifecycle | API Contracts; Designing One Endpoint Well | 2/1/0/1 | challenge | system_design scenarios | none (covered) |
 | sql-indexes | beginner | — | B-Tree Mental Model; Reading EXPLAIN | 2/2/1/0 | advanced | databases, optimization | none (covered) |
 | composite-indexes | intermediate | sql-indexes | Composite Indexes and Query Shape | 2/0/1/0 | core, advanced | databases, optimization | PostgreSQL multicolumn-index docs (cited) |
 | transactions-isolation | intermediate | — | Isolation Levels & Anomalies; Lost Update Walkthrough | 2/3/1/2 | — (full ladder) | databases, read-code | none (covered) |
 | redis-caching | beginner | — | — | 0/1/1/0 | lessons, warmup, advanced | debugging, read-code | redis.io docs |
 | caching-strategies | intermediate | redis-caching | Cache Warming and Cache Stampedes | 0/0/1/0 | warmup, core, advanced | optimization | none (covered) |
-| queues-workers | intermediate | — | — | 0/0/1/0 (→ async-worker-drops-jobs C, queue-redelivery-duplicate-emails C, job-scheduler-spec C, unbounded-queue-oom Ch, batcher-throughput-latency-trap Ch) | lessons, warmup, advanced | debugging, write-code, optimization | queue-semantics references (SQS/RabbitMQ public docs) |
+| queues-workers | intermediate | — | The Queue-Worker Contract (concept); Designing a Job Queue That Survives Restarts (walkthrough) | 2/3/3/0 | advanced | debugging, write-code, optimization, read-code | SQS/Kafka docs (cited) |
 | rate-limiting | intermediate | apis-requirements | What a Rate Limiter Actually Does | 0/1/1/0 | warmup, advanced | write-code, coding | none (covered) |
 | observability | intermediate | — | — | 1/0/0/0 | lessons, core, challenge, advanced | optimization | Google SRE book, OpenTelemetry docs |
 | reliability-backpressure | advanced | queues-workers, observability | — | 0/1/0/0 (→ retry-backoff-wrapper-spec C, unbounded-queue-oom Ch, lease-clock-skew-split-brain A) | lessons, warmup | coding, write-code | SRE book overload chapters |
@@ -271,8 +271,8 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 | docker-fundamentals | beginner | — | Containers Mental Model; docker run Walkthrough | 2/2/1/0 | advanced | debugging, os/networking | docs.docker.com (cited), kernel namespaces docs |
 | dockerfiles-image-layers | intermediate | docker-fundamentals | Docker Image Layers; Cache Optimization Walkthrough | 2/2/1/0 | advanced | optimization, write-code, debugging | docs.docker.com build cache (cited) |
 | docker-compose | beginner | docker-fundamentals | — | 0/0/0/0 | all | — | compose docs |
-| kubernetes-fundamentals | beginner | docker-fundamentals | — | 0/0/0/0 | all | — | kubernetes.io concepts |
-| pods-deployments-services | beginner | k8s-fundamentals | Pods vs Deployments vs Services | 0/0/0/0 | all problems | — | kubernetes.io (cited) |
+| kubernetes-fundamentals | beginner | docker-fundamentals | Kubernetes Core Concepts: Desired-State Loop (concept); What Happens When kubectl apply Creates a Deployment (walkthrough) | 2/2/1/0 | advanced | read-code, debugging, write-code | kubernetes.io concepts/architecture (cited) |
+| pods-deployments-services | beginner | k8s-fundamentals | Pods vs Deployments vs Services (concept); Tracing Traffic from Service to Pod (walkthrough) | 2/2/1/0 | advanced | read-code, write-code, debugging | kubernetes.io workloads/services (cited) |
 | kubernetes-configmaps-secrets | intermediate | pods-deployments-services | — | 0/0/0/0 | all | — | kubernetes.io config docs |
 | kubernetes-networking-ingress | advanced | pods…, tcp-vs-udp | — | 0/0/0/0 | all | — | kubernetes.io networking/ingress |
 | kubernetes-scheduling-resource-limits | advanced | pods…, scheduling | — | 0/0/0/0 | all | — | kubernetes.io scheduler/resources |
@@ -316,6 +316,32 @@ Completed: three real lessons (TCP reliability traced packet by packet; a connec
 
 Completed: four real lessons (DP as a state definition, deriving a 1-D DP end to end, grid tables, string alignment with edit distance and LCS) and nine original runnable problems in `prisma/seed-data/dsa-dynamic-programming.ts` (release-train-hops, cheapest-retry-ladder, ad-slot-revenue-plan, fewest-batches-exact-total, warehouse-robot-routes, ordered-log-subsequence, cheapest-rack-cabling, config-drift-distance, shared-history-length) — 4 warmups, 3 core, 1 challenge, 1 applied, all with Python/JavaScript/TypeScript public and hidden tests including greedy-refuting and performance cases. Reference solutions verified against all 52 seeded tests. This closes the last empty priority-1 gap: every DSA module the path marks core now has at least a warmup entry point.
 
+### Batch 9 — Backend: http-request-lifecycle + queues-workers — DONE 2026-07-04
+
+Completed: two concept lessons (HTTP request lifecycle; the queue-worker delivery contract) and two walkthrough lessons (tracing one POST through Nginx/app/DB; designing a job queue that survives restarts). Five new problems in `prisma/seed-data/http-queues-foundations.ts`:
+- http-timeout-three-layers (core, debugging): diagnose connect / read / pool-acquisition timeout from logs
+- http-retry-safety-analysis (core, read_code): classify six HTTP operations as safe/idempotent with worst-case retry analysis
+- http-latency-waterfall-diagnosis (challenge, debugging): waterfall shows 8s TTFB; trace to PostgreSQL ALTER TABLE lock and prescribe non-blocking migration
+- queue-delivery-guarantee-classify (warmup, read_code): classify four queue configurations as at-most-once / at-least-once / effectively-exactly-once
+- dlq-stuck-message-diagnosis (warmup, debugging): JSONDecodeError in DLQ; diagnose permanent vs transient failure class, fix retry strategy, identify producer as fix site
+
+Five orphan problems mapped via `learning-overrides.ts` to queues-workers (async-worker-drops-jobs, queue-redelivery-duplicate-emails, job-scheduler-spec as core; batcher-throughput-latency-trap, unbounded-queue-oom as challenge). Two existing http-request-lifecycle warmups linked to the new concept lesson. Sources: RFC 9110, SQS/Kafka docs.
+
+### Batch 10 — Kubernetes: kubernetes-fundamentals + pods-deployments-services — DONE 2026-07-04
+
+Completed: two concept lessons and one new walkthrough lesson. kubernetes-fundamentals: the desired-state reconciliation loop (concept) and the full kubectl-apply six-step chain (walkthrough). pods-deployments-services: traffic-tracing walkthrough (Service → Endpoints → label selector → readiness probe → container) added alongside the existing concept lesson. Ten new problems in `prisma/seed-data/kubernetes-foundations.ts`:
+- k8s-control-plane-components (warmup, read_code): match five components to responsibilities + failure modes
+- kubectl-apply-trace (warmup, read_code): order six events from kubectl apply to Running pod
+- k8s-crashloopbackoff-diagnosis (core, debugging): 2-second lifetime, missing DATABASE_URL, Secret-based fix
+- k8s-resource-requests-limits (core, write_code): configure requests/limits for Node.js; distinguish OOMKilled (exit 137) from CPU throttling; name QoS classes
+- k8s-cluster-dns-failure (challenge, debugging): pods can't reach each other by name; diagnose NodeLocal DNSCache DaemonSet failure on one node
+- k8s-workload-type-selection (warmup, read_code): choose Deployment / StatefulSet / Job / CronJob / Pod for five scenarios
+- k8s-service-type-selection (warmup, read_code): choose ClusterIP / LoadBalancer / Headless / NodePort for four scenarios including Headless DNS A-record behavior
+- k8s-deployment-rollout-strategy (core, write_code): configure maxUnavailable=1/maxSurge=2 for ≥5/6 always-ready; trace two rollout waves; distinguish readiness from liveness probes
+- k8s-service-selector-mismatch (core, debugging): version=v2 in pod labels vs version=stable in Service selector; two fixes (selector patch vs Deployment rollout) with tradeoffs
+- k8s-pod-stuck-pending (challenge, debugging): diagnose three distinct Pending causes from kubectl describe: CPU exhaustion, taint+nodeSelector conflict, PVC not bound
+Sources: kubernetes.io concepts, scheduling, storage, networking documentation.
+
 ### Batch 7 — C++: raii-resource-ownership + move-semantics — DONE 2026-07-04
 
 Completed: one new walkthrough lesson for raii-resource-ownership (tracing resource lifetime through every exit path, RAII chaining via LIFO scope order) and two new lessons for move-semantics (value categories concept; why noexcept is not optional for move constructors, walkthrough). Six written problems in `prisma/seed-data/cpp-foundations.ts`:
@@ -342,7 +368,7 @@ Completed: two new lessons for docker-fundamentals (namespaces/cgroups/overlayfs
 - dockerfile-build-reproducibility (challenge, write_code): fix four non-determinism sources and explain reproducibility for supply-chain security
 Sources: Docker documentation, Linux kernel cgroup/namespace man pages.
 
-**Queued** (in priority order): http-request-lifecycle deepening; market-data-feeds + order-books; K8s fundamentals pair; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
+**Queued** (in priority order): market-data-feeds + order-books; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
 
 ## Long-term generation guidance
 
@@ -364,4 +390,4 @@ Keep easy problems genuinely easy: a warmup isolates one main idea, uses a small
 
 ## Recommended next prompt
 
-Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: `http-request-lifecycle` deepening (concept + 2 warmups + 2 core + 1 challenge) paired with `market-data-feeds` + `order-books` or the K8s fundamentals pair (`kubernetes-fundamentals` + `pods-deployments-services`). Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.
+Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: `market-data-feeds` + `order-books` (Quant Dev path — orphan candidates: multicast-gap-recovery-design, order-book-sequence-state-machine, orderbook-level-aggregator-spec, mini-matching-engine) or `stacks-queues-heaps` + `trees-graphs` (DSA Confidence Builder — concept lessons needed, orphan candidates available). Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.
