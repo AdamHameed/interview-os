@@ -1,6 +1,6 @@
 # Interview OS — Progress and Handoff
 
-Last updated: 2026-07-03 on branch `codex-stabilize`.
+Last updated: 2026-07-04 on branch `codex-stabilize` (curriculum coverage plan pass; no seed content changed).
 
 ## Current platform
 
@@ -134,9 +134,181 @@ Runtime smoke tests returned HTTP 200 for the module catalog, all six new real-l
 - Interviews, resources, and admin sidebar destinations remain unimplemented.
 - Prisma still emits the existing `package.json#prisma` deprecation warning.
 
-## What Claude Fable 5 should generate next
+## Curriculum coverage plan (2026-07-04)
 
-Expand content in small, reviewed batches while maintaining a curriculum coverage matrix. The long-term curriculum must include varied difficulties and problem formats across DSA, backend, infrastructure, databases, debugging, optimization, system design, quant development, networking/OS/concurrency, and effective AI usage.
+This plan was produced by auditing every module against the current 92-problem bank, the 13 ready lessons, and the problem→module links in `prisma/seed-data/learning-overrides.ts` plus the direct metadata in `prisma/seed-data/starter-confidence.ts`. All validation (`validate:seed`, lint, typecheck, tests, build) passed on the audited state.
+
+### How to read the tables
+
+- **Level** is the intended learner level (module `difficulty`).
+- **Lessons** counts ready (non-placeholder) lessons over total. Every incomplete module carries the same scaffold sequence — *Foundations* (concept) → *Applied Checkpoint* (walkthrough) — so the lesson-sequence column lists only ready lessons; the target sequence for every module is: concept lesson → worked example/walkthrough → optional interview checkpoint.
+- **W/C/Ch/A** counts problems currently linked at each confidence level (warmup/core/challenge/advanced). A problem shared by two modules is counted in both. `→` marks *unlinked candidates*: existing problems that fit the module but lack `learning-overrides` metadata — linking them is a zero-content-risk win.
+- **Missing** lists the empty problem tiers after counting candidates.
+- **Formats** lists interview formats currently exercised by linked problems (coding = runnable function-call).
+- **Sources** lists research still needed before authoring lessons (primary/public material only; problems themselves stay original).
+
+### Global gaps (highest leverage first)
+
+1. **~40 authored problems have no module/path metadata.** Most read-code, write-code, debugging, optimization, and starter-databases/quant problems are orphans. Extending `learning-overrides.ts` costs no new content and instantly fills many W/C/Ch/A slots (candidates are marked `→` below).
+2. **The bank contains zero `system_design`-type problems** even though a System Design path exists. Current design-adjacent problems are debugging/optimization formats. A first batch of open-ended scenario problems (no code harness) is queued as Batch 4+.
+3. **10 of the 18 DSA roadmap families have no module scaffold**: binary search, linked lists, tries, backtracking, advanced graphs, 2-D DP, greedy, intervals, bit manipulation, math/geometry. (Trees/BSTs live inside `trees-graphs`; two pointers inside `arrays-hashmaps-two-pointers`.)
+4. **`dynamic-programming-basics` has zero linked problems** — the worst gap inside the existing DSA path.
+5. **56 of 69 modules have only scaffold lessons.** OS, networking, Docker/K8s, C++, Python, and quant modules are almost all lesson-free.
+6. No `os_networking_concurrency`-type problems exist yet; OS/networking modules will need debugging/read-code/written-analysis formats.
+
+### DSA Confidence Builder (priority 1)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| arrays-hashmaps-two-pointers | beginner | — | Two Sum as a Hashmap Pattern | 3/0/0/0 (→ quadratic-settlement-matcher C) | core, challenge, advanced | coding, optimization | none (covered) |
+| sliding-window-prefix-sums | beginner | arrays | Sliding Window: When It Applies | 1/1/0/0 | challenge, advanced; prefix sums entirely untaught | coding | prefix-sum references (CLRS/uni notes) |
+| binary-search *(missing module)* | beginner | arrays | — | 0/0/0/0 | all | — | invariant/boundary write-ups (uni notes, Bentley-style) |
+| linked-lists *(missing module)* | beginner | — | — | 0/0/0/0 | all | — | pointer-manipulation references |
+| stacks-queues-heaps | intermediate | arrays | — | 1/1/0/0 (→ rolling-window-max-latency C, cooldown-task-scheduler Ch, log-topk-full-sort C) | concept lesson, challenge, advanced | coding | heap/deque references |
+| trees-graphs | intermediate | stacks-queues-heaps | — | 1/1/0/0 (→ account-merge-shared-emails C, surge-aware-shortest-path Ch) | concept lesson, advanced | coding | BST/traversal/union-find references |
+| tries *(missing module)* | intermediate | trees-graphs | — | 0/0/0/0 (→ cli-autocomplete-trie C/Ch) | all | — | trie references |
+| backtracking *(missing module)* | intermediate | trees-graphs | — | 0/0/0/0 | all | — | pruning/state-space references |
+| greedy *(missing module)* | intermediate | arrays | — | 0/0/0/0 | all | — | exchange-argument references |
+| intervals *(missing module)* | intermediate | greedy | — | 0/0/0/0 (→ maintenance-window-merge W) | all | — | sweep-line references |
+| dynamic-programming-basics | intermediate | arrays | — | 0/0/0/0 | **everything** | — | 1-D DP references (uni notes) |
+| dp-grids-strings *(missing module, 2-D DP)* | advanced | dp-basics | — | 0/0/0/0 | all | — | grid/edit-distance references |
+| advanced-graphs *(missing module)* | advanced | trees-graphs | — | 0/0/0/0 (→ surge-aware-shortest-path Ch) | all | — | Dijkstra/topo-sort/MST references |
+| bit-manipulation *(missing module)* | intermediate | arrays | — | 0/0/0/0 (→ oncall-coverage-bitmask A) | all | — | two's-complement/mask references |
+| math-geometry *(missing module)* | intermediate | arrays | — | 0/0/0/0 | all | — | modular arithmetic/geometry basics |
+| dsa-to-real-systems | advanced | trees-graphs, dp-basics | — | 0/1/0/0 (→ ttl-lru-session-cache C, log-template-dedup C, mini-matching-engine A, order-book-imbalance-window C) | lessons, warmup, challenge | coding | none (applied original) |
+
+Proposed extended path order once scaffolds exist: arrays → sliding window/prefix sums → binary search → linked lists → stacks/queues/heaps → trees/graphs → tries → backtracking → greedy → intervals → 1-D DP → 2-D DP → advanced graphs → bit manipulation → math/geometry → DSA-to-real-systems.
+
+### Backend SWE (priority 2)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| http-request-lifecycle | beginner | tcp-vs-udp | — | 2/0/0/0 | lessons, core, challenge, advanced | debugging, optimization | RFC 9110–9112 |
+| apis-requirements | beginner | http-request-lifecycle | — | 0/0/0/0 | all | — | REST/idempotency references (RFC 9110 semantics) |
+| sql-indexes | beginner | — | — | 0/0/0/0 | all | — | PostgreSQL/SQLite index docs |
+| composite-indexes | intermediate | sql-indexes | Composite Indexes and Query Shape | 2/0/1/0 | core, advanced | databases, optimization | PostgreSQL multicolumn-index docs (cited) |
+| transactions-isolation | intermediate | — | — | 0/0/0/0 (→ sql-lost-update-balance C, snapshot-isolation-write-skew-oncall Ch/A, account-transfer-deadlock-order C, webhook-idempotency-transaction-boundary C) | lessons, warmup | read-code, databases | PostgreSQL isolation docs |
+| redis-caching | beginner | — | — | 0/0/0/0 (→ cache-write-before-commit C, read-through-cache-stale-forever Ch) | lessons, warmup, advanced | debugging, read-code | redis.io docs |
+| caching-strategies | intermediate | redis-caching | Cache Warming and Cache Stampedes | 0/0/1/0 | warmup, core, advanced | optimization | none (covered) |
+| queues-workers | intermediate | — | — | 0/0/1/0 (→ async-worker-drops-jobs C, queue-redelivery-duplicate-emails C, job-scheduler-spec C, unbounded-queue-oom Ch, batcher-throughput-latency-trap Ch) | lessons, warmup, advanced | debugging, write-code, optimization | queue-semantics references (SQS/RabbitMQ public docs) |
+| rate-limiting | intermediate | apis-requirements | What a Rate Limiter Actually Does | 0/1/1/0 | warmup, advanced | write-code, coding | none (covered) |
+| observability | intermediate | — | — | 1/0/0/0 | lessons, core, challenge, advanced | optimization | Google SRE book, OpenTelemetry docs |
+| reliability-backpressure | advanced | queues-workers, observability | — | 0/1/0/0 (→ retry-backoff-wrapper-spec C, unbounded-queue-oom Ch, lease-clock-skew-split-brain A) | lessons, warmup | coding, write-code | SRE book overload chapters |
+
+### Operating systems, concurrency, and networking (priority 3)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| processes-vs-threads | beginner | — | Processes vs Threads | 0/0/0/0 | all problems | — | OSTEP ch. 4–6/26, man7 (cited) |
+| virtual-memory-page-tables | intermediate | processes-vs-threads | Page Tables and Virtual Memory | 0/0/0/0 | all problems | — | OSTEP VM chapters (cited) |
+| scheduling-context-switching | intermediate | processes-vs-threads | — | 0/0/0/0 | all | — | OSTEP scheduling chapters |
+| filesystems-file-descriptors | intermediate | processes-vs-threads | — | 0/0/0/0 | all | — | OSTEP files chapters, man7 open/dup |
+| threading-synchronization | intermediate | processes-vs-threads | — | 0/0/0/1 (→ shared-counter-undercounts W, flaky-test-global-state C) | lessons, core, challenge | debugging, optimization | OSTEP ch. 26–29, man7 pthreads |
+| mutexes-semaphores-condition-variables | intermediate | threading-synchronization | — | 0/0/0/0 | all | — | OSTEP ch. 28–31 |
+| deadlocks-starvation | advanced | mutexes-… | — | 0/0/0/0 (→ account-transfer-deadlock-order C) | lessons, warmup, challenge, advanced | databases | OSTEP ch. 32 |
+| tcp-vs-udp | beginner | — | TCP vs UDP for Backend and Quant Dev | 0/1/0/0 | warmup, challenge, advanced | quant-design | RFC 9293/768 (cited) |
+| sockets-connection-lifecycle | intermediate | tcp-vs-udp | — | 0/0/0/0 (→ cancelled-request-connection-leak C) | lessons, warmup, challenge, advanced | debugging | man7 socket(7), tcp(7) |
+| dns-fundamentals | beginner | — | — | 0/0/0/0 | all | — | RFC 1034/1035 |
+| tls-basics | intermediate | tcp-vs-udp | — | 0/0/0/0 | all | — | RFC 8446 |
+| websockets-streaming | intermediate | http-request-lifecycle | — | 0/0/0/0 (→ reverse-proxy-buffers-event-stream C) | lessons, warmup, challenge, advanced | debugging | RFC 6455, WHATWG streams |
+| load-balancing | intermediate | http-request-lifecycle | — | 0/0/0/0 | all | — | Envoy/NGINX public docs, SRE book |
+
+### Databases beyond Backend path (priority 4)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| query-plans | intermediate | sql-indexes | — | 0/0/0/0 (→ deep-offset-audit-pagination C, long-snapshot-vacuum-bloat A) | lessons, warmup, challenge | optimization, databases | PostgreSQL EXPLAIN docs |
+| n-plus-one-queries | beginner | — | — | 0/0/0/0 (→ orm-n-plus-one-dashboard C, chatty-enrichment-loop C) | lessons, warmup, challenge, advanced | optimization | ORM lazy-loading docs (Prisma/Hibernate public) |
+| cursor-pagination | intermediate | sql-indexes | — | 0/0/0/0 (→ cursor-pagination-helper-spec C, pagination-deletes-skip-rows C) | lessons, warmup, challenge, advanced | write-code, debugging | keyset-pagination references |
+| database-deadlocks-idempotency | advanced | transactions-isolation | — | 0/0/0/0 (→ account-transfer-deadlock-order C, webhook-idempotency-transaction-boundary C, idempotency-key-handler-spec Ch, timeout-double-charge Ch) | lessons, warmup, advanced | databases, write-code, debugging | PostgreSQL lock docs |
+
+### C++ and Python (priority 5)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| raii-resource-ownership | beginner | — | C++ RAII in Interviews | 0/1/0/0 | warmup, challenge, advanced | quant-debugging | cppreference (cited), Core Guidelines |
+| move-semantics | intermediate | raii | — | 0/1/0/0 (shares cpp-moved-handle-double-close) | lessons, warmup, challenge, advanced | quant-debugging | cppreference move/value categories |
+| references-pointers-lifetimes | intermediate | raii | — | 0/0/0/0 (→ cpp-dangling-view-config Ch, cpp-callback-vector-realloc Ch) | lessons, warmup, core, advanced | read-code, debugging | cppreference lifetime rules |
+| stl-containers-iterators | intermediate | — | — | 0/0/0/0 | all | — | cppreference containers, iterator invalidation |
+| unordered-map-hashing-collisions | intermediate | stl-containers | — | 0/0/0/0 | all | — | cppreference unordered_map |
+| cpp-templates-basics | intermediate | — | — | 0/0/0/0 | all | — | cppreference templates |
+| concurrency-in-cpp | advanced | threading-sync, raii | — | 0/0/0/0 | all | — | cppreference atomics/threads |
+| python-mutability-identity | beginner | — | — | 0/0/0/0 (→ py-mutable-default-report W, py-identity-vs-equality-dedupe C, python-list-mutation-skips-orders C) | lessons, challenge, advanced | read-code | docs.python.org data model |
+| python-generators-iterators | intermediate | — | — | 0/0/0/0 (→ py-generator-exhaustion-metrics W) | lessons, core, challenge, advanced | read-code | docs.python.org generators |
+| python-decorators-closures | intermediate | — | — | 0/0/0/0 | all | — | docs.python.org functional docs |
+| python-gil-concurrency | advanced | threading-sync | — | 0/0/0/0 | all | — | docs.python.org threading/GIL notes |
+| python-hashing-equality | intermediate | — | — | 0/0/0/0 (→ python-hash-randomized-sharding C, java-hashset-mutable-key analog) | lessons, warmup, challenge | quant, read-code | docs.python.org __hash__ docs |
+| python-memory-object-model | advanced | mutability-identity | — | 0/0/0/0 | all | — | docs.python.org memory model, CPython devguide |
+
+### System design (priority 6)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| system-design-interview-framework | beginner | — | How to Structure a System Design Answer | 0/0/0/0 | **first true `system_design`-type scenario problems** | — | SRE book (cited) |
+| replication-sharding | advanced | transactions-isolation | — | 0/0/0/0 | all | — | database replication docs (PostgreSQL), DDIA-adjacent public material |
+
+(`apis-requirements`, `rate-limiting`, `caching-strategies`, `queues-workers`, `observability`, `reliability-backpressure` are shared with Backend above.)
+
+### Quant Dev (priority 7)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| market-data-feeds | intermediate | tcp-vs-udp | — | 0/1/0/0 (shares multicast-gap-recovery-design) | lessons, warmup, challenge, advanced | quant-design | public exchange feed specs (Nasdaq ITCH, CME MDP public pages) |
+| order-books | intermediate | market-data-feeds | — | 0/0/1/0 (→ orderbook-level-aggregator-spec Ch, mini-matching-engine A, order-book-imbalance-window C) | lessons, warmup, core | write-code, coding | public matching-engine explainers |
+| latency-cache-locality | advanced | raii | — | 0/0/0/0 | all | — | Agner Fog guides, public perf references |
+| linux-for-quant-dev | intermediate | processes-vs-threads | — | 0/0/0/0 | all | — | man7, kernel docs |
+| networking-for-quant-dev | advanced | tcp-vs-udp, sockets | — | 0/0/0/0 | all | — | kernel networking docs, public HFT engineering posts |
+| concurrency-for-quant-dev | advanced | threading-sync | — | 0/0/0/1 | lessons, warmup, core, challenge | optimization | lock-free/memory-order public references |
+
+### Docker and Kubernetes (priority 8)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| docker-fundamentals | beginner | — | — | 0/0/0/0 | all | — | docs.docker.com |
+| dockerfiles-image-layers | intermediate | docker-fundamentals | Docker Image Layers | 0/0/0/0 | all problems (lesson links none) | — | docs.docker.com build cache (cited) |
+| docker-compose | beginner | docker-fundamentals | — | 0/0/0/0 | all | — | compose docs |
+| kubernetes-fundamentals | beginner | docker-fundamentals | — | 0/0/0/0 | all | — | kubernetes.io concepts |
+| pods-deployments-services | beginner | k8s-fundamentals | Pods vs Deployments vs Services | 0/0/0/0 | all problems | — | kubernetes.io (cited) |
+| kubernetes-configmaps-secrets | intermediate | pods-deployments-services | — | 0/0/0/0 | all | — | kubernetes.io config docs |
+| kubernetes-networking-ingress | advanced | pods…, tcp-vs-udp | — | 0/0/0/0 | all | — | kubernetes.io networking/ingress |
+| kubernetes-scheduling-resource-limits | advanced | pods…, scheduling | — | 0/0/0/0 | all | — | kubernetes.io scheduler/resources |
+
+### AI-efficient engineering (priority 9)
+
+| Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
+|---|---|---|---|---|---|---|---|
+| good-ai-usage-principles | beginner | — | — | 0/0/0/0 | all | — | vendor agent docs (Anthropic/GitHub public) |
+| token-efficient-prompting | beginner | principles | Token-Efficient Debugging Prompts | 1/1/0/0 | challenge, advanced | ai_usage | none (covered) |
+| selecting-repo-context | beginner | principles | — | 0/1/0/0 | lessons, warmup, challenge, advanced | ai_usage | none needed |
+| reviewing-ai-code | intermediate | selecting-repo-context | — | 1/0/1/0 | lessons, core, advanced | ai_usage | none needed |
+| hallucination-detection | intermediate | reviewing-ai-code | — | 0/0/0/0 | all | — | none needed |
+| testing-verification | intermediate | reviewing-ai-code | — | 0/1/0/0 | lessons, warmup, challenge, advanced | ai_usage | none needed |
+
+## Next three implementation batches
+
+Each batch is bounded, independently committable, and ends with the full validation suite plus manual route checks. Batches 2–3 follow the Prompt 2 shape in `CLAUDE_CONTENT_PROMPTS.md`; Batch 1 follows Prompt 3.
+
+### Batch 1 — DSA roadmap scaffolds + binary search & linked lists
+
+1. Scaffold the 10 missing DSA modules (`binary-search`, `linked-lists`, `tries`, `backtracking`, `greedy`, `intervals`, `dp-grids-strings`, `advanced-graphs`, `bit-manipulation`, `math-geometry`) as `MODULE_SPECS` entries with prerequisites per the table above, and extend the `dsa-confidence-builder` path ordering to the proposed 16-module sequence. Scaffolds only — the generator supplies the 2 placeholder lessons each.
+2. Map the orphan DSA problems via `learning-overrides.ts`: rolling-window-max-latency and cooldown-task-scheduler → stacks-queues-heaps; account-merge-shared-emails → trees-graphs; cli-autocomplete-trie → tries; surge-aware-shortest-path → advanced-graphs; oncall-coverage-bitmask → bit-manipulation; maintenance-window-merge → also intervals; ttl-lru-session-cache, log-template-dedup, mini-matching-engine, order-book-imbalance-window → dsa-to-real-systems; log-topk-full-sort → stacks-queues-heaps.
+3. Fully develop **binary-search** and **linked-lists** (both beginner, both empty): concept + worked-example lessons each, and across the pair exactly 4 runnable warmups, 3 core, 1 challenge, plus at most 1 applied variant, all with Python/JavaScript/TypeScript function-call tests.
+
+### Batch 2 — Databases entry point: sql-indexes + transactions-isolation
+
+1. Map orphan database problems per the tables (transactions-isolation, query-plans, n-plus-one-queries, cursor-pagination, database-deadlocks-idempotency, redis-caching candidates).
+2. Fully develop **sql-indexes** (beginner entry point for the whole Backend path — currently empty) and **transactions-isolation**: concept + worked-example lessons, 2 genuine warmups, 2 core, 1 challenge, ≤1 advanced per module, favoring optimization (inefficient query + plan) and debugging (anomaly symptom) formats. Research: PostgreSQL index/EXPLAIN/isolation docs.
+
+### Batch 3 — Concurrency entry point: threading-synchronization + mutexes-semaphores-condition-variables
+
+1. Map shared-counter-undercounts (warmup) and flaky-test-global-state (core) → threading-synchronization; account-transfer-deadlock-order also → deadlocks-starvation.
+2. Fully develop both modules with lessons plus race/ordering warmups, debugging-format core problems (code + symptom), one challenge combining condition variables with shutdown or bounded-buffer semantics, and one applied backend/quant variant. Research: OSTEP ch. 26–31, man7 pthreads.
+
+**Queued after Batch 3** (in priority order): dynamic-programming-basics + dp-grids-strings; tcp-vs-udp deepening + sockets-connection-lifecycle; first true `system_design`-type scenario problems for the framework module; http-request-lifecycle + apis-requirements; raii + move-semantics deepening; docker-fundamentals + dockerfiles-image-layers; market-data-feeds + order-books; K8s fundamentals pair; remaining Python/C++/AI modules.
+
+## Long-term generation guidance
+
+Expand content in small, reviewed batches while maintaining the coverage matrix above (`CLAUDE_CONTENT_PROMPTS.md` Prompt 2 is the reusable batch prompt). The long-term curriculum must include varied difficulties and problem formats across DSA, backend, infrastructure, databases, debugging, optimization, system design, quant development, networking/OS/concurrency, and effective AI usage.
 
 The DSA Confidence Builder must remain a complete standalone interview path, not merely an introduction to systems topics. Its target breadth should be comparable to a strong "150"-style algorithms roadmap while using entirely original prompts. Cover arrays and hashing, two pointers, sliding windows, stacks, binary search, linked lists, trees/BSTs, tries, heaps/priority queues, backtracking, graphs, advanced graphs, one- and two-dimensional dynamic programming, greedy algorithms, intervals, bit manipulation, and math/geometry. Scaffold missing modules before filling them, and give each major pattern a warmup entry point followed by core, challenge, and applied variants.
 
@@ -150,16 +322,8 @@ Problem format should follow the skill being trained:
 
 Every problem should strengthen interview performance rather than add trivia. State why the skill is tested, make evaluation criteria concrete, include common mistakes and follow-ups, and support a timed practice flow. Keep easy problems genuinely easy so learners can build confidence, while retaining meaningful medium, hard, and advanced work.
 
-For the next implementation slice, first audit the DSA module coverage and add only the missing module scaffolds. Then deepen no more than two related DSA modules and one applied module, using a balanced warmup → core → challenge progression. Do not attempt the entire roadmap in one generation pass.
+Keep easy problems genuinely easy: a warmup isolates one main idea, uses a small clear contract, avoids tricks, and takes 10–20 minutes. Every topic should normally progress concept lesson → worked example → easy warmup → core problem → harder variation → applied variant → rubric self-review.
 
-## Recommended next prompt for Claude Fable 5 / Codex
+## Recommended next prompt
 
-> Read `README.md`, `PROGRESS.md`, `prisma/schema.prisma`, `prisma/seed-data/learning.ts`, `prisma/seed-data/learning-overrides.ts`, and the existing problem seed files before editing. Preserve all existing problems, learning paths, submissions, local judging, and Codex review flows. Do not restart or broadly re-architect the app.
->
-> Build Interview OS into a rigorous interview-preparation curriculum with varied difficulty, topic coverage, and exercise formats. DSA must remain a strong standalone path comparable in breadth and progression to a high-quality "150"-style algorithms roadmap, while every prompt and explanation must be original: do not copy or closely paraphrase LeetCode, NeetCode, paid courses, or proprietary interview banks. Ensure the roadmap covers arrays/hashing, two pointers, sliding windows, stacks, binary search, linked lists, trees/BSTs, tries, heaps, backtracking, graphs and advanced graphs, 1-D and 2-D dynamic programming, greedy algorithms, intervals, bit manipulation, and math/geometry. Add genuinely easy confidence-building entry problems as well as medium, hard, and advanced variants; do not let systems content displace algorithm practice.
->
-> Use the exercise format that best matches the interview skill. DSA and implementation exercises should have clear function contracts, constraints, starter code, and runnable public/hidden tests where the current local harness supports them. Optimization exercises should often give the learner correct but inefficient code, SQL, a query plan, or a bottlenecked design to improve; specify the baseline complexity or behavior, the required target, constraints, and behavior that must remain unchanged. Debugging and read-code exercises should include realistic code, logs, traces, symptoms, or failing tests. System-design exercises should be descriptive, open-ended scenarios with functional and non-functional requirements, scale assumptions, ambiguity to clarify, rubrics, trade-off questions, and follow-ups rather than artificial test cases. Database, backend, infrastructure, quant, networking/OS/concurrency, and AI-usage exercises should mix implementation, diagnosis, analysis, and design in ways that resemble real interviews.
->
-> Every new problem must have a clear interview purpose, realistic constraints, calibrated difficulty, estimated time, useful hints, a solution outline, common mistakes, follow-up questions, a concrete rubric, and public primary or high-quality educational sources or an original-content note. Prefer depth and reviewability over volume. Maintain warmup → core → challenge → advanced progressions and show how algorithm skills branch into backend, quant, optimization, and system-design applications.
->
-> For this pass only: audit the DSA path against the topic list above; scaffold missing modules and placeholder lessons without writing the entire curriculum; then fully improve no more than two related DSA modules and one applied module. Add a small, balanced set of original problems across multiple difficulties and at least three exercise formats. Do not generate the full roadmap or a huge problem batch. Link problems bidirectionally through path/module/lesson metadata, update README and PROGRESS coverage notes and counts, run Prisma generation/database push, seed validation, seed, lint, typecheck, tests, and build, and commit only this bounded slice. Document exactly which topics and difficulty levels remain for later passes.
+Run **Prompt 3** in `CLAUDE_CONTENT_PROMPTS.md` scoped to **Batch 1** above (DSA scaffolds + binary search & linked lists). After that, run **Prompt 2** repeatedly for Batches 2 and 3 and the queued batches, updating the coverage tables in this file after each pass.
