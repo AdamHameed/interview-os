@@ -5,6 +5,7 @@ import { cppFoundationProblems } from "./cpp-foundations";
 import { databasesFoundationProblems } from "./databases-foundations";
 import { dockerFoundationProblems } from "./docker-foundations";
 import { httpQueuesFoundationProblems } from "./http-queues-foundations";
+import { kubernetesFoundationProblems } from "./kubernetes-foundations";
 import { dsaDynamicProgrammingProblems } from "./dsa-dynamic-programming";
 import { dsaSearchListProblems } from "./dsa-search-lists";
 import { confidenceWarmupProblems } from "./starter-confidence";
@@ -39,6 +40,7 @@ const authoredProblems: SeedProblem[] = [
   ...cppFoundationProblems,
   ...dockerFoundationProblems,
   ...httpQueuesFoundationProblems,
+  ...kubernetesFoundationProblems,
   ...readCodeProblems,
   ...writeCodeProblems,
   ...debuggingProblems,
