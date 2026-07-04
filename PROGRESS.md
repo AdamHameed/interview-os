@@ -51,8 +51,8 @@ Together they contain:
 
 - 79 standalone modules across DSA, Docker, Kubernetes, operating systems, networking, C++, Python, databases, caching, backend/system design, quant development, and AI usage;
 - 63 ordered path memberships, including modules reused across multiple paths;
-- 175 lesson records;
-- 17 real mini-lessons;
+- 179 lesson records;
+- 21 real mini-lessons;
 - 158 explicit placeholder lesson briefs.
 
 The 2026-07-04 DSA batch extended the DSA Confidence Builder to 16 ordered modules covering the full roadmap topic list (arrays/hashing through math/geometry), added four real lessons (binary-search invariants, search-on-answers, linked-list pointer discipline, slow/fast pointers), and mapped twelve previously orphaned problems into modules.
@@ -81,7 +81,7 @@ Placeholder lessons are not disguised as complete content. The UI labels them **
 
 ## Confidence-building problems
 
-The bank now contains 101 validated problems: 80 originals, 12 easy warmups, and 9 binary-search/linked-list problems (4 warmups, 3 core, 1 challenge, 1 applied) added 2026-07-04.
+The bank now contains 110 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems (4 warmups, 3 core, 1 challenge, 1 applied), and 9 written database problems for sql-indexes and transactions-isolation (4 warmups, 3 core, 1 challenge, 1 advanced), the last two batches added 2026-07-04.
 
 - Four runnable DSA warmups: pair sum, unique sliding window, balanced brackets, and graph reachability.
 - Two debugging warmups: boolean environment parsing and missing `await`.
@@ -187,10 +187,10 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 |---|---|---|---|---|---|---|---|
 | http-request-lifecycle | beginner | tcp-vs-udp | — | 2/0/0/0 | lessons, core, challenge, advanced | debugging, optimization | RFC 9110–9112 |
 | apis-requirements | beginner | http-request-lifecycle | — | 0/0/0/0 | all | — | REST/idempotency references (RFC 9110 semantics) |
-| sql-indexes | beginner | — | — | 0/0/0/0 | all | — | PostgreSQL/SQLite index docs |
+| sql-indexes | beginner | — | B-Tree Mental Model; Reading EXPLAIN | 2/2/1/0 | advanced | databases, optimization | none (covered) |
 | composite-indexes | intermediate | sql-indexes | Composite Indexes and Query Shape | 2/0/1/0 | core, advanced | databases, optimization | PostgreSQL multicolumn-index docs (cited) |
-| transactions-isolation | intermediate | — | — | 0/0/0/0 (→ sql-lost-update-balance C, snapshot-isolation-write-skew-oncall Ch/A, account-transfer-deadlock-order C, webhook-idempotency-transaction-boundary C) | lessons, warmup | read-code, databases | PostgreSQL isolation docs |
-| redis-caching | beginner | — | — | 0/0/0/0 (→ cache-write-before-commit C, read-through-cache-stale-forever Ch) | lessons, warmup, advanced | debugging, read-code | redis.io docs |
+| transactions-isolation | intermediate | — | Isolation Levels & Anomalies; Lost Update Walkthrough | 2/3/1/2 | — (full ladder) | databases, read-code | none (covered) |
+| redis-caching | beginner | — | — | 0/1/1/0 | lessons, warmup, advanced | debugging, read-code | redis.io docs |
 | caching-strategies | intermediate | redis-caching | Cache Warming and Cache Stampedes | 0/0/1/0 | warmup, core, advanced | optimization | none (covered) |
 | queues-workers | intermediate | — | — | 0/0/1/0 (→ async-worker-drops-jobs C, queue-redelivery-duplicate-emails C, job-scheduler-spec C, unbounded-queue-oom Ch, batcher-throughput-latency-trap Ch) | lessons, warmup, advanced | debugging, write-code, optimization | queue-semantics references (SQS/RabbitMQ public docs) |
 | rate-limiting | intermediate | apis-requirements | What a Rate Limiter Actually Does | 0/1/1/0 | warmup, advanced | write-code, coding | none (covered) |
@@ -219,10 +219,10 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
-| query-plans | intermediate | sql-indexes | — | 0/0/0/0 (→ deep-offset-audit-pagination C, long-snapshot-vacuum-bloat A) | lessons, warmup, challenge | optimization, databases | PostgreSQL EXPLAIN docs |
-| n-plus-one-queries | beginner | — | — | 0/0/0/0 (→ orm-n-plus-one-dashboard C, chatty-enrichment-loop C) | lessons, warmup, challenge, advanced | optimization | ORM lazy-loading docs (Prisma/Hibernate public) |
-| cursor-pagination | intermediate | sql-indexes | — | 0/0/0/0 (→ cursor-pagination-helper-spec C, pagination-deletes-skip-rows C) | lessons, warmup, challenge, advanced | write-code, debugging | keyset-pagination references |
-| database-deadlocks-idempotency | advanced | transactions-isolation | — | 0/0/0/0 (→ account-transfer-deadlock-order C, webhook-idempotency-transaction-boundary C, idempotency-key-handler-spec Ch, timeout-double-charge Ch) | lessons, warmup, advanced | databases, write-code, debugging | PostgreSQL lock docs |
+| query-plans | intermediate | sql-indexes | — | 0/1/0/1 | lessons, warmup, challenge | optimization, databases | PostgreSQL EXPLAIN docs |
+| n-plus-one-queries | beginner | — | — | 0/2/0/0 | lessons, warmup, challenge, advanced | optimization | ORM lazy-loading docs (Prisma/Hibernate public) |
+| cursor-pagination | intermediate | sql-indexes | — | 0/3/0/0 | lessons, warmup, challenge, advanced | write-code, debugging, optimization | keyset-pagination references |
+| database-deadlocks-idempotency | advanced | transactions-isolation | — | 0/2/2/0 | lessons, warmup, advanced | databases, write-code, debugging | PostgreSQL lock docs |
 
 ### C++ and Python (priority 5)
 
@@ -294,10 +294,9 @@ Each batch is bounded, independently committable, and ends with the full validat
 
 Completed: 10 DSA module scaffolds added, path extended to 16 ordered modules, 12 orphan problems mapped via `learning-overrides.ts`, and binary-search + linked-lists fully developed (4 lessons; 9 runnable problems in `prisma/seed-data/dsa-search-lists.ts`: sorted-build-id-lookup, first-failing-canary, error-code-range-scan, backup-bandwidth-planner, stale-metric-lookup, reverse-approval-chain, middle-of-release-queue, drop-stale-checkpoint, merge-alert-feeds). All reference solutions verified against the seeded tests.
 
-### Batch 2 — Databases entry point: sql-indexes + transactions-isolation
+### Batch 2 — Databases entry point: sql-indexes + transactions-isolation — DONE 2026-07-04
 
-1. Map orphan database problems per the tables (transactions-isolation, query-plans, n-plus-one-queries, cursor-pagination, database-deadlocks-idempotency, redis-caching candidates).
-2. Fully develop **sql-indexes** (beginner entry point for the whole Backend path — currently empty) and **transactions-isolation**: concept + worked-example lessons, 2 genuine warmups, 2 core, 1 challenge, ≤1 advanced per module, favoring optimization (inefficient query + plan) and debugging (anomaly symptom) formats. Research: PostgreSQL index/EXPLAIN/isolation docs.
+Completed: 14 orphan database problems mapped via `learning-overrides.ts` (transactions-isolation, database-deadlocks-idempotency, query-plans, n-plus-one-queries, cursor-pagination, redis-caching, caching-strategies). sql-indexes and transactions-isolation fully developed: four real lessons (B-tree mental model, reading EXPLAIN, isolation levels and anomalies, lost-update walkthrough) and nine written problems in `prisma/seed-data/databases-foundations.ts` (pick-index-for-login-lookup, wildcard-search-no-index, order-status-page-crawl, covering-index-hot-endpoint, write-amplification-index-audit, read-committed-status-check, double-click-refund, inventory-oversell-checkout, report-snapshot-consistency) — 4 warmups, 3 core, 1 challenge, 1 advanced across databases and optimization formats, sourced from PostgreSQL documentation.
 
 ### Batch 3 — Concurrency entry point: threading-synchronization + mutexes-semaphores-condition-variables
 
