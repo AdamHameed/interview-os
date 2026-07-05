@@ -43,7 +43,7 @@ export type HydratedProblem = Omit<
   rubric: RubricItem[];
   sourceUrls: string[];
   tests: TestCase[] | null;
-  supportedLanguages: ("python" | "javascript" | "typescript")[];
+  supportedLanguages: ("python" | "javascript" | "typescript" | "sql")[];
   pathIds: string[];
   moduleIds: string[];
   lessonIds: string[];
@@ -65,7 +65,7 @@ export function hydrateProblem(p: Problem): HydratedProblem {
     rubric: parseJsonArray<RubricItem>(p.rubric),
     sourceUrls: parseJsonArray<string>(p.sourceUrls),
     tests: p.tests ? parseJsonArray<TestCase>(p.tests) : null,
-    supportedLanguages: parseJsonArray<"python" | "javascript" | "typescript">(
+    supportedLanguages: parseJsonArray<"python" | "javascript" | "typescript" | "sql">(
       p.supportedLanguages
     ),
     pathIds: parseJsonArray<string>(p.pathIds),

@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { RubricItem } from "@/lib/schemas";
 import type { SubmissionStatus } from "@/lib/enums";
 
-type Language = "python" | "javascript" | "typescript";
+type Language = "python" | "javascript" | "typescript" | "sql";
 
 type TestResult = {
   name: string;
@@ -47,6 +47,9 @@ function languageTemplate(
 ): string {
   if (language === "python") {
     return pythonStarter || `def ${functionName}(*args):\n    raise NotImplementedError\n`;
+  }
+  if (language === "sql") {
+    return pythonStarter || "-- Write your SQL here\n";
   }
   if (language === "typescript") {
     return `export function ${functionName}(...args: unknown[]): unknown {\n  throw new Error("Not implemented");\n}\n`;
@@ -209,9 +212,11 @@ export function SubmissionWorkspace({
           <div>
             <CardTitle>{isCoding ? "Code submission workspace" : "Written answer workspace"}</CardTitle>
             <CardDescription>
-              {isCoding
-                ? `Define ${functionName}; tests run in local child processes.`
-                : "Write in Markdown, then export a local review bundle for Codex."}
+              {!isCoding
+                ? "Write in Markdown, then export a local review bundle for Codex."
+                : language === "sql"
+                  ? "Write SQL (e.g. a CREATE INDEX); the query plan is graded in a local SQLite sandbox."
+                  : `Define ${functionName}; tests run in local child processes.`}
             </CardDescription>
           </div>
           <Badge variant="outline">{status.replaceAll("_", " ")}</Badge>
@@ -230,7 +235,13 @@ export function SubmissionWorkspace({
                 >
                   {supportedLanguages.map((item) => (
                     <option key={item} value={item}>
-                      {item === "python" ? "Python" : item === "javascript" ? "JavaScript" : "TypeScript"}
+                      {item === "python"
+                        ? "Python"
+                        : item === "javascript"
+                          ? "JavaScript"
+                          : item === "sql"
+                            ? "SQL"
+                            : "TypeScript"}
                     </option>
                   ))}
                 </select>

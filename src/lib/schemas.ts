@@ -20,6 +20,22 @@ export const rubricItemSchema = z.object({
 });
 export type RubricItem = z.infer<typeof rubricItemSchema>;
 
+export const sqlPlanAssertSchema = z.object({
+  usesIndex: z.boolean().optional(),
+  covering: z.boolean().optional(),
+  noTempSort: z.boolean().optional(),
+  forbidFullScanOf: z.array(z.string().min(1)).optional(),
+  resultEquals: z.array(z.array(z.unknown())).optional(),
+  maxStatements: z.number().int().min(1).optional(),
+});
+
+export const sqlPlanSpecSchema = z.object({
+  setup: z.string().min(1),
+  query: z.string().min(1),
+  assert: sqlPlanAssertSchema,
+});
+export type SqlPlanSpec = z.infer<typeof sqlPlanSpecSchema>;
+
 export const testCaseSchema = z.object({
   name: z.string().min(1),
   input: z.string().optional(),
@@ -28,6 +44,7 @@ export const testCaseSchema = z.object({
   args: z.array(z.unknown()).optional(),
   expectedValue: z.unknown().optional(),
   hidden: z.boolean().optional(),
+  sqlPlan: sqlPlanSpecSchema.optional(),
 });
 export type TestCase = z.infer<typeof testCaseSchema>;
 
@@ -54,9 +71,9 @@ export const problemInputSchema = z
     estimatedMinutes: z.number().int().min(5).max(120),
     language: z.string().optional(),
     functionName: z.string().regex(/^[A-Za-z_$][\w$]*$/).optional(),
-    testHarnessType: z.enum(["function_call", "stdin_stdout", "custom"]).optional(),
+    testHarnessType: z.enum(["function_call", "sql_plan", "stdin_stdout", "custom"]).optional(),
     supportedLanguages: z
-      .array(z.enum(["python", "javascript", "typescript"]))
+      .array(z.enum(["python", "javascript", "typescript", "sql"]))
       .optional(),
     pathIds: z.array(z.string().min(1)).optional(),
     moduleIds: z.array(z.string().min(1)).optional(),
@@ -123,7 +140,7 @@ export const submissionInputSchema = z.object({
   problemId: z.string().min(1),
   submissionId: z.string().min(1).optional(),
   answerText: z.string().max(500_000),
-  language: z.enum(["python", "javascript", "typescript"]).optional(),
+  language: z.enum(["python", "javascript", "typescript", "sql"]).optional(),
   status: z.enum(SUBMISSION_STATUSES),
   selfScore: z.number().int().min(1).max(5).optional(),
 });

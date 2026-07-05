@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   if (!problem) {
     return NextResponse.json({ error: "Problem not found" }, { status: 404 });
   }
-  if (problem.testHarnessType === "function_call") {
+  if (problem.testHarnessType === "function_call" || problem.testHarnessType === "sql_plan") {
     const supported = parseJsonArray<string>(problem.supportedLanguages);
     if (!language || !supported.includes(language)) {
       return NextResponse.json(

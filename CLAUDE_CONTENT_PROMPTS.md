@@ -325,9 +325,20 @@ Include the stub class in `fullSolution` too, so the displayed reference is itse
 
 `functionName`, `testHarnessType: "function_call"`, `supportedLanguages` (use `["python"]` for `sqlite3`/`asyncio` problems), `starterCode` (the buggy/slow entry), and `tests` (each needs `name`, a display `expected` string, plus `args` and `expectedValue` — the runnable data). Verify every problem end-to-end with `runLocalTests` from `src/lib/local-runner.ts`: the correct reference solution must pass and the shipped starter must fail.
 
+### Plan-cost oracle (built — `testHarnessType: "sql_plan"`)
+
+Index-selection problems produce the same rows whether the query is fast or slow, so a value check cannot grade them. Use the SQL-plan harness (`src/lib/sql-plan-runner.ts`, `runSqlPlanTests`): the candidate writes SQL (`language: "sql"`, usually a `CREATE INDEX`), and each test carries a `sqlPlan: { setup, query, assert }` where `setup` seeds an in-memory SQLite schema, `query` is the fixed graded query, and `assert` checks plan SHAPE:
+
+- `usesIndex` — plan must be `SEARCH ... USING INDEX` (not a full `SCAN`).
+- `covering` — plan must be `USING COVERING INDEX` (index-only, no table lookup).
+- `noTempSort` — the `ORDER BY` must be served by the index (no `USE TEMP B-TREE`). This is what distinguishes a correct composite index from a naive single-column one.
+- `forbidFullScanOf: [table]`, `resultEquals: rows`, `maxStatements`.
+
+SQLite plans from schema+indexes (no ANALYZE), so signals are deterministic and independent of row count. Ship a starter that is a wrong/insufficient index (empty, single-column, or non-covering) so the plan fails, and verify with `runSqlPlanTests` that starter fails and the reference index passes. See `prisma/seed-data/sql-plan.ts`. This is an approximation of Postgres `EXPLAIN ANALYZE`, not a replacement.
+
 ### What still needs new infrastructure (do not fake it)
 
-- **Query-count / plan-cost oracles** (prove an N+1 became 1 query; prove OFFSET does a full scan): the output is identical whether the code is fast or slow, so these need a dedicated `sql`/`scenario` harness that instruments the DB (a `sqlite3` trace callback to count statements, or `EXPLAIN QUERY PLAN` assertions). Extend the `testHarnessType` enum in `src/lib/schemas.ts` (`sql`, `scenario`) and add an assertion kind to test cases (`exact | invariant | result_set | query_plan`) when building this.
+- **Query-count oracle for N+1 in real SQL:** the budgeted-stub trick (a query-counting stub that raises past N) already makes N+1 testable without real SQL (see `orm-n-plus-one-query-count`). A `sqlite3` `set_trace_callback` statement count is wired into the SQL-plan runner (`maxStatements`) if you want to assert query counts against a real DB.
 - **Compiled languages (C++):** the runner only spawns `python3`/`node`. C++ lifetime/UB problems stay read-and-reason (or add a "predict the output / identify the UB line" structured check) until a compiled sandbox exists.
 
 Prefer this augmentation on debugging, optimization, databases, concurrency, and systems problems whose lesson is an invariant. Update PROGRESS.md and run the full validation suite (`validate:seed`, `lint`, `typecheck`, `test`, `build`) after each batch.

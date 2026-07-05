@@ -22,6 +22,7 @@ export { learningModules, learningPaths } from "./learning";
 import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
 import { runnableSystemsProblems } from "./runnable-systems";
+import { sqlPlanProblems } from "./sql-plan";
 import { runnableOverrides } from "./runnable-overrides";
 import { starterAiUsageProblems } from "./starter-ai-usage";
 import { systemDesignFoundationProblems } from "./system-design-foundations";
@@ -58,6 +59,7 @@ const authoredProblems: SeedProblem[] = [
   ...quantDevFoundationProblems,
   ...readCodeProblems,
   ...runnableSystemsProblems,
+  ...sqlPlanProblems,
   ...writeCodeProblems,
   ...debuggingProblems,
   ...optimizationProblems,

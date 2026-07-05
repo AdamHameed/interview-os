@@ -528,4 +528,23 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     lessonIds: [],
     confidenceLevel: "core",
   },
+  // Prompt 4 batch 5: sql_plan harness — plan-graded index problems
+  "index-the-login-lookup": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("sql-indexes")],
+    lessonIds: [],
+    confidenceLevel: "warmup",
+  },
+  "composite-index-filter-and-order": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("composite-indexes")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
+  "covering-index-avoids-table-lookup": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("composite-indexes")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
 };

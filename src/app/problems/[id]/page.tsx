@@ -29,7 +29,9 @@ export default async function ProblemDetailPage({ params }: { params: Promise<{ 
   const problem = hydrateProblem(rawProblem);
   const latestAttempt = attempts[0];
   const latestSubmission = submissions[0];
-  const isCoding = problem.testHarnessType === "function_call" && problem.supportedLanguages.length > 0;
+  const isCoding =
+    (problem.testHarnessType === "function_call" || problem.testHarnessType === "sql_plan") &&
+    problem.supportedLanguages.length > 0;
   const learningPaths = problem.pathIds.length
     ? await db.learningPath.findMany({ where: { id: { in: problem.pathIds } } })
     : [];
