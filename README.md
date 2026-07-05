@@ -31,13 +31,14 @@ Interview OS supports two complementary study modes:
 
 Paths do not own modules. `LearningPathModule` is an ordered join with `isRequired` and a `warmup | core | advanced | optional | interview_cram` label, so the same module can appear in several paths. Lessons belong to standalone modules. Problems may link to multiple module IDs and carry a `warmup | core | challenge | advanced` confidence level.
 
-The current scaffold contains six paths, 79 standalone modules, 63 path memberships, 193 lessons, and 35 reviewed mini-lessons. The remaining 158 lesson briefs are visibly marked scaffolds for later content work. The bank includes open-ended `system_design` scenario problems (no code harness) alongside runnable coding, debugging, optimization, and written-analysis formats. The DSA Confidence Builder now spans 16 modules covering the full roadmap topic list; binary search and linked lists are fully developed with lessons and runnable problems.
+The current scaffold contains six paths, 79 standalone modules, 63 path memberships, 234 lessons, and 76 reviewed lessons. The remaining 158 lesson briefs are visibly marked scaffolds for later content work. The bank includes open-ended `system_design` scenario problems (no code harness) alongside runnable coding, debugging, optimization, and written-analysis formats. The DSA Confidence Builder now spans 16 modules covering the full roadmap topic list.
 
 ### Add a standalone module
 
 1. Add a `ModuleSpec` to `MODULE_SPECS` in `prisma/seed-data/learning.ts` with a unique slug, title, category, difficulty, prerequisites by module slug, and estimated hours.
-2. The generator creates a stable `learningModuleId(moduleSlug)`, outcomes, and two placeholder lesson briefs.
-3. Add the module slug to one or more entries in `PATHS` only when it belongs in a guided sequence. Standalone-only modules are valid.
+2. Provide the `motivation` field on the `ModuleSpec`; it becomes the module's rendered `motivationMarkdown` and should explain why the topic exists, the real-system problem it solves, interview relevance, and the learner's end outcome.
+3. The generator creates a stable `learningModuleId(moduleSlug)`, outcomes, and two placeholder lesson briefs.
+4. Add the module slug to one or more entries in `PATHS` only when it belongs in a guided sequence. Standalone-only modules are valid.
 
 ### Add or change a path
 
@@ -47,10 +48,13 @@ The current scaffold contains six paths, 79 standalone modules, 63 path membersh
 
 ### Add or complete a lesson
 
-1. Add a lesson to `REAL_LESSONS[moduleSlug]` in `prisma/seed-data/learning.ts`.
-2. Include reviewed Markdown, takeaways, examples, public sources, and linked problem slugs.
-3. Set `isPlaceholder: false` only after the instructional is genuinely useful.
-4. Keep scaffold lessons until their replacements are reviewed; the UI clearly distinguishes ready content from placeholders.
+1. Read `LESSON_AUTHORING_STANDARD.md`; `page-tables-virtual-memory` is the canonical reference.
+2. Add a lesson to `REAL_LESSONS[moduleSlug]` in `prisma/seed-data/learning.ts`.
+3. Author the complete Goal → Why This Matters → The Simple Mental Model → progressive concepts → Worked Example → Interview Value → interview Q&A → Common Mistakes → Quick Check → Key Takeaway flow. New lessons must pass in their authored form.
+4. Include reviewed takeaways, concrete examples, public sources, and linked problem slugs.
+5. Set `isPlaceholder: false` only after the instructional is genuinely useful and `npm run validate:seed` passes.
+6. Never add a new slug to `LEGACY_LESSON_SLUGS`; that compatibility set is frozen for lessons predating the standard.
+7. Keep scaffold lessons until their replacements are reviewed; the UI clearly distinguishes ready content from placeholders.
 
 ### Link lessons and problems
 
@@ -82,7 +86,7 @@ The local runner:
 
 Public tests show expected and actual values. Hidden tests report pass/fail without returning those values. Hidden tests are a practice affordance, not a security boundary: this is a local database and the seed source is available on disk.
 
-Thirty problems currently have runnable function-call tests: eight existing problems overlaid via `prisma/seed-data/runnable-overrides.ts`, four DSA confidence warmups, nine binary-search/linked-list problems in `prisma/seed-data/dsa-search-lists.ts`, and nine dynamic-programming problems in `prisma/seed-data/dsa-dynamic-programming.ts`; the newer problems carry their executable metadata directly.
+Sixty-eight problems currently have runnable function-call tests; older runnable metadata is overlaid via `prisma/seed-data/runnable-overrides.ts`, while newer problems carry executable metadata directly.
 
 ### Local runner security warning
 

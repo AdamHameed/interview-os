@@ -80,26 +80,27 @@ model LearningPath {
 }
 
 model LearningModule {
-  id             String               @id
-  slug           String               @unique
-  title          String
-  description    String
+  id                 String               @id
+  slug               String               @unique
+  title              String
+  description        String
+  motivationMarkdown String               @default("")
   // dsa | system_design | backend | infrastructure | devops | docker | kubernetes |
   // operating_systems | networking | databases | caching | distributed_systems |
   // concurrency | cpp | python | java | go | quant_dev | ai_usage | behavioral
-  category       String               @default("backend")
+  category           String               @default("backend")
   // beginner | intermediate | advanced
-  difficulty     String               @default("intermediate")
-  estimatedHours Int
-  prerequisites  String               @default("[]") // JSON module slugs
-  outcomes       String               @default("[]") // JSON string[]
-  sourceUrls     String               @default("[]") // JSON string[]
-  isPublished    Boolean              @default(false)
-  isPlaceholder  Boolean              @default(true)
-  paths          LearningPathModule[]
-  lessons        Lesson[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  difficulty         String               @default("intermediate")
+  estimatedHours     Int
+  prerequisites      String               @default("[]") // JSON module slugs
+  outcomes           String               @default("[]") // JSON string[]
+  sourceUrls         String               @default("[]") // JSON string[]
+  isPublished        Boolean              @default(false)
+  isPlaceholder      Boolean              @default(true)
+  paths              LearningPathModule[]
+  lessons            Lesson[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
   @@index([category])
   @@index([difficulty])

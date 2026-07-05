@@ -13,11 +13,7 @@ const SECTION_TITLES: [string, string][] = [
   ["/lessons", "Lessons"],
   ["/problems", "Problems"],
   ["/practice", "Practice"],
-  ["/interviews", "Mock Interviews"],
   ["/ai-usage", "AI Usage"],
-  ["/resources", "Resources"],
-  ["/admin/problems", "New Problem"],
-  ["/admin/import", "Import"],
 ];
 
 export function TopBar({ problems }: { problems: CommandIndexItem[] }) {

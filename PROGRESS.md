@@ -1,6 +1,10 @@
 # Interview OS — Progress and Handoff
 
-Last updated: 2026-07-04 on branch `codex-stabilize` (Batches 9 and 10 complete; 174 problems, 47 real lessons).
+Last updated: 2026-07-05 on branch `codex-stabilize` (Batches 9–17 complete + lesson-quality pass; 229 problems, 76 real lessons; DSA Confidence Builder ladder fully authored).
+
+**Lesson Contract v2 adopted (2026-07-05):** `page-tables-virtual-memory` remains the gold standard. The required flow is now `## Goal` → `## Why This Matters` → `## The Simple Mental Model` → progressive one-idea-at-a-time teaching → worked example → interview framing → mistakes → understanding checks → key takeaway. All 76 ready lessons include the two motivation sections and contain 900–2,350 words (median 1,434). Intentional placeholder briefs remain untouched.
+
+**Content-depth pass (2026-07-05):** Per user feedback that many early lessons were too short/weak and several read_code problems had no code to read: expanded all 13 sub-600-char "starter" lessons (two-sum-hashmap-pattern, sliding-window-when-it-applies, docker-image-layers-why-they-matter, kubernetes-pods-deployments-services, processes-vs-threads-interview-model, page-tables-virtual-memory, cpp-raii-in-interviews, tcp-vs-udp-backend-quant, what-rate-limiter-does, cache-warming-stampedes, composite-indexes-query-shape, structure-system-design-answer, token-efficient-debugging-prompts) to the Batch 9–16 depth standard (full mental model, worked example, when-to-use, common mistakes, why-interviewers-ask, next step) — the shortest lesson is now ~1,557 chars, up from 366. Added real code/config artifacts (worker code, retry wrapper, shell session, blanked-`kind:`/`type:` YAML manifests, kube-system pod listing) to the 6 read_code problems that previously presented only prose scenarios (http-retry-safety-analysis, queue-delivery-guarantee-classify, container-vs-vm-comparison, k8s-control-plane-components, k8s-workload-type-selection, k8s-service-type-selection); 0 read_code problems now lack code. Full suite green.
 
 ## Current platform
 
@@ -27,7 +31,7 @@ Existing coding submissions, Python/JavaScript/TypeScript local judging, written
 ### Data model
 
 - `LearningPath`: stable ID, slug, description, target roles, difficulty, estimated hours, ordering, and publication status.
-- `LearningModule`: first-class global topic with a unique slug, category, difficulty, prerequisites by module slug, outcomes, sources, publication status, and explicit placeholder status.
+- `LearningModule`: first-class global topic with a unique slug, plain-language module motivation, category, difficulty, prerequisites by module slug, outcomes, sources, publication status, and explicit placeholder status.
 - `LearningPathModule`: reusable many-to-many path membership with path-specific order, required/optional status, and a progression label.
 - `Lesson`: type, difficulty, duration, Markdown, takeaways, examples, linked problem IDs, public sources, order, and explicit placeholder status.
 - `Problem`: optional JSON path/global-module/lesson IDs plus `warmup | core | challenge | advanced` confidence level.
@@ -51,8 +55,8 @@ Together they contain:
 
 - 79 standalone modules across DSA, Docker, Kubernetes, operating systems, networking, C++, Python, databases, caching, backend/system design, quant development, and AI usage;
 - 63 ordered path memberships, including modules reused across multiple paths;
-- 193 lesson records;
-- 35 real mini-lessons;
+- 234 lesson records;
+- 76 real lessons;
 - 158 explicit placeholder lesson briefs.
 
 The 2026-07-04 DSA batch extended the DSA Confidence Builder to 16 ordered modules covering the full roadmap topic list (arrays/hashing through math/geometry), added four real lessons (binary-search invariants, search-on-answers, linked-list pointer discipline, slow/fast pointers), and mapped twelve previously orphaned problems into modules.
@@ -74,15 +78,30 @@ Placeholder lessons are not disguised as complete content. The UI labels them **
 - Path pages show reusable module cards in curated order; every card links to the standalone module page.
 - `/modules` provides search and filters for category, difficulty, target role, estimated time, and ready/scaffold content.
 - Standalone module pages show prerequisites, outcomes, ordered lessons, confidence-grouped problems, paths that reuse the module, related modules, sources, and an interview-cram checklist.
+- Every standalone module page shows a Module Motivation before its lesson list; all 79 modules explain why the topic exists, its real-system problem, interview relevance, and learner outcome.
 - Lesson pages render Markdown, takeaways, examples, sources, previous/next navigation, linked practice, and a clear placeholder warning.
 - Dashboard includes Continue Learning, a Browse Modules entry point, and quick interview-cram cards for Kubernetes, Docker, threading, C++, databases, system design, quant, and AI usage.
 - The problem bank uses a calm single-column result list. Search, format, and difficulty stay visible while less-common filters are grouped under **More filters**.
 - Problem detail pages use a responsive split workspace: statement, constraints, and hints remain visible in a sticky left pane while the Monaco editor or written-answer workspace occupies the right pane. Review material is collapsed until needed.
 - Practice includes Practice by Path, Practice by Module, and the dedicated Confidence Builder progression.
 
+### Lesson quality enforcement
+
+The lesson audit preserves each authored technical explanation and fills missing instructional sections from that lesson's own reviewed takeaways and worked examples at the `real(...)` seed boundary.
+
+- 63 ready lessons gained an explicit learning goal.
+- 71 gained structured interview Q&A and quick checks.
+- All 76 now contain an explicit worked example with identify → apply → verify reasoning.
+- All 76 include beginner-friendly `Why This Matters` and `The Simple Mental Model` sections before the technical breakdown.
+- The shortest lessons gained active-recall or deeper-follow-up sections so their depth matches the displayed duration.
+- Every ready lesson includes a public research source.
+- `npm run validate:seed` rejects ready lessons missing required sections, sources, or duration-scaled minimum depth.
+
+Future authoring is defined by `LESSON_AUTHORING_STANDARD.md`, which uses Page Tables and Virtual Memory as the canonical reference. `CLAUDE_CONTENT_PROMPTS.md` requires agents to read that contract before planning or implementing content. New lessons do not receive automatic repair: `LEGACY_LESSON_SLUGS` is frozen to the 76 pre-standard lessons, while every new slug must pass stricter authored-format checks for motivation, simple mental model, section order, a fenced technical artifact, three topic-specific interview questions, three numbered mistakes, three quick checks with explicit answers, sources, and at least 900 words. Lesson 1 must limit early vocabulary and defer secondary implementation detail. The Kubernetes first lesson was rewritten around desired state, actual state, and one Pod-crash example; control-plane internals move to its walkthrough.
+
 ## Confidence-building problems
 
-The bank now contains 143 validated problems: 80 originals, 12 easy warmups, 9 binary-search/linked-list problems, 9 written database problems, 8 written concurrency problems, 9 runnable dynamic-programming problems, 8 written networking problems, and 8 system-design scenarios — the last six batches added 2026-07-04, each with a warmup → core → challenge → applied mix. From the networking batch onward, every problem statement embeds a concrete example artifact (traces, tool output, sample exchanges, incident reports).
+The bank now contains 229 validated problems across coding, debugging, optimization, databases, OS/networking/concurrency, quant, system design, read-code, and write-code formats.
 
 - Four runnable DSA warmups: pair sum, unique sliding window, balanced brackets, and graph reachability.
 - Two debugging warmups: boolean environment parsing and missing `await`.
@@ -90,7 +109,7 @@ The bank now contains 143 validated problems: 80 originals, 12 easy warmups, 9 b
 - Two database warmups: composite index selection and uniqueness races.
 - Two AI-usage warmups: debugging prompt structure and hallucinated configuration verification.
 
-The four DSA warmups, the nine binary-search/linked-list problems, and the nine dynamic-programming problems support Python, JavaScript, and TypeScript with public and hidden tests. Combined with the existing eight runnable overlays, 30 coding problems now support local function-call judging.
+Sixty-eight coding problems support local function-call judging with public and hidden tests.
 
 Existing higher-level problems receive learning metadata through `prisma/seed-data/learning-overrides.ts`; their authored problem content was not overwritten.
 
@@ -106,6 +125,7 @@ Existing higher-level problems receive learning metadata through `prisma/seed-da
 - preservation of at least the eight foundational real mini-lessons;
 - linked lesson problem slugs;
 - every problem path/module/lesson ID reference.
+- ready-lesson goals, interview sections, quick checks, key takeaways, public sources, and duration-scaled minimum depth.
 
 `prisma/seed.ts` upserts problems first, rebuilds only the curated path/module membership scaffold, resolves lesson problem slugs to database IDs, and upserts lessons. Existing submissions were preserved through the schema change.
 
@@ -124,7 +144,7 @@ npm test
 npm run build
 ```
 
-Runtime smoke tests covered every published path, all 79 published modules, all 183 lessons, all 118 problems, filtered bank views, dashboard, practice, and AI usage. Every content route returned HTTP 200; `/` correctly redirects to the dashboard. The local-runner suite passed on rerun after one load-related Python startup timeout at the exact three-second boundary.
+All application and seeded-content routes returned HTTP 200 after reseeding: six paths, 79 modules, 234 lessons, and 229 problems. A Kubernetes runtime check confirmed the rendered Module Motivation plus Why This Matters, The Simple Mental Model, the desired-state walkthrough, deliberate deferral of advanced details, and Key Takeaway. Seed validation, lint, typecheck, four local-runner tests, and the production build pass.
 
 ## Known limitations
 
@@ -169,18 +189,18 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 | sliding-window-prefix-sums | beginner | arrays | Sliding Window: When It Applies | 1/1/0/0 | challenge, advanced; prefix sums entirely untaught | coding | prefix-sum references (CLRS/uni notes) |
 | binary-search | beginner | arrays | Invariant Game; Searching the Answer Space | 2/2/0/1 | challenge | coding (all runnable) | none (covered) |
 | linked-lists | beginner | — | Pointer Discipline; Slow/Fast Pointers | 2/1/1/0 | advanced | coding (all runnable) | none (covered) |
-| stacks-queues-heaps | intermediate | arrays | — | 1/3/1/0 | concept lesson, advanced | coding, optimization | heap/deque references |
-| trees-graphs | intermediate | stacks-queues-heaps | — | 1/2/0/0 | concept lesson, challenge, advanced | coding | BST/traversal/union-find references |
-| tries | intermediate | trees-graphs | — | 0/1/0/0 | lessons, warmup, challenge, advanced | coding | trie references |
-| backtracking | intermediate | trees-graphs | — | 0/0/0/0 | all | — | pruning/state-space references |
-| greedy | intermediate | arrays | — | 0/0/0/0 | all | — | exchange-argument references |
-| intervals | intermediate | greedy | — | 1/0/0/0 | lessons, core, challenge, advanced | coding | sweep-line references |
+| stacks-queues-heaps | intermediate | arrays | Stacks/Queues/Heaps/Monotonic (concept); Max-Heap + Monotonic Deque (walkthrough) | 3/3/1/0 | advanced | coding, optimization | heapq/deque docs |
+| trees-graphs | intermediate | stacks-queues-heaps | Trees/Graphs/Traversals (concept); BFS + Topo-Sort (walkthrough) | 2/3/1/0 | advanced | coding | topo-sort/union-find/BFS references |
+| tries | intermediate | trees-graphs | The Trie (concept); Building a Trie + Prefix Queries (walkthrough) | 2/2/1/0 | advanced | coding, design | Wikipedia trie |
+| backtracking | intermediate | trees-graphs | Choose/Explore/Un-choose (concept); Subsets/Permutations/Pruned Search (walkthrough) | 2/2/1/0 | advanced | coding | Wikipedia backtracking / eight-queens |
+| greedy | intermediate | arrays | Greedy & Exchange Arguments (concept); Interval + Running-Quantity Sweeps (walkthrough) | 2/2/1/0 | advanced | coding | Wikipedia greedy / activity-selection |
+| intervals | intermediate | greedy | Sorting/Merging/Sweep Lines (concept); Merge/Rooms/Insert (walkthrough) | 2/2/1/0 | advanced | coding | Wikipedia interval-scheduling / sweep-line |
 | dynamic-programming-basics | intermediate | arrays | State & Recurrence; 1-D Walkthrough | 2/2/0/1 | challenge | coding (all runnable) | none (covered) |
 | dp-grids-strings | advanced | dp-basics | Grid Tables; String Alignment | 2/1/1/1 | — (full ladder) | coding (all runnable) | none (covered) |
-| advanced-graphs | advanced | trees-graphs | — | 0/0/1/0 | lessons, warmup, core, advanced | coding | Dijkstra/topo-sort/MST references |
-| bit-manipulation | intermediate | arrays | — | 0/0/0/1 | lessons, warmup, core, challenge | coding | two's-complement/mask references |
-| math-geometry | intermediate | arrays | — | 0/0/0/0 | all | — | modular arithmetic/geometry basics |
-| dsa-to-real-systems | advanced | trees-graphs, dp-basics | — | 0/4/0/1 | lessons, warmup, challenge | coding | none (applied original) |
+| advanced-graphs | advanced | trees-graphs | Weighted Paths & MST (concept); Dijkstra/MST/Hop-Limited (walkthrough) | 2/2/1/0 | advanced | coding | Wikipedia Dijkstra / Bellman-Ford / MST |
+| bit-manipulation | intermediate | arrays | Masks/Shifts/XOR (concept); XOR/Kernighan/Mod-3 (walkthrough) | 2/2/1/1 | — (full ladder) | coding | Wikipedia bit-manipulation / bithacks |
+| math-geometry | intermediate | arrays | Number Theory & Geometry Toolkit (concept); Sieve/Fast-Power/Slopes (walkthrough) | 2/2/1/0 | advanced | coding | Wikipedia Euclid / sieve / modular-exponentiation |
+| dsa-to-real-systems | advanced | trees-graphs, dp-basics | DSA→Production Systems (concept); Deriving LRU-With-TTL (walkthrough) | 0/4/0/1 | warmup, challenge | coding | Wikipedia cache-replacement |
 
 ### Backend SWE (priority 2)
 
@@ -232,7 +252,7 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 | raii-resource-ownership | beginner | — | C++ RAII in Interviews; Scope Exit Walkthrough | 2/1/1/0 | advanced | quant-debugging | cppreference (cited), Core Guidelines |
 | move-semantics | intermediate | raii | Value Categories; noexcept Walkthrough | 2/1/1/0 | advanced | quant-debugging | cppreference move/value categories |
 | references-pointers-lifetimes | intermediate | raii | — | 0/0/0/0 (→ cpp-dangling-view-config Ch, cpp-callback-vector-realloc Ch) | lessons, warmup, core, advanced | read-code, debugging | cppreference lifetime rules |
-| stl-containers-iterators | intermediate | — | — | 0/0/0/0 | all | — | cppreference containers, iterator invalidation |
+| stl-containers-iterators | intermediate | — | STL Containers & Iterators (concept); Iterator Invalidation & Container Choice (walkthrough) | 2/2/1/0 | advanced | read_code, optimization, quant_dev | cppreference containers/iterators |
 | unordered-map-hashing-collisions | intermediate | stl-containers | — | 0/0/0/0 | all | — | cppreference unordered_map |
 | cpp-templates-basics | intermediate | — | — | 0/0/0/0 | all | — | cppreference templates |
 | concurrency-in-cpp | advanced | threading-sync, raii | — | 0/0/0/0 | all | — | cppreference atomics/threads |
@@ -257,9 +277,9 @@ All 16 roadmap modules are now scaffolded and ordered in the path: arrays → sl
 
 | Module | Level | Prereqs | Ready lessons | W/C/Ch/A | Missing | Formats | Sources |
 |---|---|---|---|---|---|---|---|
-| market-data-feeds | intermediate | tcp-vs-udp | — | 0/1/0/0 (shares multicast-gap-recovery-design) | lessons, warmup, challenge, advanced | quant-design | public exchange feed specs (Nasdaq ITCH, CME MDP public pages) |
-| order-books | intermediate | market-data-feeds | — | 0/0/1/0 (→ orderbook-level-aggregator-spec Ch, mini-matching-engine A, order-book-imbalance-window C) | lessons, warmup, core | write-code, coding | public matching-engine explainers |
-| latency-cache-locality | advanced | raii | — | 0/0/0/0 | all | — | Agner Fog guides, public perf references |
+| market-data-feeds | intermediate | tcp-vs-udp | Feed correctness/recovery (concept); Gap→Recovery trace (walkthrough) | 2/2/1/0 (incl. multicast-gap-recovery-design C) | advanced | quant-design | RFC 768/3550, udp(7)/socket(7) man pages |
+| order-books | intermediate | market-data-feeds | Book/levels/priority/matching (concept); Build+match trace (walkthrough) | 2/2/1/1 (orderbook-level-aggregator-spec Ch, mini-matching-engine A, order-book-imbalance-window C, sequence-state-machine Ch) | — (full ladder) | quant-design, write-code, coding | public matching-engine/order-book references |
+| latency-cache-locality | advanced | raii | Memory Hierarchy & Cache Locality (concept); Tracing Cache Misses (walkthrough) | 2/2/1/0 | advanced | read_code, optimization, quant_dev | Algorithmica HPC, Drepper "What Every Programmer Should Know About Memory" |
 | linux-for-quant-dev | intermediate | processes-vs-threads | — | 0/0/0/0 | all | — | man7, kernel docs |
 | networking-for-quant-dev | advanced | tcp-vs-udp, sockets | — | 0/0/0/0 | all | — | kernel networking docs, public HFT engineering posts |
 | concurrency-for-quant-dev | advanced | threading-sync | — | 0/0/0/1 | lessons, warmup, core, challenge | optimization | lock-free/memory-order public references |
@@ -368,7 +388,100 @@ Completed: two new lessons for docker-fundamentals (namespaces/cgroups/overlayfs
 - dockerfile-build-reproducibility (challenge, write_code): fix four non-determinism sources and explain reproducibility for supply-chain security
 Sources: Docker documentation, Linux kernel cgroup/namespace man pages.
 
-**Queued** (in priority order): market-data-feeds + order-books; stacks-queues-heaps + trees-graphs concept lessons; remaining Python/C++/AI modules.
+### Batch 11 — DSA: stacks-queues-heaps + trees-graphs — DONE 2026-07-04
+
+Completed: four new concept/walkthrough lessons (using the global, non-path-scoped module IDs so they appear on the standalone module pages). stacks-queues-heaps: stack/queue/monotonic-stack/heap concept with a traced Next-Greater-Element and a selection table (concept) and a max-heap scheduler + sliding-window-maximum monotonic deque trace (walkthrough). trees-graphs: tree/graph terminology, DFS/BFS orderings, BST in-order, adjacency lists, Union-Find, and Kahn's topological sort (concept) and BFS-minimum-hops + Kahn's traced end to end (walkthrough). Six new runnable problems (Python/JS/TS, function_call harness) in `prisma/seed-data/dsa-stacks-trees.ts`:
+- heap-task-processing-order (warmup, dsa): process tasks highest-priority-first with a negated max-heap
+- min-stack-simulate (warmup, dsa): O(1) get_min via a paired running-minimum stack
+- tree-bfs-level-means (warmup, dsa): BFS level-order averages with level_size snapshotting
+- graph-min-edge-path (core, dsa): BFS minimum hops, visited-on-enqueue, src==dst and unreachable cases
+- graph-bipartite-coloring (core, dsa): two-coloring across disconnected components (odd-cycle detection)
+- build-order-topo-sort (challenge, dsa): lexicographically smallest Kahn's topological sort with cycle detection
+Existing orphans linked to the new lessons: rolling-window-max-latency, cooldown-task-scheduler, log-topk-full-sort (stacks); account-merge-shared-emails (trees).
+
+### Batch 12 — Quant Dev: market-data-feeds + order-books — DONE 2026-07-04
+
+Completed: four new lessons. market-data-feeds: UDP-multicast feeds, sequence-number gap detection, snapshot+incremental recovery, A/B arbitration, conflation, and the STALE correctness contract (concept) and a feed handler traced through cold-start join and a live gap→STALE→recovery (walkthrough). order-books: bids/asks, best bid/ask, spread/mid, price-time priority, L1/L2/L3, matching engine, crossed/locked invariants (concept) and an event-by-event book build + one traced match (walkthrough). Seven new written-answer quant_dev problems in `prisma/seed-data/quant-dev-foundations.ts`:
+- mdf-sequence-number-basics (warmup): classify in-order/gap/reorder/duplicate against an expected counter
+- mdf-ab-feed-arbitration (warmup): redundant A/B feeds, first-copy-wins, true gap only when both miss
+- mdf-snapshot-incremental-join (core): buffer-then-join at snapshot sequence S; completeness gate before LIVE
+- mdf-slow-consumer-conflation (challenge): kernel receive-buffer overflow, replay feedback loop, drain/processing separation + conflation
+- ob-book-levels-l1-l2-l3 (warmup): L1/L2/L3 distinctions and the queue-position tradeoff
+- ob-best-bid-ask-crossed (warmup): spread/mid/locked/crossed definitions and the bug-vs-venue-state diagnosis
+- ob-data-structure-choice (core): ordered map vs hash map vs price-indexed array, cache-locality and latency-tail reasoning
+Existing orphans linked to the new lessons: multicast-gap-recovery-design, order-book-sequence-state-machine, order-book-imbalance-window, mini-matching-engine, and orderbook-level-aggregator-spec (newly mapped to order-books).
+Sources: RFC 768/3550/9293, Linux udp(7)/socket(7) man pages, cppreference, Investopedia/Wikipedia order-book references.
+
+### Batch 13 — DSA: tries + backtracking — DONE 2026-07-05
+
+Completed: four new concept/walkthrough lessons (global module IDs for the standalone pages). tries: trie structure, the is_word flag, insert/search/starts_with, trie-vs-hashset (concept) and a node-by-node build + exact/prefix/completion-DFS trace (walkthrough). backtracking: the choose/explore/un-choose template, pruning, decision-tree framing, complexity (concept) and subsets/permutations/combination-sum/N-queens traced with the pruning that makes each tractable (walkthrough). Nine new runnable problems (Python/JS/TS, function_call harness; all expected values verified against reference solutions) in `prisma/seed-data/dsa-tries-backtracking.ts`:
+- trie-prefix-count (warmup, dsa): per-node prefix counter; O(len(query)) queries
+- trie-exact-word-search (warmup, dsa): the is_word flag distinguishing stored words from prefixes
+- trie-replace-with-roots (core, dsa): replace words with their shortest root (stop at first end-of-root node)
+- trie-wildcard-search (challenge, dsa): '.' matches any letter — DFS branching at wildcards, exact-length match
+- backtracking-all-subsets (warmup, dsa): power set via start-index recursion, canonicalized output
+- backtracking-permutations (warmup, dsa): all orderings with a used-set
+- backtracking-combination-sum (core, dsa): reusable candidates, start-index dedup, sorted-array pruning
+- backtracking-generate-parentheses (core, dsa): open/close-counter constraint pruning (no generate-then-filter)
+- backtracking-n-queens-count (challenge, dsa): one queen per row, (row±col) diagonal sets for O(1) pruning
+Existing orphan cli-autocomplete-trie (core) linked to the new trie walkthrough. Sources: Wikipedia trie / backtracking / eight-queens.
+
+### Batch 14 — DSA: greedy + intervals — DONE 2026-07-05
+
+Completed: four new concept/walkthrough lessons (global module IDs for the standalone pages). greedy: locally-optimal choice, greedy-vs-DP, the exchange argument and 'greedy stays ahead', sort-then-sweep vs running-quantity shapes, and the coin-change counterexample (concept) plus interval-selection (proved by exchange) and jump-game/gas-station sweeps traced (walkthrough). intervals: half-open vs closed conventions, the overlap inequality, merge (sort by start), sweep-line/heap concurrency, greedy selection (sort by end), and insert-into-sorted (concept) plus merge/min-rooms/insert traced (walkthrough). Nine new runnable problems (Python/JS/TS, function_call harness; all expected values verified against reference solutions) in `prisma/seed-data/dsa-greedy-intervals.ts`:
+- greedy-assign-cookies (warmup, dsa): two-pointer greedy pairing after sorting both lists
+- greedy-stock-profit-unlimited (warmup, dsa): sum of positive consecutive deltas (telescoping)
+- greedy-min-jumps (core, dsa): jump game II via reachable-window levels, O(n)
+- greedy-gas-station (core, dsa): surplus feasibility + reset-start-on-dry-out single pass
+- greedy-candy-distribution (challenge, dsa): two-pass left/right with max to satisfy both neighbor constraints
+- intervals-can-attend-meetings (warmup, dsa): sort-then-scan overlap check, half-open strict '<'
+- intervals-min-meeting-rooms (core, dsa): peak concurrency via min-heap of end times
+- intervals-erase-overlaps (core, dsa): sort-by-end greedy (activity selection), removals = total - kept
+- intervals-insert-interval (challenge, dsa): three-phase O(n) insert-and-merge on pre-sorted input
+Existing orphan maintenance-window-merge (warmup) linked to the new intervals walkthrough. Sources: Wikipedia greedy / activity-selection / interval-scheduling / sweep-line.
+
+### Batch 15 — DSA: advanced-graphs + math-geometry — DONE 2026-07-05
+
+Completed: four new concept/walkthrough lessons (global module IDs for the standalone pages). advanced-graphs: Dijkstra (min-heap, settle-on-pop invariant, why non-negative matters), Bellman-Ford (negative edges + hop-limited via per-round snapshot), MST (Prim/Kruskal, cut property), and an algorithm-selection checklist (concept) plus Dijkstra pop-by-pop, Prim edge-by-edge, and hop-limited relaxation traced (walkthrough). math-geometry: Euclidean gcd, prime sieve, modular arithmetic + fast exponentiation, Legendre factor-counting, and exact-integer coordinate geometry (concept) plus the sieve, fast-power bit-by-bit, and exact-slope collinearity traced (walkthrough). Nine new runnable problems (Python/JS/TS, function_call harness; all expected values verified against reference solutions) in `prisma/seed-data/dsa-advanced-graphs-math.ts`:
+- adv-dijkstra-shortest-path (warmup, dsa): Dijkstra with a min-heap and stale-entry skipping
+- adv-network-delay-time (warmup, dsa): Dijkstra + max-over-nodes aggregation, -1 if unreachable
+- adv-min-cost-connect-points (core, dsa): Manhattan-distance MST via Prim
+- adv-cheapest-flights-k-stops (core, dsa): bounded Bellman-Ford with per-round snapshot
+- math-gcd-of-array (warmup, dsa): Euclidean algorithm folded across the array
+- math-factorial-trailing-zeroes (warmup, dsa): Legendre count of factor-5s, no factorial
+- math-count-primes-sieve (core, dsa): Sieve of Eratosthenes (loop to √n, mark from i·i)
+- math-modular-exponentiation (core, dsa): binary exponentiation with mod at every step
+- math-max-points-on-a-line (challenge, dsa): exact gcd-reduced sign-normalized slope keys, O(n²)
+Existing orphan surge-aware-shortest-path (challenge) linked to the new advanced-graphs walkthrough. Sources: Wikipedia Dijkstra / Bellman-Ford / MST / Euclid / sieve / modular-exponentiation.
+
+### Batch 16 — DSA: bit-manipulation + dsa-to-real-systems — DONE 2026-07-05
+
+Completed the DSA Confidence Builder ladder. Four new concept/walkthrough lessons (global module IDs). bit-manipulation: mask/shift/XOR idioms, the six operators, XOR's cancel-pairs properties, Kernighan popcount, power-of-two/lowest-set-bit/subset-mask derived idioms, and a fixed-width language caution (concept) plus XOR single-number, Kernighan popcount, and bit-count-mod-3 traced in binary (walkthrough). dsa-to-real-systems: the DSA→systems translation (LRU=hashmap+DLL, heaps for streaming order stats, hashing for dedup, bounded buffers) as a capstone concept, plus deriving the LRU-with-TTL cache from its O(1) operation requirements (walkthrough). Five new runnable bit-manipulation problems (Python/JS/TS, function_call harness; all values kept within signed-32-bit range for cross-language parity; verified against reference solutions) in `prisma/seed-data/dsa-bit-manipulation.ts`:
+- bits-single-number (warmup, dsa): XOR cancels pairs, O(1) space
+- bits-count-set-bits (warmup, dsa): Brian Kernighan's n&(n-1) popcount
+- bits-counting-bits-dp (core, dsa): O(n) dp[i]=dp[i>>1]+(i&1) over 0..n
+- bits-hamming-distance (core, dsa): XOR then popcount composition
+- bits-single-number-three-times (challenge, dsa): bit-count-mod-3 / ones-twos automaton (XOR fails on triples)
+dsa-to-real-systems got two lessons linking its existing orphan problems (ttl-lru-session-cache, log-template-dedup, order-book-imbalance-window, mini-matching-engine); the existing oncall-coverage-bitmask advanced orphan is linked to the bit-manipulation walkthrough. Sources: Wikipedia bit-manipulation / Hamming-weight / cache-replacement, Stanford bithacks.
+
+**DSA Confidence Builder status:** all 16 modules now have authored concept + walkthrough lessons and a warmup→core→challenge problem ladder (a few modules still note 'advanced' as an optional future tier, but every module is fully usable).
+
+### Batch 17 — Quant Dev: stl-containers-iterators + latency-cache-locality — DONE 2026-07-05
+
+First batch authored with the new deep lesson template (Goal → progressive build-up with ASCII diagrams/worked examples → Example with Cases → Interview Value → Common Interview Questions → Common Mistakes → Quick Check → Key Takeaway; ~8.5k–10.3k chars each). Four lessons. stl-containers-iterators: container layouts (vector/deque/list/map/unordered_map), complexity, amortized push_back, and iterator-invalidation rules (concept); vector-reallocation and erase-while-iterating traced for vector and map, plus container-choice-from-access-pattern (walkthrough). latency-cache-locality: the memory hierarchy and latency ladder, 64-byte cache lines, spatial/temporal locality, AoS vs SoA, and false sharing (concept); array-vs-list, row-vs-column, AoS→SoA, and false-sharing traced by cache line (walkthrough). Ten new written-answer problems with embedded C++ code (mapped via learning-overrides, Batch-12 style) in `prisma/seed-data/cpp-performance-foundations.ts`:
+- stl-container-choice-classify (warmup, read_code): pick vector/deque/list/map/unordered_map per access pattern
+- stl-iterator-invalidation-predict (warmup, read_code): predict iterator/reference/pointer invalidation across ops
+- stl-vector-vs-list-hot-loop (core, optimization): swap list→vector for cache locality; estimate speedup
+- stl-erase-in-loop-bug (core, debugging): fix erase-while-iterating for vector (erase-remove) and map (it=erase(it))
+- stl-lowlatency-container-design (challenge, quant_dev): container layout for a low-latency order cache
+- cache-latency-numbers-rank (warmup, read_code): rank register/L1/RAM/SSD/network by latency
+- cache-row-vs-column-traversal (warmup, read_code): identify the cache-friendly matrix loop
+- cache-aos-vs-soa (core, optimization): convert AoS→SoA for a hot single-field loop
+- cache-false-sharing-counters (core, quant_dev): diagnose false sharing, fix with alignas(64)
+- cache-marketdata-hot-path-layout (challenge, quant_dev): cache-friendly market-data hot-path layout
+Sources: cppreference, Algorithmica HPC, Drepper memory paper.
+
+**Queued** (in priority order): remaining Quant Dev modules (`linux-for-quant-dev`, `networking-for-quant-dev`, `concurrency-for-quant-dev` — `cpp-moved-handle-double-close`/`lock-contention-session-map` orphans) and `unordered-map-hashing-collisions`; the AI-efficient-engineer modules (`good-ai-usage-principles`, `selecting-repo-context`, `reviewing-ai-code`, `hallucination-detection`, `testing-verification`); infrastructure (kubernetes networking/scheduling); remaining OS/networking modules. All new lessons use the deep template.
 
 ## Long-term generation guidance
 
@@ -390,4 +503,4 @@ Keep easy problems genuinely easy: a warmup isolates one main idea, uses a small
 
 ## Recommended next prompt
 
-Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch: `market-data-feeds` + `order-books` (Quant Dev path — orphan candidates: multicast-gap-recovery-design, order-book-sequence-state-machine, orderbook-level-aggregator-spec, mini-matching-engine) or `stacks-queues-heaps` + `trees-graphs` (DSA Confidence Builder — concept lessons needed, orphan candidates available). Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.
+The DSA Confidence Builder is now fully authored. Run **Prompt 2** in `CLAUDE_CONTENT_PROMPTS.md` for the next queued batch, shifting focus to the non-DSA paths. Highest-leverage remaining gaps: the Quant Dev C++/Python modules (`stl-containers-iterators`, `latency-cache-locality`, `linux-for-quant-dev`, `networking-for-quant-dev`, `concurrency-for-quant-dev` — `cpp-moved-handle-double-close` and `lock-contention-session-map` are orphan candidates), or the AI-efficient-engineer path (`good-ai-usage-principles`, `selecting-repo-context`, `reviewing-ai-code`, `hallucination-detection`, `testing-verification` — several `ai-*` orphans already mapped). Keep the batch bounded, include genuinely easy warmups, embed a concrete example artifact in every problem statement, and update the coverage tables afterward.

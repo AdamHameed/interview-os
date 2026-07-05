@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Clock3, Search, SlidersHorizontal } from "lucide-react";
-import { ConfidenceBadge, DifficultyBadge, QualityDots, SourceBadge, StatusBadge, TypeBadge } from "@/components/badges";
+import { ChevronDown, Clock3, Search, SlidersHorizontal } from "lucide-react";
+import { ConfidenceBadge, DifficultyBadge, StatusBadge, TypeBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { db } from "@/lib/db";
 import {
   ATTEMPT_STATUS_LABELS,
@@ -55,10 +55,13 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
   };
   const visible = filterProblems(problems, filters, latest);
   const topics = collectTopics(problems);
-  const pathById = new Map(learningPaths.map((path) => [path.id, path]));
+  const hasAdvancedFilters = Boolean(
+    filters.topic || filters.role || filters.status || filters.pathId ||
+    filters.moduleId || filters.confidenceLevel || filters.maxMinutes
+  );
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <div>
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Problem bank</p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight">Find the right next rep.</h2>
@@ -67,14 +70,9 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><SlidersHorizontal className="size-4" /> Filters</CardTitle>
-          <CardDescription>Every filter is shareable in the URL.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <label className="relative md:col-span-2 xl:col-span-2">
+      <form className="rounded-xl border bg-card p-4">
+        <div className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_12rem_12rem_auto]">
+            <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
               <input
                 name="q"
@@ -91,6 +89,16 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
               <option value="">All difficulties</option>
               {DIFFICULTIES.map((difficulty) => <option key={difficulty} value={difficulty}>{DIFFICULTY_LABELS[difficulty]}</option>)}
             </select>
+            <button className={buttonVariants()} type="submit">Search</button>
+        </div>
+
+        <details className="group mt-3 border-t pt-3" open={hasAdvancedFilters}>
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+            <SlidersHorizontal className="size-4" /> More filters
+            {hasAdvancedFilters && <Badge variant="secondary">Active</Badge>}
+            <ChevronDown className="ml-auto size-4 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <select name="role" defaultValue={filters.role} className="h-9 rounded-lg border bg-background px-3 text-sm">
               <option value="">All target roles</option>
               {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}
@@ -123,12 +131,12 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
               {CONFIDENCE_LEVELS.map((level) => <option key={level} value={level}>{CONFIDENCE_LEVEL_LABELS[level]}</option>)}
             </select>
             <div className="flex gap-2 md:col-span-2 xl:col-span-4">
-              <button className={buttonVariants()} type="submit">Apply filters</button>
+              <button className={buttonVariants({ variant: "secondary" })} type="submit">Apply all filters</button>
               <Link href="/problems" className={buttonVariants({ variant: "outline" })}>Clear</Link>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </details>
+      </form>
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground"><span className="font-medium text-foreground">{visible.length}</span> of {problems.length} problems</p>
@@ -140,38 +148,26 @@ export default async function ProblemsPage({ searchParams }: { searchParams: Pro
           <p className="mt-1 text-sm text-muted-foreground">Clear one or two constraints and try again.</p>
         </div>
       ) : (
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="space-y-3">
           {visible.map((problem) => {
             const status = problemStatus(problem.id, latest);
             return (
               <Link key={problem.id} href={`/problems/${problem.slug}`} className="group">
-                <Card className="h-full transition-colors group-hover:bg-muted/30">
-                  <CardHeader>
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <TypeBadge type={problem.type} />
-                      <DifficultyBadge difficulty={problem.difficulty} />
-                      {problem.confidenceLevel && <ConfidenceBadge level={problem.confidenceLevel} />}
-                      {status !== "not_started" && <StatusBadge status={status} />}
-                    </div>
-                    <CardTitle className="text-lg group-hover:underline group-hover:underline-offset-4">{problem.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{problem.context ?? problem.prompt}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="mt-auto space-y-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {problem.topics.slice(0, 4).map((topic) => <Badge key={topic} variant="secondary">{topic}</Badge>)}
-                    </div>
-                    {problem.pathIds.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {problem.pathIds.map((pathId) => pathById.get(pathId)).filter((path): path is NonNullable<typeof path> => Boolean(path)).map((path) => (
-                          <Badge key={path.id} variant="outline">{path.title}</Badge>
-                        ))}
+                <Card size="sm" className="transition-colors group-hover:bg-muted/30">
+                  <CardContent className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <TypeBadge type={problem.type} />
+                        <DifficultyBadge difficulty={problem.difficulty} />
+                        {problem.confidenceLevel && <ConfidenceBadge level={problem.confidenceLevel} />}
                       </div>
-                    )}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-3 text-xs text-muted-foreground">
+                      <CardTitle className="mt-2 text-base group-hover:underline group-hover:underline-offset-4">{problem.title}</CardTitle>
+                      <CardDescription className="mt-1 line-clamp-1">{problem.context ?? problem.prompt}</CardDescription>
+                      <p className="mt-2 truncate text-xs text-muted-foreground">{problem.topics.slice(0, 3).join(" · ")}</p>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground md:flex-col md:items-end">
                       <span className="flex items-center gap-1"><Clock3 className="size-3.5" />{problem.estimatedMinutes} min</span>
-                      <span className="flex items-center gap-1.5"><QualityDots score={problem.qualityScore} /> quality</span>
-                      <SourceBadge sourceType={problem.sourceType} />
-                      <span className="ml-auto">{problem.targetRoles.slice(0, 2).map((role) => ROLE_LABELS[role]).join(" · ")}</span>
+                      {status !== "not_started" && <StatusBadge status={status} />}
                     </div>
                   </CardContent>
                 </Card>

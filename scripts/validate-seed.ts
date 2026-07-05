@@ -1,4 +1,5 @@
 import { allProblems, learningModules, learningPaths } from "../prisma/seed-data";
+import { LEGACY_LESSON_SLUGS } from "../prisma/seed-data/learning";
 import {
   findPlaceholder,
   problemInputSchema,
@@ -10,6 +11,18 @@ type ValidationError = {
   slug: string;
   message: string;
 };
+
+const REQUIRED_REAL_LESSON_SECTIONS = [
+  "Goal",
+  "Why This Matters",
+  "The Simple Mental Model",
+  "Worked Example",
+  "Interview Value",
+  "Common Interview Questions",
+  "Common Mistakes",
+  "Quick Check",
+  "Key Takeaway",
+] as const;
 
 const errors: ValidationError[] = [];
 const seenSlugs = new Set<string>();
@@ -86,6 +99,96 @@ function checkRunnableMetadata(problem: ProblemInput): void {
   }
 }
 
+function checkRealLessonQuality(lesson: {
+  slug: string;
+  estimatedMinutes: number;
+  contentMarkdown: string;
+  sourceUrls: string[];
+}): void {
+  for (const heading of REQUIRED_REAL_LESSON_SECTIONS) {
+    const pattern = heading === "Worked Example"
+      ? /^##\s+(?:Worked )?Example\s*$/im
+      : new RegExp(`^##\\s+${heading}\\s*$`, "im");
+    if (!pattern.test(lesson.contentMarkdown)) {
+      report(lesson.slug, `ready lesson is missing required section ${JSON.stringify(heading)}`);
+    }
+  }
+
+  const wordCount = lesson.contentMarkdown.trim().split(/\s+/).filter(Boolean).length;
+  const minimumWords = Math.max(900, lesson.estimatedMinutes * 30);
+  if (wordCount < minimumWords) {
+    report(
+      lesson.slug,
+      `ready lesson has ${wordCount} words; expected at least ${minimumWords} for ${lesson.estimatedMinutes} minutes`
+    );
+  }
+  if (lesson.sourceUrls.length === 0) {
+    report(lesson.slug, "ready lesson requires at least one public research source");
+  }
+
+  if (LEGACY_LESSON_SLUGS.has(lesson.slug)) return;
+
+  const headings = [...lesson.contentMarkdown.matchAll(/^##\s+(.+?)\s*$/gm)].map(
+    (match) => ({ title: match[1], index: match.index ?? -1 })
+  );
+  if (headings[0]?.title !== "Goal") {
+    report(lesson.slug, "new ready lesson must begin with ## Goal");
+  }
+  if (headings.at(-1)?.title !== "Key Takeaway") {
+    report(lesson.slug, "new ready lesson must end with ## Key Takeaway");
+  }
+
+  const orderedSections = [
+    /^Goal$/,
+    /^Why This Matters$/,
+    /^The Simple Mental Model$/,
+    /^(?:Worked )?Example$/,
+    /^Interview Value$/,
+    /^Common Interview Questions$/,
+    /^Common Mistakes$/,
+    /^Quick Check$/,
+    /^Key Takeaway$/,
+  ];
+  let previousIndex = -1;
+  for (const sectionPattern of orderedSections) {
+    const heading = headings.find((candidate) => sectionPattern.test(candidate.title));
+    if (heading && heading.index <= previousIndex) {
+      report(lesson.slug, "new ready lesson sections are not in the required authoring order");
+      break;
+    }
+    if (heading) previousIndex = heading.index;
+  }
+
+  if (!lesson.contentMarkdown.includes("```")) {
+    report(lesson.slug, "new ready lesson requires a fenced diagram, trace, code, or configuration artifact");
+  }
+
+  const sectionBody = (start: RegExp): string => {
+    const match = start.exec(lesson.contentMarkdown);
+    if (!match || match.index === undefined) return "";
+    const bodyStart = match.index + match[0].length;
+    const nextHeading = lesson.contentMarkdown.slice(bodyStart).search(/^##\s+/m);
+    return nextHeading === -1
+      ? lesson.contentMarkdown.slice(bodyStart)
+      : lesson.contentMarkdown.slice(bodyStart, bodyStart + nextHeading);
+  };
+  const interviewQuestions = sectionBody(/^##\s+Common Interview Questions\s*$/im);
+  if ((interviewQuestions.match(/^###\s+/gm) ?? []).length < 3) {
+    report(lesson.slug, "new ready lesson requires at least three topic-specific interview questions");
+  }
+  const mistakes = sectionBody(/^##\s+Common Mistakes\s*$/im);
+  if ((mistakes.match(/^###\s+Mistake\s+\d+/gm) ?? []).length < 3) {
+    report(lesson.slug, "new ready lesson requires at least three numbered topic-specific mistakes");
+  }
+  const quickCheck = sectionBody(/^##\s+Quick Check\s*$/im);
+  if ((quickCheck.match(/^###\s+Question\s+\d+/gm) ?? []).length < 3) {
+    report(lesson.slug, "new ready lesson requires at least three quick-check questions");
+  }
+  if ((quickCheck.match(/^###\s+Answer\s*$/gm) ?? []).length < 3) {
+    report(lesson.slug, "new ready lesson quick checks require explicit answer sections");
+  }
+}
+
 for (const candidate of allProblems) {
   const slug = typeof candidate.slug === "string" ? candidate.slug : "<missing slug>";
 
@@ -129,6 +232,15 @@ for (const candidate of learningModules) {
   moduleIds.add(learningModule.id);
   moduleSlugs.add(learningModule.slug);
 
+  const motivationPlaceholder = findPlaceholder(learningModule.motivationMarkdown);
+  if (motivationPlaceholder) {
+    report(learningModule.slug, `module motivation contains placeholder text: ${JSON.stringify(motivationPlaceholder)}`);
+  }
+  const motivationWords = learningModule.motivationMarkdown.trim().split(/\s+/).filter(Boolean).length;
+  if (motivationWords < 60) {
+    report(learningModule.slug, `module motivation has ${motivationWords} words; expected at least 60`);
+  }
+
   for (const prerequisite of learningModule.prerequisites) {
     if (!learningModules.some((item) => item.slug === prerequisite)) {
       report(learningModule.slug, `unknown prerequisite module ${prerequisite}`);
@@ -154,7 +266,10 @@ for (const candidate of learningModules) {
       lessonIds.add(lesson.id);
       lessonSlugs.add(lesson.slug);
       lessonOrders.add(lesson.order);
-      if (!lesson.isPlaceholder) realLessonCount += 1;
+      if (!lesson.isPlaceholder) {
+        realLessonCount += 1;
+        checkRealLessonQuality(lesson);
+      }
       for (const problemSlug of lesson.linkedProblemSlugs) {
         if (!problemSlugs.has(problemSlug)) {
           report(lesson.slug, `links missing problem ${problemSlug}`);

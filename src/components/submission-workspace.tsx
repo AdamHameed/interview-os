@@ -203,8 +203,8 @@ export function SubmissionWorkspace({
   }
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader>
+    <Card className="min-w-0">
+      <CardHeader className="border-b">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <CardTitle>{isCoding ? "Code submission workspace" : "Written answer workspace"}</CardTitle>
@@ -220,9 +220,9 @@ export function SubmissionWorkspace({
       <CardContent className="space-y-4">
         {isCoding ? (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <label className="flex items-center gap-2 text-sm">
-                Language
+                <span className="sr-only">Language</span>
                 <select
                   value={language}
                   onChange={(event) => changeLanguage(event.target.value as Language)}
@@ -235,32 +235,31 @@ export function SubmissionWorkspace({
                   ))}
                 </select>
               </label>
-              <span className="text-xs text-muted-foreground">3 second timeout per test</span>
+              <Button size="sm" onClick={runTests} disabled={busy !== null || answer.trim().length === 0}>
+                {busy === "run" ? <Loader2 className="animate-spin" /> : <Play />} Run tests
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => save("draft")} disabled={busy !== null}>
+                <Save /> Save
+              </Button>
+              <Button size="sm" variant="secondary" onClick={runTests} disabled={busy !== null || answer.trim().length === 0}>
+                <Send /> Submit
+              </Button>
+              <span className="ml-auto text-xs text-muted-foreground">3s per test</span>
             </div>
             <div className="overflow-hidden rounded-lg border">
               <Editor
-                height="430px"
+                height="clamp(420px, 56vh, 680px)"
                 language={language}
                 theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
                 value={answer}
                 onChange={(value) => setAnswer(value ?? "")}
-                options={{ minimap: { enabled: false }, fontSize: 13, scrollBeyondLastLine: false }}
+                options={{ minimap: { enabled: false }, fontSize: 14, lineHeight: 22, padding: { top: 14 }, scrollBeyondLastLine: false, wordWrap: "on" }}
               />
             </div>
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs leading-relaxed text-muted-foreground">
-              Local personal-use runner only. It limits time and output but is not a secure sandbox. Never expose it to untrusted users.
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={runTests} disabled={busy !== null || answer.trim().length === 0}>
-                {busy === "run" ? <Loader2 className="animate-spin" /> : <Play />} Run tests
-              </Button>
-              <Button variant="outline" onClick={() => save("draft")} disabled={busy !== null}>
-                <Save /> Save draft
-              </Button>
-              <Button variant="secondary" onClick={runTests} disabled={busy !== null || answer.trim().length === 0}>
-                <Send /> Submit
-              </Button>
-            </div>
+            <details className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground">
+              <summary className="cursor-pointer">Local runner safety</summary>
+              <p className="mt-2 leading-relaxed">Personal use only. Time and output limits do not make this a secure sandbox. Never expose it to untrusted users.</p>
+            </details>
           </>
         ) : (
           <>
@@ -268,7 +267,7 @@ export function SubmissionWorkspace({
               value={answer}
               onChange={(event) => setAnswer(event.target.value)}
               placeholder="Write your reasoning in Markdown…"
-              className="min-h-80 font-mono text-sm leading-relaxed"
+              className="min-h-[52vh] font-mono text-sm leading-relaxed"
             />
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={() => save("draft")} disabled={busy !== null}>
@@ -337,14 +336,17 @@ export function SubmissionWorkspace({
         )}
 
         {!isCoding && (
-          <div className="grid gap-3 border-t pt-4 md:grid-cols-2">
-            {rubric.map((item) => (
-              <div key={item.criterion} className="rounded-lg border p-3">
-                <div className="text-sm font-medium">{item.criterion}</div>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.description}</p>
-              </div>
-            ))}
-          </div>
+          <details className="border-t pt-4">
+            <summary className="cursor-pointer text-sm font-medium">Review the rubric</summary>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {rubric.map((item) => (
+                <div key={item.criterion} className="rounded-lg border p-3">
+                  <div className="text-sm font-medium">{item.criterion}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </details>
         )}
 
         {feedback && (

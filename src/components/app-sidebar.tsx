@@ -5,13 +5,9 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Bot,
-  Braces,
-  FilePlus2,
   GraduationCap,
   LayoutDashboard,
-  Library,
   ListChecks,
-  Swords,
   Terminal,
   Timer,
 } from "lucide-react";
@@ -42,19 +38,7 @@ const NAV = [
     items: [
       { title: "Problems", href: "/problems", icon: ListChecks },
       { title: "Practice", href: "/practice", icon: Timer },
-      { title: "Mock Interviews", href: "/interviews", icon: Swords },
       { title: "AI Usage", href: "/ai-usage", icon: Bot },
-    ],
-  },
-  {
-    label: "Library",
-    items: [{ title: "Resources", href: "/resources", icon: Library }],
-  },
-  {
-    label: "Manage",
-    items: [
-      { title: "New Problem", href: "/admin/problems/new", icon: FilePlus2 },
-      { title: "Import", href: "/admin/import", icon: Braces },
     ],
   },
 ];

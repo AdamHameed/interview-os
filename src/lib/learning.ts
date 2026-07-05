@@ -46,6 +46,7 @@ export const moduleSeedSchema = z.object({
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   title: z.string().min(5),
   description: z.string().min(20),
+  motivationMarkdown: z.string().min(100),
   category: z.enum(MODULE_CATEGORIES),
   difficulty: z.enum(MODULE_DIFFICULTIES),
   estimatedHours: z.number().int().min(1).max(100),

@@ -2,15 +2,22 @@ import { debuggingProblems } from "./debugging";
 import { dsaProblems } from "./dsa";
 import { concurrencyFoundationProblems } from "./concurrency-foundations";
 import { cppFoundationProblems } from "./cpp-foundations";
+import { cppPerformanceFoundationProblems } from "./cpp-performance-foundations";
 import { databasesFoundationProblems } from "./databases-foundations";
 import { dockerFoundationProblems } from "./docker-foundations";
 import { httpQueuesFoundationProblems } from "./http-queues-foundations";
 import { kubernetesFoundationProblems } from "./kubernetes-foundations";
 import { dsaDynamicProgrammingProblems } from "./dsa-dynamic-programming";
 import { dsaSearchListProblems } from "./dsa-search-lists";
+import { dsaStacksTreesProblems } from "./dsa-stacks-trees";
+import { dsaTriesBacktrackingProblems } from "./dsa-tries-backtracking";
+import { dsaGreedyIntervalsProblems } from "./dsa-greedy-intervals";
+import { dsaAdvancedGraphsMathProblems } from "./dsa-advanced-graphs-math";
+import { dsaBitManipulationProblems } from "./dsa-bit-manipulation";
 import { confidenceWarmupProblems } from "./starter-confidence";
 import { learningOverrides } from "./learning-overrides";
 import { networkingFoundationProblems } from "./networking-foundations";
+import { quantDevFoundationProblems } from "./quant-dev-foundations";
 export { learningModules, learningPaths } from "./learning";
 import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
@@ -33,14 +40,21 @@ const authoredProblems: SeedProblem[] = [
   ...dsaProblems,
   ...dsaSearchListProblems,
   ...dsaDynamicProgrammingProblems,
+  ...dsaStacksTreesProblems,
+  ...dsaTriesBacktrackingProblems,
+  ...dsaGreedyIntervalsProblems,
+  ...dsaAdvancedGraphsMathProblems,
+  ...dsaBitManipulationProblems,
   ...databasesFoundationProblems,
   ...concurrencyFoundationProblems,
   ...networkingFoundationProblems,
   ...systemDesignFoundationProblems,
   ...cppFoundationProblems,
+  ...cppPerformanceFoundationProblems,
   ...dockerFoundationProblems,
   ...httpQueuesFoundationProblems,
   ...kubernetesFoundationProblems,
+  ...quantDevFoundationProblems,
   ...readCodeProblems,
   ...writeCodeProblems,
   ...debuggingProblems,

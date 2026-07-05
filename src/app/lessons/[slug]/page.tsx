@@ -49,6 +49,8 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
 
       {lesson.isPlaceholder && <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm leading-relaxed text-muted-foreground"><strong className="text-foreground">This lesson is intentionally scaffolded.</strong> The path position, outcomes, and future content brief exist, but Claude should replace this brief with a reviewed instructional before treating it as complete.</div>}
 
+      {lesson.order === 1 && <Card><CardHeader><CardTitle>Module Motivation</CardTitle><CardDescription>Why this topic exists before the technical details begin.</CardDescription></CardHeader><CardContent><Markdown>{learningModule.motivationMarkdown}</Markdown></CardContent></Card>}
+
       <Card><CardContent className="pt-2"><Markdown>{lesson.contentMarkdown}</Markdown></CardContent></Card>
 
       <section className="grid gap-4 lg:grid-cols-2">

@@ -13,6 +13,7 @@ Research and plan the next content expansion without generating the entire curri
 First read:
 - README.md
 - PROGRESS.md
+- LESSON_AUTHORING_STANDARD.md
 - prisma/schema.prisma
 - prisma/seed-data/learning.ts
 - prisma/seed-data/learning-overrides.ts
@@ -42,6 +43,7 @@ Interview OS must support both:
 2. Standalone modules for targeted interview preparation.
 
 Create or update a curriculum coverage plan in PROGRESS.md. For every module, record:
+- the plain-language module motivation: why it exists, the real problem it solves, interview relevance, and learner outcome
 - intended learner level
 - prerequisites
 - lesson sequence
@@ -121,7 +123,7 @@ Continue from the current Interview OS repository state.
 Goal:
 Fully develop one coherent module batch so its lessons and problems form a smooth interview-preparation progression.
 
-Read README.md and PROGRESS.md first. Follow the curriculum coverage plan. Do not restart or re-architect the application.
+Read README.md, PROGRESS.md, and LESSON_AUTHORING_STANDARD.md first. Follow the curriculum coverage plan. Do not restart or re-architect the application.
 
 Choose:
 - no more than two closely related modules
@@ -140,16 +142,31 @@ For each selected module, create:
 Required flow:
 concept → worked example → easy warmup → second warmup → core → core variation → challenge → self-review
 
-Every lesson must include:
-- concise explanation
-- why interviewers test the topic
-- prerequisite knowledge
-- worked example
-- common mistakes
-- key takeaways
-- recommended next step
-- public source URLs
-- links to the relevant problems
+Every new ready lesson must be fully authored in the exact workflow from LESSON_AUTHORING_STANDARD.md. Do not rely on legacy lesson normalization to repair short notes. Required content order:
+- Goal
+- Why This Matters, connected to a real engineering problem
+- The Simple Mental Model in 3–6 plain-language sentences
+- progressive concept sections that teach one idea at a time
+- at least one fenced diagram, trace, code sample, query plan, protocol exchange, or configuration artifact
+- complete step-by-step flow
+- Worked Example with real values and normal plus boundary/failure cases
+- Interview Value
+- at least three topic-specific Common Interview Questions with substantive answers
+- at least three numbered, topic-specific Common Mistakes
+- at least three Quick Check questions with explicit Answer sections
+- Key Takeaway as the final level-two section
+
+Lesson quality rules:
+- Usually write 900–1600 words and meet at least max(900, estimatedMinutes × 30) words.
+- Define terms before using them heavily and introduce no more than 3–5 new terms before returning to an example.
+- For Lesson 1, prioritize motivation, the simplest useful model, one end-to-end example, minimum vocabulary, and beginner misconceptions. Move secondary components and advanced implementation details to later lessons.
+- Use public primary or high-quality educational sources.
+- Teach every concept required by the linked warmup.
+- Link lessons to a genuinely easy warmup before core or challenge work.
+- Do not use generic generated questions such as “What is the central model?” New questions must be specific to the lesson topic.
+- Do not add new slugs to LEGACY_LESSON_SLUGS. That set exists only for lessons authored before this standard.
+
+Every new module must also provide a plain-language `motivation` on its `ModuleSpec`; it is stored as `motivationMarkdown` and must explain why the topic exists, the real-system problem it solves, why interviewers care, and what the learner should explain after finishing.
 
 Every problem must include:
 - title
@@ -229,7 +246,7 @@ Expand the DSA Confidence Builder into a strong original algorithms-and-data-str
 Do not attempt the entire roadmap in one run.
 
 First:
-- Read README.md and PROGRESS.md.
+- Read README.md, PROGRESS.md, and LESSON_AUTHORING_STANDARD.md.
 - Audit existing DSA modules, lessons, problems, and runnable tests.
 - Select the next two adjacent incomplete DSA topics.
 - Preserve all existing content and application behavior.
@@ -252,6 +269,8 @@ The path must feel cumulative:
 - core problems require choosing and implementing the pattern
 - the challenge combines the pattern with another idea
 - the applied problem connects DSA to realistic engineering
+
+Every lesson must be authored in the full LESSON_AUTHORING_STANDARD.md format, including Why This Matters, The Simple Mental Model, topic-specific interview Q&A, numbered mistakes, quick checks with answers, a fenced trace/code artifact, and Key Takeaway as the final section. Do not use the legacy-normalization allowlist for new lessons. Lesson 1 must introduce at most 3–5 essential terms before returning to a concrete example.
 
 For coding problems:
 - use original scenarios and wording

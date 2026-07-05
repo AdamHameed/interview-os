@@ -19,73 +19,79 @@ export const learningOverrides: Record<string, LearningMetadata> = {
   "maintenance-window-merge": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("dsa-confidence-builder", "arrays-hashmaps-two-pointers"), moduleId("intervals")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("intervals"), "intervals-walkthrough")],
     confidenceLevel: "warmup",
   },
   "rolling-window-max-latency": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("stacks-queues-heaps")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("stacks-queues-heaps"), "stacks-queues-heaps-walkthrough")],
     confidenceLevel: "core",
   },
   "cooldown-task-scheduler": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("stacks-queues-heaps")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("stacks-queues-heaps"), "stacks-queues-heaps-concept")],
     confidenceLevel: "challenge",
   },
   "log-topk-full-sort": {
     pathIds: [path("dsa-confidence-builder"), path("backend-swe")],
     moduleIds: [moduleId("stacks-queues-heaps"), moduleId("observability")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("stacks-queues-heaps"), "stacks-queues-heaps-concept")],
     confidenceLevel: "core",
   },
   "account-merge-shared-emails": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("trees-graphs")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("trees-graphs"), "trees-graphs-concept")],
     confidenceLevel: "core",
   },
   "surge-aware-shortest-path": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("advanced-graphs")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("advanced-graphs"), "advanced-graphs-walkthrough")],
     confidenceLevel: "challenge",
   },
   "cli-autocomplete-trie": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("tries")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("tries"), "tries-walkthrough")],
     confidenceLevel: "core",
   },
   "oncall-coverage-bitmask": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("bit-manipulation"), moduleId("dynamic-programming-basics")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("bit-manipulation"), "bit-manipulation-walkthrough")],
     confidenceLevel: "advanced",
   },
   "ttl-lru-session-cache": {
     pathIds: [path("dsa-confidence-builder"), path("backend-swe")],
     moduleIds: [moduleId("dsa-to-real-systems")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("dsa-to-real-systems"), "dsa-to-real-systems-concept")],
     confidenceLevel: "core",
   },
   "log-template-dedup": {
     pathIds: [path("dsa-confidence-builder")],
     moduleIds: [moduleId("dsa-to-real-systems")],
-    lessonIds: [],
+    lessonIds: [lessonId(moduleId("dsa-to-real-systems"), "dsa-to-real-systems-concept")],
     confidenceLevel: "core",
   },
   "mini-matching-engine": {
     pathIds: [path("dsa-confidence-builder"), path("quant-dev")],
     moduleIds: [moduleId("dsa-to-real-systems"), moduleId("order-books")],
-    lessonIds: [],
+    lessonIds: [
+      lessonId(moduleId("dsa-to-real-systems"), "dsa-to-real-systems-walkthrough"),
+      lessonId(moduleId("order-books"), "order-books-concept"),
+    ],
     confidenceLevel: "advanced",
   },
   "order-book-imbalance-window": {
     pathIds: [path("dsa-confidence-builder"), path("quant-dev")],
     moduleIds: [moduleId("dsa-to-real-systems"), moduleId("order-books")],
-    lessonIds: [],
+    lessonIds: [
+      lessonId(moduleId("dsa-to-real-systems"), "dsa-to-real-systems-concept"),
+      lessonId(moduleId("order-books"), "order-books-concept"),
+    ],
     confidenceLevel: "core",
   },
   "top-k-failing-endpoints": {
@@ -247,13 +253,16 @@ export const learningOverrides: Record<string, LearningMetadata> = {
   "multicast-gap-recovery-design": {
     pathIds: [path("quant-dev"), path("infrastructure-swe")],
     moduleIds: [moduleId("tcp-vs-udp"), moduleId("market-data-feeds")],
-    lessonIds: [lessonId(moduleId("tcp-vs-udp"), "tcp-vs-udp-backend-quant")],
+    lessonIds: [
+      lessonId(moduleId("tcp-vs-udp"), "tcp-vs-udp-backend-quant"),
+      lessonId(moduleId("market-data-feeds"), "market-data-feeds-walkthrough"),
+    ],
     confidenceLevel: "core",
   },
   "order-book-sequence-state-machine": {
     pathIds: [path("quant-dev")],
     moduleIds: [moduleId("order-books")],
-    lessonIds: [lessonId(moduleId("tcp-vs-udp"), "tcp-vs-udp-backend-quant")],
+    lessonIds: [lessonId(moduleId("order-books"), "order-books-walkthrough")],
     confidenceLevel: "challenge",
   },
   "lock-contention-session-map": {
@@ -328,6 +337,119 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     pathIds: [path("backend-swe"), path("system-design")],
     moduleIds: [moduleId("queues-workers")],
     lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-delivery-contract")],
+    confidenceLevel: "challenge",
+  },
+  // Batch 12: market-data-feeds new problems
+  "mdf-sequence-number-basics": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("market-data-feeds")],
+    lessonIds: [lessonId(moduleId("market-data-feeds"), "market-data-feeds-concept")],
+    confidenceLevel: "warmup",
+  },
+  "mdf-ab-feed-arbitration": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("market-data-feeds")],
+    lessonIds: [lessonId(moduleId("market-data-feeds"), "market-data-feeds-concept")],
+    confidenceLevel: "warmup",
+  },
+  "mdf-snapshot-incremental-join": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("market-data-feeds")],
+    lessonIds: [lessonId(moduleId("market-data-feeds"), "market-data-feeds-walkthrough")],
+    confidenceLevel: "core",
+  },
+  "mdf-slow-consumer-conflation": {
+    pathIds: [path("quant-dev"), path("infrastructure-swe")],
+    moduleIds: [moduleId("market-data-feeds")],
+    lessonIds: [lessonId(moduleId("market-data-feeds"), "market-data-feeds-walkthrough")],
+    confidenceLevel: "challenge",
+  },
+  // Batch 12: order-books new problems
+  "ob-book-levels-l1-l2-l3": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("order-books")],
+    lessonIds: [lessonId(moduleId("order-books"), "order-books-concept")],
+    confidenceLevel: "warmup",
+  },
+  "ob-best-bid-ask-crossed": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("order-books")],
+    lessonIds: [lessonId(moduleId("order-books"), "order-books-concept")],
+    confidenceLevel: "warmup",
+  },
+  "ob-data-structure-choice": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("order-books")],
+    lessonIds: [lessonId(moduleId("order-books"), "order-books-walkthrough")],
+    confidenceLevel: "core",
+  },
+  // Batch 12: link existing order-book aggregator orphan
+  "orderbook-level-aggregator-spec": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("order-books")],
+    lessonIds: [lessonId(moduleId("order-books"), "order-books-walkthrough")],
+    confidenceLevel: "challenge",
+  },
+  // Batch 17: stl-containers-iterators
+  "stl-container-choice-classify": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("stl-containers-iterators")],
+    lessonIds: [lessonId(moduleId("stl-containers-iterators"), "stl-containers-concept")],
+    confidenceLevel: "warmup",
+  },
+  "stl-iterator-invalidation-predict": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("stl-containers-iterators")],
+    lessonIds: [lessonId(moduleId("stl-containers-iterators"), "stl-containers-concept")],
+    confidenceLevel: "warmup",
+  },
+  "stl-vector-vs-list-hot-loop": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("stl-containers-iterators"), moduleId("latency-cache-locality")],
+    lessonIds: [lessonId(moduleId("stl-containers-iterators"), "stl-iterators-walkthrough")],
+    confidenceLevel: "core",
+  },
+  "stl-erase-in-loop-bug": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("stl-containers-iterators")],
+    lessonIds: [lessonId(moduleId("stl-containers-iterators"), "stl-iterators-walkthrough")],
+    confidenceLevel: "core",
+  },
+  "stl-lowlatency-container-design": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("stl-containers-iterators"), moduleId("latency-cache-locality")],
+    lessonIds: [lessonId(moduleId("stl-containers-iterators"), "stl-iterators-walkthrough")],
+    confidenceLevel: "challenge",
+  },
+  // Batch 17: latency-cache-locality
+  "cache-latency-numbers-rank": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("latency-cache-locality")],
+    lessonIds: [lessonId(moduleId("latency-cache-locality"), "latency-cache-concept")],
+    confidenceLevel: "warmup",
+  },
+  "cache-row-vs-column-traversal": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("latency-cache-locality")],
+    lessonIds: [lessonId(moduleId("latency-cache-locality"), "latency-cache-concept")],
+    confidenceLevel: "warmup",
+  },
+  "cache-aos-vs-soa": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("latency-cache-locality")],
+    lessonIds: [lessonId(moduleId("latency-cache-locality"), "latency-cache-walkthrough")],
+    confidenceLevel: "core",
+  },
+  "cache-false-sharing-counters": {
+    pathIds: [path("quant-dev"), path("infrastructure-swe")],
+    moduleIds: [moduleId("latency-cache-locality"), moduleId("threading-synchronization")],
+    lessonIds: [lessonId(moduleId("latency-cache-locality"), "latency-cache-walkthrough")],
+    confidenceLevel: "core",
+  },
+  "cache-marketdata-hot-path-layout": {
+    pathIds: [path("quant-dev")],
+    moduleIds: [moduleId("latency-cache-locality"), moduleId("market-data-feeds")],
+    lessonIds: [lessonId(moduleId("latency-cache-locality"), "latency-cache-walkthrough")],
     confidenceLevel: "challenge",
   },
 };
