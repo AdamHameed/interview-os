@@ -452,4 +452,42 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     lessonIds: [lessonId(moduleId("latency-cache-locality"), "latency-cache-walkthrough")],
     confidenceLevel: "challenge",
   },
+  // Prompt 4: runnable augmentations
+  "async-worker-at-least-once": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("queues-workers")],
+    lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-job-lifecycle")],
+    confidenceLevel: "core",
+  },
+  "keyset-pagination-consistency": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("cursor-pagination")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
+  // Prompt 4 batch 2: runnable augmentations (idempotency, cache ordering, batching)
+  "idempotent-charge-on-retry": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("database-deadlocks-idempotency")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
+  "cache-invalidate-after-commit": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("caching-strategies")],
+    lessonIds: [lessonId(moduleId("caching-strategies"), "cache-warming-stampedes")],
+    confidenceLevel: "core",
+  },
+  "batch-merchant-enrichment": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("n-plus-one-queries")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
+  "dedup-redelivered-emails": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("queues-workers")],
+    lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-delivery-contract")],
+    confidenceLevel: "core",
+  },
 };

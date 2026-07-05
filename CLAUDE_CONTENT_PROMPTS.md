@@ -290,3 +290,44 @@ Run all validation, update README.md and PROGRESS.md, document the next two DSA 
 ```
 
 Prompt 2 is the reusable default. Run it repeatedly for different module batches instead of asking Claude to generate the entire curriculum in one pass.
+
+## Prompt 4 — Augment non-DSA problems with runnable tests and starter code
+
+Many high-value problems are currently written-answer only (databases, debugging, concurrency, systems, quant). A large fraction can be made **runnable** — starter code the learner edits plus tests that pass/fail — without any new runner infrastructure, because `src/lib/local-runner.ts` is a generic Python/JS/TS executor that already:
+
+- calls any entry function by name with JSON args and compares results by **JSON-normalized deep equality** (sets are compared order-insensitively);
+- **awaits coroutines** (`asyncio.run`), so async problems run as-is;
+- runs anything in the Python/Node stdlib inside the submission — including `sqlite3` (in-memory), `threading`, `asyncio`, `json`, `re`.
+
+### The augmentation pattern
+
+1. **Ship the broken or slow code as `starterCode`** (a real, editable entry function), not just prose.
+2. **Expose a deterministic scenario entry point** that returns JSON-compatible data (ids processed, pages produced, allowed requests) — the "function under test" does not have to be a pure algorithm.
+3. **Encode the lesson as an invariant** the test checks: at-least-once (no id lost), consistency (no duplicate/skipped rows), idempotency, determinism under key collision. Use a fixed scenario so the correct output is deterministic, and design the buggy starter to fail that invariant **deterministically** (do not rely on GC/thread timing — the test must be reproducible).
+
+### Faithful vs testable
+
+Some bugs are inherently non-deterministic (an un-referenced `asyncio.create_task` that is GC'd; a thread race). Do **not** force these into a flaky judge. Instead:
+
+- keep the deep, non-deterministic version as the **written-answer** problem (rubric-graded), and
+- add a **runnable sibling** in the same module that targets the deterministic, testable core of the same lesson (e.g. at-least-once retry semantics), cross-referenced in the prompt.
+
+### Making an *optimization* testable: the budgeted-stub trick
+
+Optimization problems are the hard case: the starter is **correct but slow**, so a correctness test passes on both the slow and the fast version and cannot distinguish them. Two options that keep it in the existing `function_call` runner without a real profiler:
+
+1. **Budgeted stub dependency (preferred).** Put the expensive resource (an API client, a DB, a rate-limited service) behind a small in-scenario class that counts calls and **raises when the budget is exceeded**. Ship the class in `starterCode`. The slow per-item version blows the budget and errors (test fails); the batched/deduped/cached version stays under budget and returns the correct result (test passes). The `expectedValue` stays the clean result — the budget does the discriminating. This makes an *efficiency* property (calls scale with distinct inputs, not with rows) directly testable. See `batch-merchant-enrichment`.
+2. **Return the efficiency metric.** Have the entry point return a value that encodes the cost (e.g. the call count, or `(result, calls)`), and pin the expected low value. Use only when the efficient strategy has a single unambiguous cost; otherwise the budgeted stub is less brittle because any under-budget strategy passes.
+
+Include the stub class in `fullSolution` too, so the displayed reference is itself runnable standalone (the runner executes the pasted code with no other context).
+
+### Harness fields to set
+
+`functionName`, `testHarnessType: "function_call"`, `supportedLanguages` (use `["python"]` for `sqlite3`/`asyncio` problems), `starterCode` (the buggy/slow entry), and `tests` (each needs `name`, a display `expected` string, plus `args` and `expectedValue` — the runnable data). Verify every problem end-to-end with `runLocalTests` from `src/lib/local-runner.ts`: the correct reference solution must pass and the shipped starter must fail.
+
+### What still needs new infrastructure (do not fake it)
+
+- **Query-count / plan-cost oracles** (prove an N+1 became 1 query; prove OFFSET does a full scan): the output is identical whether the code is fast or slow, so these need a dedicated `sql`/`scenario` harness that instruments the DB (a `sqlite3` trace callback to count statements, or `EXPLAIN QUERY PLAN` assertions). Extend the `testHarnessType` enum in `src/lib/schemas.ts` (`sql`, `scenario`) and add an assertion kind to test cases (`exact | invariant | result_set | query_plan`) when building this.
+- **Compiled languages (C++):** the runner only spawns `python3`/`node`. C++ lifetime/UB problems stay read-and-reason (or add a "predict the output / identify the UB line" structured check) until a compiled sandbox exists.
+
+Prefer this augmentation on debugging, optimization, databases, concurrency, and systems problems whose lesson is an invariant. Update PROGRESS.md and run the full validation suite (`validate:seed`, `lint`, `typecheck`, `test`, `build`) after each batch.

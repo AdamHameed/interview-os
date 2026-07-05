@@ -21,6 +21,7 @@ import { quantDevFoundationProblems } from "./quant-dev-foundations";
 export { learningModules, learningPaths } from "./learning";
 import { optimizationProblems } from "./optimization";
 import { readCodeProblems } from "./read-code";
+import { runnableSystemsProblems } from "./runnable-systems";
 import { runnableOverrides } from "./runnable-overrides";
 import { starterAiUsageProblems } from "./starter-ai-usage";
 import { systemDesignFoundationProblems } from "./system-design-foundations";
@@ -56,6 +57,7 @@ const authoredProblems: SeedProblem[] = [
   ...kubernetesFoundationProblems,
   ...quantDevFoundationProblems,
   ...readCodeProblems,
+  ...runnableSystemsProblems,
   ...writeCodeProblems,
   ...debuggingProblems,
   ...optimizationProblems,
