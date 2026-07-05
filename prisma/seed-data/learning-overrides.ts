@@ -509,4 +509,23 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     lessonIds: [],
     confidenceLevel: "core",
   },
+  // Prompt 4 batch 4: transactions/atomicity + backpressure (sqlite3 + bounded queue)
+  "inventory-oversell-conditional-update": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("transactions-isolation")],
+    lessonIds: [lessonId(moduleId("transactions-isolation"), "lost-update-walkthrough")],
+    confidenceLevel: "core",
+  },
+  "account-transfer-atomicity": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("transactions-isolation"), moduleId("database-deadlocks-idempotency")],
+    lessonIds: [lessonId(moduleId("transactions-isolation"), "lost-update-walkthrough")],
+    confidenceLevel: "core",
+  },
+  "bounded-queue-load-shedding": {
+    pathIds: [path("backend-swe"), path("system-design")],
+    moduleIds: [moduleId("reliability-backpressure")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
 };

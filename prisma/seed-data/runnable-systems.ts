@@ -1644,5 +1644,555 @@ export const runnableSystemsProblems = defineProblems([
     ],
     "licenseNote": "Inspired by open-source tooling patterns; problem text and code written for Interview OS.",
     "qualityScore": 5
+  },
+  {
+    "slug": "inventory-oversell-conditional-update",
+    "title": "Stop the Checkout From Overselling Stock (Runnable)",
+    "type": "debugging",
+    "difficulty": "medium",
+    "topics": [
+      "transactions",
+      "lost-update",
+      "sql",
+      "sqlite",
+      "python"
+    ],
+    "targetRoles": [
+      "backend_swe",
+      "mid_level_swe",
+      "fullstack_swe"
+    ],
+    "companyStyles": [
+      "startup",
+      "big_tech",
+      "fintech"
+    ],
+    "estimatedMinutes": 25,
+    "language": "python",
+    "functionName": "fulfill_orders",
+    "testHarnessType": "function_call",
+    "supportedLanguages": [
+      "python"
+    ],
+    "prompt": "This is the runnable companion to \"The Checkout That Oversells Inventory.\" The classic bug is a read-modify-write: read the available quantity, decide in application code, then write — a window in which a stale read approves more orders than there is stock.\n\nHere the staleness is reproduced deterministically: the starter reads `available` once, up front, then validates every order against that snapshot, so several orders that each fit the *initial* stock all get approved and oversell.\n\n```python\navailable = db.execute(\"SELECT qty FROM inventory\").fetchone()[0]  # read ONCE\nfor order_id, qty in orders:\n    if qty <= available:            # <-- stale: never re-checks the real remaining qty\n        fulfilled.append(order_id)\n        db.execute(\"UPDATE inventory SET qty = qty - ?\", (qty,))\n```\n\nFix `fulfill_orders` using a single atomic guarded UPDATE (`... WHERE qty >= ?`) and the affected-row count, so it can never oversell. Return the list of fulfilled order_ids. The invariant: total fulfilled quantity never exceeds the starting stock.",
+    "context": "The written-answer version (inventory-oversell-checkout) discusses the four-line lost-update interleaving and all three repairs (guarded UPDATE, SELECT FOR UPDATE, version column). This runnable sibling isolates the guarded-UPDATE repair, made deterministic by validating against a stale up-front read instead of a live thread race.",
+    "constraints": "Orders are processed in order and compete for one SKU's stock. Fulfill an order only if enough remains at that moment; a fulfilled order decrements the stock. Use the atomic form UPDATE inventory SET qty = qty - ? WHERE qty >= ? and check cursor.rowcount — do not read the quantity into a Python variable and decide from it. Total fulfilled quantity must never exceed the initial stock.",
+    "starterCode": "import sqlite3\n\n\ndef fulfill_orders(stock, orders):\n    \"\"\"\n    stock:  the initial quantity on hand for one SKU.\n    orders: list of [order_id, qty] processed in order (they compete for the same stock).\n    Return the list of order_ids that were fulfilled, in order.\n\n    The invariant: total fulfilled quantity must never exceed `stock` (no overselling).\n    \"\"\"\n    db = sqlite3.connect(\":memory:\")\n    db.execute(\"CREATE TABLE inventory (qty INTEGER)\")\n    db.execute(\"INSERT INTO inventory VALUES (?)\", (stock,))\n\n    # BUG: reads available ONCE, up front, then validates every order against that stale\n    # snapshot — so several orders each <= the initial stock all pass and oversell.\n    available = db.execute(\"SELECT qty FROM inventory\").fetchone()[0]\n    fulfilled = []\n    for order_id, qty in orders:\n        if qty <= available:\n            fulfilled.append(order_id)\n            db.execute(\"UPDATE inventory SET qty = qty - ?\", (qty,))\n    return fulfilled\n",
+    "tests": [
+      {
+        "name": "two large orders cannot both be filled from the same stock",
+        "input": "stock=10, orders=[[1,7],[2,7],[3,2]]",
+        "expected": "[1, 3]",
+        "args": [
+          10,
+          [
+            [
+              1,
+              7
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              3,
+              2
+            ]
+          ]
+        ],
+        "expectedValue": [
+          1,
+          3
+        ]
+      },
+      {
+        "name": "stock runs out partway through",
+        "input": "stock=5, orders=[[1,2],[2,2],[3,2]]",
+        "expected": "[1, 2]",
+        "args": [
+          5,
+          [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ]
+        ],
+        "expectedValue": [
+          1,
+          2
+        ],
+        "hidden": true
+      },
+      {
+        "name": "an order larger than all stock is rejected",
+        "input": "stock=3, orders=[[1,5]]",
+        "expected": "[]",
+        "args": [
+          3,
+          [
+            [
+              1,
+              5
+            ]
+          ]
+        ],
+        "expectedValue": [],
+        "hidden": true
+      },
+      {
+        "name": "unit orders fill exactly to the limit",
+        "input": "stock=6, seven unit orders",
+        "expected": "[1, 2, 3, 4, 5, 6]",
+        "args": [
+          6,
+          [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              6,
+              1
+            ],
+            [
+              7,
+              1
+            ]
+          ]
+        ],
+        "expectedValue": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "hidden": true
+      }
+    ],
+    "hints": [
+      "The bug is the up-front read: every order is compared to the original stock, never to what is left. Re-check against the live quantity each time.",
+      "Do the check and the decrement in one statement: UPDATE inventory SET qty = qty - ? WHERE qty >= ?.",
+      "cursor.rowcount tells you whether the guarded UPDATE actually applied (1) or was blocked by insufficient stock (0)."
+    ],
+    "solutionOutline": "Replace the read-decide-write with a single guarded UPDATE per order: UPDATE inventory SET qty = qty - ? WHERE qty >= ?. The WHERE clause makes the check and the decrement one atomic operation, so there is no window where a stale read can approve an order that no longer fits. Inspect cursor.rowcount: 1 means the order was fulfilled and the stock decremented; 0 means insufficient stock, so the order is skipped and nothing changed. Because each decrement is conditioned on the live remaining quantity, the sum of fulfilled quantities can never exceed the initial stock. This is the guarded-UPDATE repair from the lost-update lesson; FOR UPDATE or a version column are the alternatives when the logic needs the value first.",
+    "fullSolution": "```python\nimport sqlite3\n\n\ndef fulfill_orders(stock, orders):\n    db = sqlite3.connect(\":memory:\")\n    db.execute(\"CREATE TABLE inventory (qty INTEGER)\")\n    db.execute(\"INSERT INTO inventory VALUES (?)\", (stock,))\n\n    fulfilled = []\n    for order_id, qty in orders:\n        # One atomic guarded UPDATE: decrement only if enough remains, then check\n        # how many rows changed. No read-modify-write window to lose.\n        cur = db.execute(\n            \"UPDATE inventory SET qty = qty - ? WHERE qty >= ?\", (qty, qty)\n        )\n        if cur.rowcount == 1:\n            fulfilled.append(order_id)\n    return fulfilled\n```",
+    "commonMistakes": [
+      "Re-reading the quantity into Python and comparing there — that reintroduces the exact read-modify-write window.",
+      "Decrementing unconditionally and 'checking after', which can drive stock negative.",
+      "Assuming wrapping the read and write in a transaction alone fixes it — at read committed the lost update survives; the guard (or a lock/version) is what fixes it."
+    ],
+    "followUpQuestions": [
+      "Write the four-line interleaving of two sessions that loses an update, and show how the guarded UPDATE prevents it.",
+      "When would you reach for SELECT ... FOR UPDATE or an optimistic version column instead of a guarded UPDATE?",
+      "How would you return a clear 'out of stock' signal to the caller rather than silently skipping the order?"
+    ],
+    "rubric": [
+      {
+        "criterion": "Atomic guard",
+        "description": "Uses a single conditional UPDATE + rowcount; no read-modify-write in application code."
+      },
+      {
+        "criterion": "No oversell",
+        "description": "Total fulfilled quantity never exceeds the initial stock."
+      }
+    ],
+    "sourceType": "official_docs_inspired",
+    "sourceUrls": [
+      "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "https://www.sqlite.org/lang_update.html"
+    ],
+    "licenseNote": "Inspired by official documentation patterns; problem text and code written for Interview OS.",
+    "qualityScore": 5
+  },
+  {
+    "slug": "account-transfer-atomicity",
+    "title": "Make the Money Transfer All-or-Nothing (Runnable)",
+    "type": "debugging",
+    "difficulty": "medium",
+    "topics": [
+      "transactions",
+      "atomicity",
+      "consistency",
+      "sqlite",
+      "python"
+    ],
+    "targetRoles": [
+      "backend_swe",
+      "mid_level_swe",
+      "quant_developer"
+    ],
+    "companyStyles": [
+      "fintech",
+      "big_tech",
+      "startup"
+    ],
+    "estimatedMinutes": 25,
+    "language": "python",
+    "functionName": "run_transfers",
+    "testHarnessType": "function_call",
+    "supportedLanguages": [
+      "python"
+    ],
+    "prompt": "This is the runnable companion to the account-transfer atomicity problem. A transfer moves money by debiting one account and crediting another — two writes that must happen together or not at all. The starter debits first, then credits, with no validation and no atomic boundary.\n\nSo when the destination does not exist, the credit updates zero rows but the debit already applied — money vanishes. When the source has insufficient funds, it goes negative. Nothing rolls back.\n\n```python\ndb.execute(\"UPDATE acct SET bal = bal - ? WHERE id = ?\", (amt, src))  # debit\ndb.execute(\"UPDATE acct SET bal = bal + ? WHERE id = ?\", (amt, dst))  # credit (0 rows if dst missing)\n```\n\nFix `run_transfers` so each transfer is atomic and valid: validate first (both accounts exist, source has enough), then apply both legs — otherwise change nothing. Return the final `[account_id, balance]` rows sorted by id. The invariant: no partial transfer, no phantom money, no overdraft.",
+    "context": "The written-answer version (account-transfer-deadlock-order) also covers lock ordering to avoid deadlock between concurrent transfers. This runnable sibling isolates the atomicity/validation core — validate-then-apply, all-or-nothing — which is deterministic and testable.",
+    "constraints": "Transfers are applied in order. A transfer is invalid, and must leave every balance unchanged, if the source or destination account does not exist or the source balance is less than the amount. A valid transfer debits the source and credits the destination by the same amount. Return [account_id, balance] rows sorted by account_id.",
+    "starterCode": "import sqlite3\n\n\ndef run_transfers(accounts, transfers):\n    \"\"\"\n    accounts:  list of [account_id, balance].\n    transfers: list of [src_id, dst_id, amount] applied in order.\n    A transfer must be ATOMIC and valid: it applies fully or not at all. It is invalid\n    (and must change nothing) if src or dst does not exist, or src would overdraw\n    (balance < amount). Return [account_id, balance] rows sorted by account_id.\n    \"\"\"\n    db = sqlite3.connect(\":memory:\")\n    db.execute(\"CREATE TABLE acct (id INTEGER PRIMARY KEY, bal INTEGER)\")\n    db.executemany(\"INSERT INTO acct VALUES (?, ?)\", accounts)\n\n    for src, dst, amt in transfers:\n        # BUG: debit first, then credit, with no validation and no atomic boundary.\n        # If dst does not exist the credit updates 0 rows but the debit already applied\n        # (money vanishes); if src overdraws it goes negative. Nothing rolls back.\n        db.execute(\"UPDATE acct SET bal = bal - ? WHERE id = ?\", (amt, src))\n        db.execute(\"UPDATE acct SET bal = bal + ? WHERE id = ?\", (amt, dst))\n\n    rows = db.execute(\"SELECT id, bal FROM acct ORDER BY id\").fetchall()\n    return [[r[0], r[1]] for r in rows]\n",
+    "tests": [
+      {
+        "name": "invalid transfers (missing dst, overdraft) must change nothing",
+        "input": "accts [1:100,2:50]; transfers [1->2:30], [1->9:40], [2->1:999]",
+        "expected": "[[1,70],[2,80]]",
+        "args": [
+          [
+            [
+              1,
+              100
+            ],
+            [
+              2,
+              50
+            ]
+          ],
+          [
+            [
+              1,
+              2,
+              30
+            ],
+            [
+              1,
+              9,
+              40
+            ],
+            [
+              2,
+              1,
+              999
+            ]
+          ]
+        ],
+        "expectedValue": [
+          [
+            1,
+            70
+          ],
+          [
+            2,
+            80
+          ]
+        ]
+      },
+      {
+        "name": "two valid transfers net out",
+        "input": "accts [1:100,2:50]; transfers [1->2:30], [2->1:10]",
+        "expected": "[[1,80],[2,70]]",
+        "args": [
+          [
+            [
+              1,
+              100
+            ],
+            [
+              2,
+              50
+            ]
+          ],
+          [
+            [
+              1,
+              2,
+              30
+            ],
+            [
+              2,
+              1,
+              10
+            ]
+          ]
+        ],
+        "expectedValue": [
+          [
+            1,
+            80
+          ],
+          [
+            2,
+            70
+          ]
+        ],
+        "hidden": true
+      },
+      {
+        "name": "transfer to a non-existent account is a no-op",
+        "input": "accts [1:50]; transfers [1->2:10]",
+        "expected": "[[1,50]]",
+        "args": [
+          [
+            [
+              1,
+              50
+            ]
+          ],
+          [
+            [
+              1,
+              2,
+              10
+            ]
+          ]
+        ],
+        "expectedValue": [
+          [
+            1,
+            50
+          ]
+        ],
+        "hidden": true
+      },
+      {
+        "name": "overdraft is rejected, balances untouched",
+        "input": "accts [1:0,2:0]; transfers [1->2:5]",
+        "expected": "[[1,0],[2,0]]",
+        "args": [
+          [
+            [
+              1,
+              0
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              2,
+              5
+            ]
+          ]
+        ],
+        "expectedValue": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        "hidden": true
+      }
+    ],
+    "hints": [
+      "The debit and credit are separate, unvalidated writes. If the second leg cannot apply, the first must not stand.",
+      "Validate before writing: both accounts exist and the source has at least `amount`; otherwise skip the whole transfer.",
+      "Apply both legs only after validation passes — that is the all-or-nothing (atomic) property a real transaction gives you via rollback."
+    ],
+    "solutionOutline": "For each transfer, first read both accounts. If the source or destination is missing, or the source balance is below the amount, skip the transfer entirely so nothing changes — the same outcome a database transaction would produce by rolling back. Only when validation passes do you apply both legs, debit and credit, together. This preserves the total money in the system across valid transfers, never leaves a half-applied transfer, and never drives an account negative. In a real system you would wrap the two UPDATEs in BEGIN/COMMIT and let a failed leg trigger ROLLBACK; validating up front is the deterministic equivalent here.",
+    "fullSolution": "```python\nimport sqlite3\n\n\ndef run_transfers(accounts, transfers):\n    db = sqlite3.connect(\":memory:\")\n    db.execute(\"CREATE TABLE acct (id INTEGER PRIMARY KEY, bal INTEGER)\")\n    db.executemany(\"INSERT INTO acct VALUES (?, ?)\", accounts)\n\n    for src, dst, amt in transfers:\n        s = db.execute(\"SELECT bal FROM acct WHERE id = ?\", (src,)).fetchone()\n        d = db.execute(\"SELECT bal FROM acct WHERE id = ?\", (dst,)).fetchone()\n        if s is None or d is None or s[0] < amt:\n            continue                       # invalid: change nothing (as if rolled back)\n        # both legs together, only after validation -> atomic and consistent\n        db.execute(\"UPDATE acct SET bal = bal - ? WHERE id = ?\", (amt, src))\n        db.execute(\"UPDATE acct SET bal = bal + ? WHERE id = ?\", (amt, dst))\n\n    rows = db.execute(\"SELECT id, bal FROM acct ORDER BY id\").fetchall()\n    return [[r[0], r[1]] for r in rows]\n```",
+    "commonMistakes": [
+      "Debiting before checking the destination exists, so a failed credit silently destroys money.",
+      "Allowing the source to go negative because there is no balance >= amount check.",
+      "Validating but then applying only one leg on an edge case, breaking the money-conservation invariant."
+    ],
+    "followUpQuestions": [
+      "How would you wrap the two UPDATEs in a real transaction so a mid-transfer error rolls back automatically?",
+      "Two concurrent transfers between the same pair of accounts can deadlock — how does consistent lock ordering prevent it?",
+      "How would you make each transfer idempotent so a retried request does not move the money twice?"
+    ],
+    "rubric": [
+      {
+        "criterion": "Atomic apply",
+        "description": "Both legs apply together after validation, or nothing changes."
+      },
+      {
+        "criterion": "Validity",
+        "description": "Rejects missing accounts and overdrafts; conserves total money across valid transfers."
+      }
+    ],
+    "sourceType": "official_docs_inspired",
+    "sourceUrls": [
+      "https://www.sqlite.org/lang_transaction.html",
+      "https://www.postgresql.org/docs/current/tutorial-transactions.html"
+    ],
+    "licenseNote": "Inspired by official documentation patterns; problem text and code written for Interview OS.",
+    "qualityScore": 5
+  },
+  {
+    "slug": "bounded-queue-load-shedding",
+    "title": "Shed Load Instead of Overflowing the Queue (Runnable)",
+    "type": "debugging",
+    "difficulty": "medium",
+    "topics": [
+      "backpressure",
+      "load-shedding",
+      "queues",
+      "reliability",
+      "python"
+    ],
+    "targetRoles": [
+      "backend_swe",
+      "infrastructure_swe",
+      "platform_engineer",
+      "distributed_systems_engineer"
+    ],
+    "companyStyles": [
+      "infra_heavy",
+      "big_tech"
+    ],
+    "estimatedMinutes": 20,
+    "language": "python",
+    "functionName": "ingest",
+    "testHarnessType": "function_call",
+    "supportedLanguages": [
+      "python"
+    ],
+    "prompt": "This is the runnable companion to \"The Queue That Ate 60 GB Before Dying.\" An ingest service accepts webhooks into an in-process queue while a worker drains them. When the worker stalls, an UNBOUNDED queue grows until the box OOMs, dropping everything.\n\nHere the queue is bounded and refuses to grow: `BoundedInbox.put` raises `QueueFull` at capacity. The starter enqueues every arrival unconditionally, so it crashes the moment the inbox fills.\n\n```python\nfor eid in event_ids:\n    inbox.put(eid)        # <-- no full-queue handling: QueueFull on overflow\n    accepted.append(eid)\n```\n\nFix `ingest` to apply backpressure by shedding load: when the inbox is full, drop the arrival (in production a 429 + Retry-After — webhook senders retry) instead of enqueuing it. Return `[accepted_ids, shed_count]`. The invariant: accepted never exceeds capacity, and nothing crashes under overload.",
+    "context": "The written-answer version (unbounded-queue-oom) covers the full backpressure story: block vs shed vs spill, circuit breakers, and the capacity arithmetic. This runnable sibling isolates the shed-when-full decision, made testable by a bounded inbox that raises on overflow.",
+    "constraints": "The inbox holds at most `capacity` items. Accept an arrival only if the inbox has room; otherwise shed it (count it, do not enqueue, do not raise). Process arrivals in order. Return [accepted_ids, shed_count] where accepted_ids are the buffered ids in arrival order and shed_count is how many were dropped. len(accepted_ids) must never exceed capacity.",
+    "starterCode": "class QueueFull(Exception):\n    pass\n\n\nclass BoundedInbox:\n    \"\"\"An in-process inbox with a hard capacity. put() raises QueueFull when it is at\n    capacity — an unbounded queue is a deferred OOM, so this one refuses to grow.\"\"\"\n    def __init__(self, capacity):\n        self.capacity = capacity\n        self.items = []\n\n    def put(self, item):\n        if len(self.items) >= self.capacity:\n            raise QueueFull(\"inbox is full\")\n        self.items.append(item)\n\n    def full(self):\n        return len(self.items) >= self.capacity\n\n\ndef ingest(event_ids, capacity):\n    \"\"\"\n    event_ids: webhooks arriving faster than the (stuck) worker drains them.\n    capacity:  the inbox's hard limit.\n    Return [accepted_ids, shed_count]: the ids buffered, and how many were shed.\n\n    When the inbox is full you must SHED (drop with a 429/Retry-After) rather than\n    blindly enqueue. The starter enqueues unconditionally and overflows.\n    \"\"\"\n    inbox = BoundedInbox(capacity)\n    accepted, shed = [], 0\n    for eid in event_ids:\n        inbox.put(eid)            # BUG: no full-queue handling -> QueueFull on overflow\n        accepted.append(eid)\n    return [accepted, shed]\n",
+    "tests": [
+      {
+        "name": "overflow is shed, not crashed",
+        "input": "events=[1,2,3,4,5], capacity=3",
+        "expected": "[[1,2,3], 2]",
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          3
+        ],
+        "expectedValue": [
+          [
+            1,
+            2,
+            3
+          ],
+          2
+        ]
+      },
+      {
+        "name": "under capacity, nothing is shed",
+        "input": "events=[1,2], capacity=5",
+        "expected": "[[1,2], 0]",
+        "args": [
+          [
+            1,
+            2
+          ],
+          5
+        ],
+        "expectedValue": [
+          [
+            1,
+            2
+          ],
+          0
+        ],
+        "hidden": true
+      },
+      {
+        "name": "tiny capacity sheds most",
+        "input": "events=[1,2,3,4], capacity=1",
+        "expected": "[[1], 3]",
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          1
+        ],
+        "expectedValue": [
+          [
+            1
+          ],
+          3
+        ],
+        "hidden": true
+      },
+      {
+        "name": "no arrivals",
+        "input": "events=[], capacity=3",
+        "expected": "[[], 0]",
+        "args": [
+          [],
+          3
+        ],
+        "expectedValue": [
+          [],
+          0
+        ],
+        "hidden": true
+      }
+    ],
+    "hints": [
+      "The bug is enqueuing without checking. Ask the inbox whether it is full before putting.",
+      "When full, shed: increment the shed counter and skip the arrival — do not let QueueFull propagate.",
+      "Webhook senders retry by contract, so a shed (429 + Retry-After) is safe; an OOM crash that drops the whole queue is not."
+    ],
+    "solutionOutline": "Before enqueuing each arrival, check inbox.full(). If there is room, put the item and record it as accepted. If the inbox is full, shed the arrival: increment the shed counter and continue without enqueuing, so QueueFull is never raised and the process stays alive under overload. This is the load-shedding branch of backpressure — a bounded queue converts a memory problem into a decision problem, and shedding (return 429 + Retry-After) leans on the fact that webhook senders retry. Accepted never exceeds capacity, and shed_count accounts for every dropped arrival.",
+    "fullSolution": "```python\nclass QueueFull(Exception):\n    pass\n\n\nclass BoundedInbox:\n    \"\"\"An in-process inbox with a hard capacity. put() raises QueueFull when it is at\n    capacity — an unbounded queue is a deferred OOM, so this one refuses to grow.\"\"\"\n    def __init__(self, capacity):\n        self.capacity = capacity\n        self.items = []\n\n    def put(self, item):\n        if len(self.items) >= self.capacity:\n            raise QueueFull(\"inbox is full\")\n        self.items.append(item)\n\n    def full(self):\n        return len(self.items) >= self.capacity\n\n\ndef ingest(event_ids, capacity):\n    inbox = BoundedInbox(capacity)\n    accepted, shed = [], 0\n    for eid in event_ids:\n        if inbox.full():\n            shed += 1             # load-shed: caller gets 429 + Retry-After and re-sends\n            continue\n        inbox.put(eid)\n        accepted.append(eid)\n    return [accepted, shed]\n```",
+    "commonMistakes": [
+      "Catching QueueFull but still counting the item as accepted, so accepted exceeds capacity.",
+      "Blocking the producer instead of shedding, which under a load balancer converts overload into full unavailability for every caller.",
+      "Shedding silently with no counter/metric, so the overload is invisible in dashboards."
+    ],
+    "followUpQuestions": [
+      "Do the capacity arithmetic: at 2,000 arrivals/s in and 4/s drained, how fast does an unbounded queue reach OOM?",
+      "Block vs shed vs spill-to-disk at a full queue — what does each do to latency, availability, and durability?",
+      "Where does a circuit breaker on the slow downstream fit, and why does it beat burning worker timeouts?"
+    ],
+    "rubric": [
+      {
+        "criterion": "Bounded accept",
+        "description": "Accepts up to capacity and sheds the rest without raising; accepted never exceeds capacity."
+      },
+      {
+        "criterion": "Accounted shedding",
+        "description": "Every dropped arrival is counted in shed_count; order preserved."
+      }
+    ],
+    "sourceType": "educational_inspired",
+    "sourceUrls": [
+      "https://aws.amazon.com/builders-library/using-load-shedding-to-avoid-overload/",
+      "https://sre.google/sre-book/handling-overload/"
+    ],
+    "licenseNote": "Inspired by educational systems material; problem text and code written for Interview OS.",
+    "qualityScore": 5
   }
 ]);
