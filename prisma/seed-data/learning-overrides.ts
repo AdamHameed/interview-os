@@ -490,4 +490,23 @@ export const learningOverrides: Record<string, LearningMetadata> = {
     lessonIds: [lessonId(moduleId("queues-workers"), "queues-workers-delivery-contract")],
     confidenceLevel: "core",
   },
+  // Prompt 4 batch 3: budgeted-stub optimizations (query count, scan count, payload shape)
+  "orm-n-plus-one-query-count": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("n-plus-one-queries")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
+  "settlement-matcher-linear": {
+    pathIds: [path("dsa-confidence-builder")],
+    moduleIds: [moduleId("arrays-hashmaps-two-pointers")],
+    lessonIds: [lessonId(moduleId("arrays-hashmaps-two-pointers"), "two-sum-hashmap-pattern")],
+    confidenceLevel: "core",
+  },
+  "feed-payload-normalization": {
+    pathIds: [path("backend-swe")],
+    moduleIds: [moduleId("http-request-lifecycle")],
+    lessonIds: [],
+    confidenceLevel: "core",
+  },
 };

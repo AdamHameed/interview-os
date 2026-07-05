@@ -986,5 +986,663 @@ export const runnableSystemsProblems = defineProblems([
     "sourceUrls": [],
     "licenseNote": "Original problem written for Interview OS. Concept-based; no text copied from any external source.",
     "qualityScore": 5
+  },
+  {
+    "slug": "orm-n-plus-one-query-count",
+    "title": "Fix the N+1 Dashboard Under a Query Budget (Runnable)",
+    "type": "optimization",
+    "difficulty": "medium",
+    "topics": [
+      "n-plus-one",
+      "databases",
+      "orm",
+      "batching",
+      "python"
+    ],
+    "targetRoles": [
+      "backend_swe",
+      "fullstack_swe",
+      "mid_level_swe"
+    ],
+    "companyStyles": [
+      "startup",
+      "big_tech"
+    ],
+    "estimatedMinutes": 25,
+    "language": "python",
+    "functionName": "team_dashboard",
+    "testHarnessType": "function_call",
+    "supportedLanguages": [
+      "python"
+    ],
+    "prompt": "This is the runnable companion to \"The Team Dashboard Making 1,201 Queries.\" The dashboard loads teams, then their members, then each member's tickets — one query at a time. On real data that is 1 + N + N + (members) queries; the endpoint melts.\n\nThe `Database` here counts queries and raises when a small budget is exceeded, so the per-team / per-member starter fails immediately. That budget is the N+1 detector.\n\n```python\nfor team_id, name in db.all_teams():          # 1\n    team_members = db.members_for_team(team_id)     # + 1 per team\n    for m_id in team_members:\n        open += db.open_tickets_for_member(m_id)    # + 1 per member (the 800)\n```\n\nRewrite `team_dashboard` to fetch the same data in a bounded number of BATCHED queries (`members_for_teams`, `open_tickets_for_members`), returning one row per team `{team_id, name, member_count, open_tickets}` sorted by team_id. The invariant: query count is constant, independent of the number of teams.",
+    "context": "The written-answer version (orm-n-plus-one-dashboard) also covers eager-loading vs aggregate-pushdown vs manual batching and join fan-out. This runnable sibling makes the core property — query count does not scale with rows — directly testable via a query-count budget instead of a real database plan.",
+    "constraints": "The Database allows only a few queries before raising, so any per-team or per-member fetch pattern fails. Use the batched methods: one call for all teams, one for members across all teams, one for open-ticket counts across all members. Count open tickets (status == \"open\") per team; include teams with zero members. Return rows sorted by team_id.",
+    "starterCode": "class Database:\n    \"\"\"A tiny query-counting database. Each method is ONE query and counts against\n    a budget; exceeding the budget raises. Per-team / per-member methods are the N+1\n    trap; the *_for_teams / *_for_members methods fetch in a single batched query.\"\"\"\n    def __init__(self, teams, members, tickets, budget):\n        self._teams = teams\n        self._members = members\n        self._tickets = tickets\n        self._budget = budget\n        self.queries = 0\n\n    def _q(self):\n        self.queries += 1\n        if self.queries > self._budget:\n            raise RuntimeError(\n                f\"query budget exceeded ({self.queries} > {self._budget}) — N+1 detected\"\n            )\n\n    def all_teams(self):\n        self._q()\n        return [list(t) for t in self._teams]\n\n    def members_for_team(self, team_id):            # per-team query (N+1 trap)\n        self._q()\n        return [m[0] for m in self._members if m[1] == team_id]\n\n    def open_tickets_for_member(self, member_id):   # per-member query (worst trap)\n        self._q()\n        return sum(1 for t in self._tickets if t[1] == member_id and t[2] == \"open\")\n\n    def members_for_teams(self, team_ids):          # batched: one query\n        self._q()\n        res = {tid: [] for tid in team_ids}\n        for m_id, t_id in self._members:\n            if t_id in res:\n                res[t_id].append(m_id)\n        return res\n\n    def open_tickets_for_members(self, member_ids):  # batched: one query\n        self._q()\n        counts = {m: 0 for m in member_ids}\n        for _tid, m_id, status in self._tickets:\n            if m_id in counts and status == \"open\":\n                counts[m_id] += 1\n        return counts\n\n\ndef team_dashboard(teams, members, tickets):\n    \"\"\"\n    teams:   list of [team_id, name]\n    members: list of [member_id, team_id]\n    tickets: list of [ticket_id, member_id, status]  (status is \"open\" or \"closed\")\n    Return one row per team: {team_id, name, member_count, open_tickets}, sorted by team_id.\n\n    The Database enforces a small query budget. Fetching members/tickets per team blows\n    it — that is the N+1 pattern. Fetch in a bounded number of BATCHED queries instead.\n    \"\"\"\n    db = Database(teams, members, tickets, budget=4)\n    out = []\n    for team_id, name in db.all_teams():                       # 1 query\n        team_members = db.members_for_team(team_id)            # + 1 per team (N+1)\n        open_count = 0\n        for m_id in team_members:\n            open_count += db.open_tickets_for_member(m_id)     # + 1 per member (worse)\n        out.append({\"team_id\": team_id, \"name\": name,\n                    \"member_count\": len(team_members), \"open_tickets\": open_count})\n    return sorted(out, key=lambda r: r[\"team_id\"])\n",
+    "tests": [
+      {
+        "name": "two teams, members and open tickets aggregated",
+        "input": "teams=[[1,Platform],[2,Growth]]",
+        "expected": "[{team 1: 2 members, 2 open}, {team 2: 1 member, 2 open}]",
+        "args": [
+          [
+            [
+              1,
+              "Platform"
+            ],
+            [
+              2,
+              "Growth"
+            ]
+          ],
+          [
+            [
+              10,
+              1
+            ],
+            [
+              11,
+              1
+            ],
+            [
+              12,
+              2
+            ]
+          ],
+          [
+            [
+              100,
+              10,
+              "open"
+            ],
+            [
+              101,
+              10,
+              "closed"
+            ],
+            [
+              102,
+              11,
+              "open"
+            ],
+            [
+              103,
+              12,
+              "open"
+            ],
+            [
+              104,
+              12,
+              "open"
+            ]
+          ]
+        ],
+        "expectedValue": [
+          {
+            "team_id": 1,
+            "name": "Platform",
+            "member_count": 2,
+            "open_tickets": 2
+          },
+          {
+            "team_id": 2,
+            "name": "Growth",
+            "member_count": 1,
+            "open_tickets": 2
+          }
+        ]
+      },
+      {
+        "name": "a team with zero members still appears",
+        "input": "teams=[[1,A],[2,B],[3,C]] where C has no members",
+        "expected": "team 3 present with 0 members, 0 open",
+        "args": [
+          [
+            [
+              1,
+              "A"
+            ],
+            [
+              2,
+              "B"
+            ],
+            [
+              3,
+              "C"
+            ]
+          ],
+          [
+            [
+              10,
+              1
+            ],
+            [
+              11,
+              1
+            ],
+            [
+              12,
+              1
+            ],
+            [
+              20,
+              2
+            ]
+          ],
+          [
+            [
+              100,
+              10,
+              "open"
+            ],
+            [
+              101,
+              11,
+              "open"
+            ],
+            [
+              102,
+              12,
+              "closed"
+            ],
+            [
+              103,
+              20,
+              "open"
+            ]
+          ]
+        ],
+        "expectedValue": [
+          {
+            "team_id": 1,
+            "name": "A",
+            "member_count": 3,
+            "open_tickets": 2
+          },
+          {
+            "team_id": 2,
+            "name": "B",
+            "member_count": 1,
+            "open_tickets": 1
+          },
+          {
+            "team_id": 3,
+            "name": "C",
+            "member_count": 0,
+            "open_tickets": 0
+          }
+        ],
+        "hidden": true
+      },
+      {
+        "name": "one team, several members (per-member fetch would blow the budget)",
+        "input": "teams=[[1,Solo]] with 4 members",
+        "expected": "team 1: 4 members, 2 open",
+        "args": [
+          [
+            [
+              1,
+              "Solo"
+            ]
+          ],
+          [
+            [
+              10,
+              1
+            ],
+            [
+              11,
+              1
+            ],
+            [
+              12,
+              1
+            ],
+            [
+              13,
+              1
+            ]
+          ],
+          [
+            [
+              100,
+              10,
+              "open"
+            ],
+            [
+              101,
+              13,
+              "open"
+            ]
+          ]
+        ],
+        "expectedValue": [
+          {
+            "team_id": 1,
+            "name": "Solo",
+            "member_count": 4,
+            "open_tickets": 2
+          }
+        ],
+        "hidden": true
+      }
+    ],
+    "hints": [
+      "Count the starter's queries: 1 for teams, one per team for members, one per member for tickets. That total scales with your data — the budget catches it.",
+      "Fetch all members in one call (members_for_teams) and all open-ticket counts in one call (open_tickets_for_members), then assemble in Python.",
+      "Group members by team_id and sum open-ticket counts per team; remember teams with no members must still appear with zeros."
+    ],
+    "solutionOutline": "Issue three queries total, none of which scale with the number of teams: all_teams, then members_for_teams(all team ids) returning a team_id -> [member_id] map, then open_tickets_for_members(all member ids) returning a member_id -> open_count map. Assemble each row from those maps — member_count is the length of the team's member list, open_tickets is the sum of its members' open counts — and sort by team_id. Teams with no members fall out of the map lookup as empty lists, so they still appear with zeros. Because the query count is fixed at three regardless of team or member count, the budget is never exceeded.",
+    "fullSolution": "```python\nclass Database:\n    \"\"\"A tiny query-counting database. Each method is ONE query and counts against\n    a budget; exceeding the budget raises. Per-team / per-member methods are the N+1\n    trap; the *_for_teams / *_for_members methods fetch in a single batched query.\"\"\"\n    def __init__(self, teams, members, tickets, budget):\n        self._teams = teams\n        self._members = members\n        self._tickets = tickets\n        self._budget = budget\n        self.queries = 0\n\n    def _q(self):\n        self.queries += 1\n        if self.queries > self._budget:\n            raise RuntimeError(\n                f\"query budget exceeded ({self.queries} > {self._budget}) — N+1 detected\"\n            )\n\n    def all_teams(self):\n        self._q()\n        return [list(t) for t in self._teams]\n\n    def members_for_team(self, team_id):            # per-team query (N+1 trap)\n        self._q()\n        return [m[0] for m in self._members if m[1] == team_id]\n\n    def open_tickets_for_member(self, member_id):   # per-member query (worst trap)\n        self._q()\n        return sum(1 for t in self._tickets if t[1] == member_id and t[2] == \"open\")\n\n    def members_for_teams(self, team_ids):          # batched: one query\n        self._q()\n        res = {tid: [] for tid in team_ids}\n        for m_id, t_id in self._members:\n            if t_id in res:\n                res[t_id].append(m_id)\n        return res\n\n    def open_tickets_for_members(self, member_ids):  # batched: one query\n        self._q()\n        counts = {m: 0 for m in member_ids}\n        for _tid, m_id, status in self._tickets:\n            if m_id in counts and status == \"open\":\n                counts[m_id] += 1\n        return counts\n\n\ndef team_dashboard(teams, members, tickets):\n    db = Database(teams, members, tickets, budget=4)\n    all_teams = db.all_teams()                                  # 1 query\n    team_ids = [t[0] for t in all_teams]\n    members_by_team = db.members_for_teams(team_ids)            # 1 batched query\n    all_member_ids = [m for ms in members_by_team.values() for m in ms]\n    open_by_member = db.open_tickets_for_members(all_member_ids)  # 1 batched query\n    out = []\n    for team_id, name in all_teams:\n        ms = members_by_team.get(team_id, [])\n        out.append({\"team_id\": team_id, \"name\": name, \"member_count\": len(ms),\n                    \"open_tickets\": sum(open_by_member.get(m, 0) for m in ms)})\n    return sorted(out, key=lambda r: r[\"team_id\"])\n```",
+    "commonMistakes": [
+      "Fixing members but leaving the per-member ticket query — that inner loop is the largest term.",
+      "Dropping teams with zero members by iterating members instead of teams.",
+      "Assembling correct numbers but still issuing a query inside the team loop, which the budget rejects."
+    ],
+    "followUpQuestions": [
+      "How would a single aggregate SQL query (GROUP BY with a filtered count) collapse this to one query, and what is the join fan-out trap?",
+      "How do you write a real query-count assertion in a test without making it brittle to legitimate query changes?",
+      "Why does lazy loading make this bug invisible in code review and on small dev datasets?"
+    ],
+    "rubric": [
+      {
+        "criterion": "Constant query count",
+        "description": "Fetches with batched queries whose count does not scale with teams/members."
+      },
+      {
+        "criterion": "Correct aggregation",
+        "description": "member_count and open_tickets correct; zero-member teams included; sorted by team_id."
+      }
+    ],
+    "sourceType": "official_docs_inspired",
+    "sourceUrls": [
+      "https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html",
+      "https://docs.djangoproject.com/en/stable/ref/models/querysets/#prefetch-related"
+    ],
+    "licenseNote": "Inspired by official documentation patterns; problem text and code written for Interview OS.",
+    "qualityScore": 5
+  },
+  {
+    "slug": "settlement-matcher-linear",
+    "title": "Match Settlements in One Pass, Not One Scan Per Trade (Runnable)",
+    "type": "optimization",
+    "difficulty": "medium",
+    "topics": [
+      "complexity",
+      "hash-map",
+      "python",
+      "profiling",
+      "fintech"
+    ],
+    "targetRoles": [
+      "new_grad_swe",
+      "backend_swe",
+      "quant_developer"
+    ],
+    "companyStyles": [
+      "fintech",
+      "quant_fund",
+      "big_tech"
+    ],
+    "estimatedMinutes": 25,
+    "language": "python",
+    "functionName": "match_settlements",
+    "testHarnessType": "function_call",
+    "supportedLanguages": [
+      "python"
+    ],
+    "prompt": "This is the runnable companion to \"The Settlement Matcher That Melts at Month-End.\" The nightly job matches each internal trade to the earliest unused custodian confirm with the same (isin, qty, side). The starter re-scans the whole confirm book for every trade — O(trades × confirms) — which is fine at 10k rows and 9 hours at 600k.\n\nThe `ConfirmBook` here charges one unit per row scanned, with a budget of a single full scan. Re-scanning per trade blows it immediately.\n\n```python\nfor t in trades:\n    for i, c in enumerate(book.all()):   # <-- a full scan, once PER trade\n        ...\n```\n\nRewrite `match_settlements` to scan the book once, build an index, and match in one pass — preserving the exact semantics: each confirm used at most once and ties go to the earliest confirm. Return the list of `[trade_id, confirm_id]` matches in trade order. The invariant: total rows scanned is linear, not quadratic.",
+    "context": "The written-answer version (quadratic-settlement-matcher) covers the complexity math and profiling discipline. This runnable sibling makes the linear-vs-quadratic property testable directly: a scan budget of one full pass that the nested-loop version cannot satisfy.",
+    "constraints": "book.all() returns every confirm but charges one unit per row; the budget is len(confirms) + 1, i.e. exactly one full scan. Preserve semantics: a confirm is matched at most once, and when several confirms share a key the earliest (list order) is used first — duplicated trades must consume duplicated confirms in order. Return [trade_id, confirm_id] pairs in trade order; unmatched trades produce nothing.",
+    "starterCode": "class ConfirmBook:\n    \"\"\"The custodian confirmations, behind a counter. all() returns every confirm but\n    charges one unit PER ROW — it is a full table scan. Scanning the whole book once per\n    trade is quadratic and blows the budget; scan once, index it yourself, then look up.\"\"\"\n    def __init__(self, confirms, budget):\n        self._confirms = confirms\n        self._budget = budget\n        self.units = 0\n\n    def all(self):\n        self.units += len(self._confirms)          # one full scan = len(confirms) units\n        if self.units > self._budget:\n            raise RuntimeError(\n                f\"scan budget exceeded ({self.units} > {self._budget}) — you are re-scanning confirms\"\n            )\n        return [list(c) for c in self._confirms]\n\n\ndef match_settlements(trades, confirms):\n    \"\"\"\n    trades / confirms: lists of [isin, qty, side, id]. Match each trade to the EARLIEST\n    still-unused confirm with the same (isin, qty, side); each confirm is used at most\n    once. Return the list of [trade_id, confirm_id] matches, in trade order.\n\n    Budget = one full scan of the book (len(confirms) + 1 units). The starter re-scans\n    the whole book for every trade — O(trades × confirms) — and blows the budget.\n    \"\"\"\n    book = ConfirmBook(confirms, budget=len(confirms) + 1)\n    used = set()\n    matched = []\n    for t in trades:\n        for i, c in enumerate(book.all()):     # BUG: a full re-scan per trade (quadratic)\n            if i in used:\n                continue\n            if c[0] == t[0] and c[1] == t[1] and c[2] == t[2]:\n                matched.append([t[3], c[3]])\n                used.add(i)\n                break\n    return matched\n",
+    "tests": [
+      {
+        "name": "duplicate trades consume duplicate confirms in order; one trade unmatched",
+        "input": "4 trades, 3 confirms (two identical US1/100/B)",
+        "expected": "[[1,901],[2,902],[3,903]]",
+        "args": [
+          [
+            [
+              "US1",
+              100,
+              "B",
+              1
+            ],
+            [
+              "US1",
+              100,
+              "B",
+              2
+            ],
+            [
+              "US2",
+              50,
+              "S",
+              3
+            ],
+            [
+              "US1",
+              100,
+              "B",
+              4
+            ]
+          ],
+          [
+            [
+              "US1",
+              100,
+              "B",
+              901
+            ],
+            [
+              "US1",
+              100,
+              "B",
+              902
+            ],
+            [
+              "US2",
+              50,
+              "S",
+              903
+            ]
+          ]
+        ],
+        "expectedValue": [
+          [
+            1,
+            901
+          ],
+          [
+            2,
+            902
+          ],
+          [
+            3,
+            903
+          ]
+        ]
+      },
+      {
+        "name": "no confirms match",
+        "input": "2 trades, 2 confirms, none matching",
+        "expected": "[]",
+        "args": [
+          [
+            [
+              "B",
+              10,
+              "B",
+              1
+            ],
+            [
+              "A",
+              5,
+              "B",
+              2
+            ]
+          ],
+          [
+            [
+              "A",
+              10,
+              "B",
+              900
+            ],
+            [
+              "C",
+              7,
+              "S",
+              901
+            ]
+          ]
+        ],
+        "expectedValue": [],
+        "hidden": true
+      },
+      {
+        "name": "earliest confirm wins across three identical confirms",
+        "input": "2 trades, 3 identical confirms",
+        "expected": "[[1,10],[2,11]]",
+        "args": [
+          [
+            [
+              "X",
+              1,
+              "B",
+              1
+            ],
+            [
+              "X",
+              1,
+              "B",
+              2
+            ]
+          ],
+          [
+            [
+              "X",
+              1,
+              "B",
+              10
+            ],
+            [
+              "X",
+              1,
+              "B",
+              11
+            ],
+            [
+              "X",
+              1,
+              "B",
+              12
+            ]
+          ]
+        ],
+        "expectedValue": [
+          [
+            1,
+            10
+          ],
+          [
+            2,
+            11
+          ]
+        ],
+        "hidden": true
+      }
+    ],
+    "hints": [
+      "The cost is book.all() called once per trade. Call it once, total, and remember what you saw.",
+      "Bucket the confirms by (isin, qty, side) into a dict of deques in list order; that preserves earliest-first.",
+      "For each trade, popleft from its bucket if non-empty — O(1) — instead of scanning."
+    ],
+    "solutionOutline": "Scan the book exactly once and bucket confirm ids by (isin, qty, side) into a dict of deques; appending in list order means each deque holds the earliest confirm at its front. Then walk trades in order and, for each, popleft from the matching bucket if it is non-empty — an O(1) match that consumes each confirm once and gives ties to the earliest confirm, exactly matching the original nested-loop semantics including duplicate consumption. Total rows scanned is len(confirms) (one pass), so the scan budget is satisfied and the job is O(trades + confirms).",
+    "fullSolution": "```python\nfrom collections import defaultdict, deque\n\nclass ConfirmBook:\n    \"\"\"The custodian confirmations, behind a counter. all() returns every confirm but\n    charges one unit PER ROW — it is a full table scan. Scanning the whole book once per\n    trade is quadratic and blows the budget; scan once, index it yourself, then look up.\"\"\"\n    def __init__(self, confirms, budget):\n        self._confirms = confirms\n        self._budget = budget\n        self.units = 0\n\n    def all(self):\n        self.units += len(self._confirms)          # one full scan = len(confirms) units\n        if self.units > self._budget:\n            raise RuntimeError(\n                f\"scan budget exceeded ({self.units} > {self._budget}) — you are re-scanning confirms\"\n            )\n        return [list(c) for c in self._confirms]\n\n\ndef match_settlements(trades, confirms):\n    book = ConfirmBook(confirms, budget=len(confirms) + 1)\n    buckets = defaultdict(deque)\n    for c in book.all():                       # ONE scan builds the index\n        buckets[(c[0], c[1], c[2])].append(c[3])   # deque preserves earliest-first\n    matched = []\n    for t in trades:\n        b = buckets.get((t[0], t[1], t[2]))\n        if b:\n            matched.append([t[3], b.popleft()])    # O(1) lookup, first-unused wins\n    return matched\n```",
+    "commonMistakes": [
+      "Bucketing by isin only and re-scanning within the bucket — still quadratic for a hot isin (exactly month-end).",
+      "Using a set of confirm ids and losing duplicate multiplicity, so two identical confirms collapse to one.",
+      "Bucketing into an unordered structure and losing earliest-first, then trying to re-sort later."
+    ],
+    "followUpQuestions": [
+      "Matching now allows a ±1% qty tolerance. Which part of the O(n) design breaks, and what structure comes next?",
+      "The job is still slow because loading 600k rows takes 20 minutes. Where did the bottleneck move?",
+      "What cProfile/py-spy evidence and before/after numbers would you put in the postmortem?"
+    ],
+    "rubric": [
+      {
+        "criterion": "Linear scan",
+        "description": "Scans the confirm book once and matches via an index, satisfying the one-pass budget."
+      },
+      {
+        "criterion": "Semantic preservation",
+        "description": "Each confirm used once, earliest-first ties, duplicate consumption preserved."
+      }
+    ],
+    "sourceType": "original",
+    "sourceUrls": [],
+    "licenseNote": "Original problem written for Interview OS. Concept-based; no text copied from any external source.",
+    "qualityScore": 5
+  },
+  {
+    "slug": "feed-payload-normalization",
+    "title": "Serialize Each User Once, Not Once Per Item (Runnable)",
+    "type": "optimization",
+    "difficulty": "medium",
+    "topics": [
+      "serialization",
+      "payload-shape",
+      "api-design",
+      "python",
+      "normalization"
+    ],
+    "targetRoles": [
+      "backend_swe",
+      "fullstack_swe",
+      "platform_engineer"
+    ],
+    "companyStyles": [
+      "big_tech",
+      "startup"
+    ],
+    "estimatedMinutes": 20,
+    "language": "python",
+    "functionName": "build_feed",
+    "testHarnessType": "function_call",
+    "supportedLanguages": [
+      "python"
+    ],
+    "prompt": "This is the runnable companion to \"60% of CPU Is json.dumps.\" The activity feed inlines a full user object into every item, for both actor and target. The same handful of users recur across most items, so the response ships — and serializes — the same user data over and over; on the profiler it is the top CPU cost.\n\nThe starter inlines nested users. Rewrite `build_feed` to emit the NORMALIZED shape: each item carries only `actor_id`/`target_id`, and a single top-level `users` map holds each referenced user exactly once.\n\n```python\n# starter (buggy): full nested user on every item\n{\"id\": .., \"verb\": .., \"actor\": {\"id\": a, \"name\": ..}, \"target\": {\"id\": t, \"name\": ..}}\n```\n\nReturn `{\"items\": [{id, verb, actor_id, target_id} ...], \"users\": {user_id: name}}`. The invariant this encodes: bytes and serialization work scale with distinct users, not with items × 2.",
+    "context": "The written-answer version (slow-json-serialization-feed) also ranks faster serializers, page-size defaults, and serialize-once caching, and covers API-compat versioning. This runnable sibling isolates the highest-win move — normalize the payload so repeated users are serialized once — as a checkable output shape.",
+    "constraints": "Each item must reference users by id (actor_id, target_id) rather than embedding them. The users map contains every user referenced by any item, keyed by user id, each appearing once (even when the same user is actor and target, or recurs across items). Preserve item order. user_names is a list indexed by user id.",
+    "starterCode": "def build_feed(items, user_names):\n    \"\"\"\n    items:      list of [item_id, verb, actor_id, target_id]\n    user_names: list indexed by user id -> display name\n    Return the feed payload. The same few users recur across most items, so inlining a\n    full user object on every item ships (and serializes) the same data over and over.\n\n    Return the NORMALIZED shape instead:\n      {\"items\": [{\"id\", \"verb\", \"actor_id\", \"target_id\"} ...],\n       \"users\": {user_id: name}}   # each referenced user exactly once\n    \"\"\"\n    out_items = []\n    for item_id, verb, actor_id, target_id in items:\n        # BUG: full nested user objects inlined per item (the repeated bytes to kill).\n        out_items.append({\n            \"id\": item_id, \"verb\": verb,\n            \"actor\": {\"id\": actor_id, \"name\": user_names[actor_id]},\n            \"target\": {\"id\": target_id, \"name\": user_names[target_id]},\n        })\n    return {\"items\": out_items}\n",
+    "tests": [
+      {
+        "name": "repeated users are serialized once in a side map",
+        "input": "3 items, users [Alice,Bob,Cara], Alice/Bob recur",
+        "expected": "items carry ids; users={0:Alice,1:Bob,2:Cara}",
+        "args": [
+          [
+            [
+              1,
+              "liked",
+              0,
+              1
+            ],
+            [
+              2,
+              "liked",
+              0,
+              1
+            ],
+            [
+              3,
+              "followed",
+              2,
+              0
+            ]
+          ],
+          [
+            "Alice",
+            "Bob",
+            "Cara"
+          ]
+        ],
+        "expectedValue": {
+          "items": [
+            {
+              "id": 1,
+              "verb": "liked",
+              "actor_id": 0,
+              "target_id": 1
+            },
+            {
+              "id": 2,
+              "verb": "liked",
+              "actor_id": 0,
+              "target_id": 1
+            },
+            {
+              "id": 3,
+              "verb": "followed",
+              "actor_id": 2,
+              "target_id": 0
+            }
+          ],
+          "users": {
+            "0": "Alice",
+            "1": "Bob",
+            "2": "Cara"
+          }
+        }
+      },
+      {
+        "name": "actor and target are the same user (appears once)",
+        "input": "1 item, actor==target==0",
+        "expected": "users={0:Solo}",
+        "args": [
+          [
+            [
+              10,
+              "posted",
+              0,
+              0
+            ]
+          ],
+          [
+            "Solo"
+          ]
+        ],
+        "expectedValue": {
+          "items": [
+            {
+              "id": 10,
+              "verb": "posted",
+              "actor_id": 0,
+              "target_id": 0
+            }
+          ],
+          "users": {
+            "0": "Solo"
+          }
+        },
+        "hidden": true
+      }
+    ],
+    "hints": [
+      "The waste is repetition: the same users recur across items, each fully inlined. Reference them by id and serialize each once.",
+      "Build a users map as you go: for each item's actor and target, add the user to the map only if it is not already there.",
+      "Emit items with actor_id/target_id (no nested objects) and return them alongside the users map."
+    ],
+    "solutionOutline": "Walk the items once. For each item, record its actor and target in a users map keyed by id, inserting a user only the first time it is seen (so the same user across many items — or as both actor and target — is stored once), and append an item that references users by actor_id/target_id instead of embedding them. Return {items, users}. Serialization work and bytes now scale with the number of distinct users plus the item ids, not with items × 2 full user objects — the same normalization a client-side store expects. Item order is preserved because you build the item list in order.",
+    "fullSolution": "```python\ndef build_feed(items, user_names):\n    out_items = []\n    users = {}\n    for item_id, verb, actor_id, target_id in items:\n        for uid in (actor_id, target_id):\n            if uid not in users:\n                users[uid] = user_names[uid]        # each user serialized once\n        out_items.append({\"id\": item_id, \"verb\": verb,\n                          \"actor_id\": actor_id, \"target_id\": target_id})\n    return {\"items\": out_items, \"users\": users}\n```",
+    "commonMistakes": [
+      "Keeping full nested users and only swapping the serializer — 5x faster at serializing redundant bytes is still redundant.",
+      "Adding a user to the map every time it is seen, producing duplicates or extra work instead of a single entry.",
+      "Reordering items or dropping the users a self-referential (actor == target) item points at."
+    ],
+    "followUpQuestions": [
+      "How do you evolve the API to this shape without breaking existing clients (versioning, field selection)?",
+      "When does swapping in a C serializer like orjson become the right next step, and when is it premature?",
+      "How would you cache serialized user-card bytes and compose them into responses without re-serializing?"
+    ],
+    "rubric": [
+      {
+        "criterion": "Normalized shape",
+        "description": "Items reference users by id; a side map holds each referenced user exactly once."
+      },
+      {
+        "criterion": "Correct + ordered",
+        "description": "All referenced users present, deduped (incl. actor == target); item order preserved."
+      }
+    ],
+    "sourceType": "open_source_inspired",
+    "sourceUrls": [
+      "https://github.com/ijl/orjson",
+      "https://github.com/benfred/py-spy"
+    ],
+    "licenseNote": "Inspired by open-source tooling patterns; problem text and code written for Interview OS.",
+    "qualityScore": 5
   }
 ]);
